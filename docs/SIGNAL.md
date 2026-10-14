@@ -38,7 +38,7 @@ Use a number that is not your own personal one if you can: alerts then arrive fr
 2. `curl -X POST http://127.0.0.1:8080/v1/register/+15145550100 -H 'content-type: application/json' -d '{"captcha":"<the link without signalcaptcha://>"}'`
 3. `curl -X POST http://127.0.0.1:8080/v1/register/+15145550100/verify/<code>` with the code Signal sends.
 
-Check it: `curl http://127.0.0.1:8080/v1/accounts` lists the number. If sending answers `Specified account does not exist` right after linking, restart the container, which loads accounts at start in `json-rpc` mode.
+Check it: `curl http://127.0.0.1:8080/v1/accounts` lists the number. Linking by QR code worked without a restart in testing. If sending still answers `Specified account does not exist` right after linking, restart the container.
 
 ## Configure the app
 
