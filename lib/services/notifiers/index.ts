@@ -2,14 +2,16 @@ import { logger } from "@/lib/logger";
 import { getSetting, getSettingsRevision } from "../settings";
 import { ntfy } from "./ntfy";
 import { slack } from "./slack";
+import { telegram } from "./telegram";
 import type { Channel, ChannelDef, Notifier } from "./types";
 
 export type { AlertPayload, Channel, ChannelContext, ChannelDef, Notifier } from "./types";
 export { NtfyChannel } from "./ntfy";
 export { SlackChannel } from "./slack";
+export { TelegramChannel } from "./telegram";
 
 /** Every channel the app knows, in the order alerts fan out and settings render. */
-export const CHANNELS: ChannelDef[] = [slack, ntfy];
+export const CHANNELS: ChannelDef[] = [slack, ntfy, telegram];
 
 export class NullNotifier implements Notifier {
   async send(): Promise<void> {}

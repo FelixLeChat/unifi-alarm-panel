@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ntfyFields } from "./notifiers/ntfy";
 import { slackFields } from "./notifiers/slack";
+import { telegramFields } from "./notifiers/telegram";
 import { decryptSecret, encryptSecret, secretsKeyStatus } from "./secrets";
 import { bool, httpUrl, secret, SETTINGS_GROUPS, text, type FieldDef, type SettingsGroup } from "./setting-schemas";
 
@@ -54,6 +55,7 @@ export const SETTINGS = {
   // Each notification channel declares its own fields (lib/services/notifiers/).
   ...slackFields,
   ...ntfyFields,
+  ...telegramFields,
 
   weatherLat: { group: "panel", schema: numberIn(-90, 90), env: "PANEL_WEATHER_LAT" },
   weatherLon: { group: "panel", schema: numberIn(-180, 180), env: "PANEL_WEATHER_LON" },

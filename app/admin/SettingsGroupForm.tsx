@@ -80,6 +80,14 @@ export const GROUP_SECTIONS: Record<SettingsGroup, SectionSpec[]> = {
         { key: "ntfyTopic", label: "Topic" },
       ],
     },
+    {
+      title: "Telegram",
+      description: "Alerts go out through api.telegram.org, the one cloud host a channel can add. With a snapshot, the text is its caption.",
+      fields: [
+        { key: "telegramBotToken", label: "Bot token", kind: "secret", hint: "From @BotFather." },
+        { key: "telegramChatId", label: "Chat ID", placeholder: "-1001234567890", hint: "A person, group or channel the bot can write to." },
+      ],
+    },
   ],
   panel: [
     {
