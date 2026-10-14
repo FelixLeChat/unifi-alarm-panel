@@ -1,6 +1,7 @@
 /**
  * Regenerates the README screenshots in docs/screenshots/ against a throwaway
- * instance with demo data (fake names, fake PINs, no UniFi console).
+ * instance with demo data (fake names, fake PINs, no UniFi console). Needs
+ * internet for the kiosk weather strip (Open-Meteo).
  *
  *   rm -f data/shot.db*
  *   pnpm build
@@ -40,7 +41,15 @@ await admin("PUT", "/api/admin/settings", {
 });
 await admin("PUT", "/api/admin/settings", {
   group: "panel",
-  values: { audioEnabled: "false", quietHoursStart: "0", quietHoursEnd: "0", helpText: "Problem? Call Sam at 555-0100" },
+  // Weather is live from Open-Meteo, so this needs internet; any city works.
+  values: {
+    audioEnabled: "false",
+    quietHoursStart: "0",
+    quietHoursEnd: "0",
+    helpText: "Problem? Call Sam at 555-0100",
+    weatherLat: "45.50",
+    weatherLon: "-73.57",
+  },
 });
 await admin("POST", "/api/admin/pins", { label: "Alex Martin", pin: "1234", isDuress: false });
 await admin("POST", "/api/admin/pins", { label: "Sam Lee", pin: "5678", isDuress: false });
