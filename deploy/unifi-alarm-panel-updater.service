@@ -1,0 +1,17 @@
+# Install alongside unifi-alarm-panel-updater.timer:
+#   sudo cp deploy/unifi-alarm-panel-updater.* /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now unifi-alarm-panel-updater.timer
+#
+# Runs as root (deliberately — unifi-alarm-panel itself is hardened with
+# NoNewPrivileges/ProtectSystem=strict and no sudo, so the actual
+# download+symlink-swap+restart for a self-triggered update happens here
+# instead). The app can only ask for an update by writing a marker file into
+# its own state dir (see app/api/admin/update); it can never apply one itself.
+[Unit]
+Description=Apply a pending unifi-alarm-panel update
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/unifi-alarm-panel
+ExecStart=/opt/unifi-alarm-panel/deploy/apply-pending-update.sh

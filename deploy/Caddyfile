@@ -1,0 +1,13 @@
+# Optional: LAN-only TLS in front of the app. Not required — the panel and
+# UniFi's webhook both work fine over plain HTTP on a trusted LAN — but if
+# you want HTTPS for the iPad/admin UI, install Caddy as a normal system
+# package (`apt install caddy` on Debian/Ubuntu; it ships its own systemd
+# unit) and drop this in as /etc/caddy/Caddyfile. No Docker involved.
+#
+# `tls internal` issues a locally-trusted self-signed cert — fine for a LAN
+# tool. Swap in your own cert/domain if you have one.
+
+alarm.internal.example {
+	tls internal
+	reverse_proxy localhost:3000
+}

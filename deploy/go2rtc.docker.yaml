@@ -1,0 +1,14 @@
+# go2rtc config for docker-compose.yml. Same as deploy/go2rtc.yaml except the
+# API listens on the compose network (the app container reaches it at
+# http://go2rtc:1984). No port is published, so it stays off the LAN.
+
+api:
+  listen: ":1984"
+
+rtsp:
+  # Loopback inside the go2rtc container: the MJPEG producer's ffmpeg pulls
+  # the stream back from here (see the comment in deploy/go2rtc.yaml).
+  listen: "127.0.0.1:8554"
+
+webrtc:
+  listen: ""

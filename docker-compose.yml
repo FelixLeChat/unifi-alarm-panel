@@ -1,0 +1,28 @@
+# docker compose up -d, then open http://<this-host>:3000/admin and finish the setup wizard.
+# Put ADMIN_TOKEN, WEBHOOK_SHARED_SECRET and SECRETS_KEY in .env next to this file (see .env.example).
+# One app container only: the alarm's timers live in that process, so never scale it.
+services:
+  app:
+    image: ghcr.io/felixlechat/unifi-alarm-panel:latest
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Seeded into the settings once, on first boot. Change it later in Settings > UniFi console.
+      GO2RTC_API_BASE_URL: http://go2rtc:1984
+    ports:
+      - "3000:3000"
+    volumes:
+      - data:/data
+    depends_on:
+      - go2rtc
+
+  # Live camera view in the admin. Reached only by the app over the compose network: no ports published.
+  go2rtc:
+    image: alexxit/go2rtc:latest
+    restart: unless-stopped
+    volumes:
+      - ./deploy/go2rtc.docker.yaml:/config/go2rtc.yaml:ro
+
+volumes:
+  data:
