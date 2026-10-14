@@ -31,6 +31,7 @@ Console, notification and panel settings are edited in the admin UI and stored i
 
 - PINs are hashed (argon2), never logged, never returned by any API.
 - A duress PIN disarms normally and must never be distinguishable from a normal PIN in the UI, an API response, the panel sounds or the audit log.
+- PIN attempts share one lockout bucket (`PIN_BUCKET` in `lib/engine/index.ts`), never one per source: the source is `X-Forwarded-For`, which the caller controls, and Next only fills it in when it's absent. Don't make PIN lockout per-source again.
 - The admin-token and webhook-secret guards share the PIN rate-limit and lockout service, each in its own namespace. Don't let a fix to one remove throttling from the others, and keep caller-controlled values (like `X-Forwarded-For`) out of another namespace's key.
 - Stored credentials (secret fields in `SETTINGS`) are AES-256-GCM encrypted with `SECRETS_KEY`, never returned by any API (the UI gets `{ set, readable }`), never logged, and the audit log records changed field names only.
 - Never set `NODE_TLS_REJECT_UNAUTHORIZED=0`. Use the CA certificate or "skip certificate check" console settings, which only apply to the Protect client.
@@ -40,6 +41,7 @@ Console, notification and panel settings are edited in the admin UI and stored i
 - The private `/api/v2/alarms/*` endpoint (arm-state sync) needs a SuperAdmin account. A Protect-scoped admin gets `403`. The legacy `armMode` field is a confirmed dead end.
 - go2rtc's MJPEG output needs a real `ffmpeg` on the box and go2rtc's own `rtsp: listen:` on loopback. ffmpeg pulls the stream back from go2rtc, not from the camera. See the comment in `deploy/go2rtc.yaml`.
 - go2rtc's stream registry is in memory and doesn't survive a go2rtc restart. Re-saving a sensor in the admin UI re-registers it.
+- A stream name is spliced into go2rtc's `ffmpeg:<name>#video=mjpeg` source, and `#` starts go2rtc options (including raw ffmpeg arguments). `isSafeStreamName` in `lib/services/go2rtc-client.ts` gates every registration; keep camera and sensor IDs going through it.
 - The Protect Integration API's camera schema has no `mac` field. Camera-to-sensor matching is config-driven (`cameraTriggerEventTypes` in `/api/admin/config`), not inferred.
 - `sensorOpenEventTypes` / `sensorClosedEventTypes` have no defaults. The door check on arming does nothing until they hold real values from the console.
 - `instrumentation.ts` has a bundle-isolation gotcha. Shared state that must be visible across bundles sits on `globalThis` (see `__uapStreamState`).

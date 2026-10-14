@@ -11,7 +11,8 @@ Include what you found, how to reproduce it, and what an attacker could do with 
 - **PINs** are hashed with argon2, never logged and never returned by any API.
 - **A duress PIN** disarms normally and is indistinguishable from a normal PIN in the UI, the API, the panel sounds and the audit log.
 - **Stored credentials** (Protect API key, SuperAdmin password, Slack webhook and token) are encrypted with AES-256-GCM using `SECRETS_KEY`, never returned by any API, and the audit log records only which fields changed. A copy of the database or a backup is useless without `SECRETS_KEY`.
-- **The admin token, webhook secret and PINs** share one rate-limit and lockout service, each in its own namespace.
+- **PIN attempts** share one lockout count across every caller, so forging `X-Forwarded-For` doesn't buy more guesses. Five wrong PINs lock the keypad and raise the alarm.
+- **The admin token and webhook secret** have their own per-source lockouts in the same rate-limit service, each in its own namespace.
 
 ## Running it safely
 

@@ -321,111 +321,84 @@ test.describe("panel kiosk", () => {
     expect(bodyText.toLowerCase()).not.toContain("duress");
   });
 
-  test("5 wrong PINs locks the panel out, triggers the alarm, and rejects even the correct PIN while locked", async ({
-    page,
-    request,
-  }) => {
-    // A synthetic, unique-per-run x-forwarded-for isolates this test's
-    // rate-limit bucket (see lib/auth/client-key.ts) from every other
-    // test's disarm attempts sharing this same server/worker — a real
-    // 5-minute lockout on a shared key would break every later test that
-    // needs to disarm via PIN. Unique rather than a fixed literal so a
-    // locally reused webServer (playwright.config's reuseExistingServer)
-    // can't carry a stale, already-part-way-to-locked-out bucket in from a
-    // previous run of this same test.
-    const lockoutKey = `e2e-lockout-test-${Date.now()}`;
+  // Every PIN attempt shares one lockout bucket, whatever X-Forwarded-For says
+  // (see PIN_BUCKET in lib/engine/index.ts), so these tests can't isolate
+  // themselves with a made-up source. Instead the lockout is shortened to a
+  // few seconds, then waited out and the alarm silenced, so nothing after
+  // them inherits a locked keypad or an ALARM.
+  test.describe("PIN lockout", () => {
+    const LOCKOUT_SEC = 3;
+    const setLockout = (request: import("@playwright/test").APIRequestContext, sec: number) =>
+      request.put("/api/admin/config", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { config: { rateLimitLockoutSec: sec } } });
 
-    // The 5 setup failures go through the API directly, not rapid real-UI
-    // clicks: submitPin() in panel.js doesn't disable the button while a
-    // request is in flight, so back-to-back clicks can race and overlap in
-    // ways that make exactly-5-distinct-failures non-deterministic to drive
-    // through the DOM. request.post() is fully sequential and awaited, so
-    // this reliably lands on exactly 5. The real UI is still what's under
-    // test below — it's used for the actual lockout-is-visible assertion.
-    for (let i = 0; i < 4; i++) {
-      const res = await request.post("/api/disarm", { headers: { "x-forwarded-for": lockoutKey }, data: { pin: "0000" } });
-      expect(res.status()).toBe(401);
-    }
-    // The 5th wrong PIN is the one that tips this bucket into lockout — the
-    // route reports 429 for it too (not 401, since there's no next attempt
-    // left to count down to), and it also triggers a real ALARM on the
-    // shared engine (see handlePinLockout in lib/state/machine.ts),
-    // regardless of whatever state the system happened to be in.
-    const fifth = await request.post("/api/disarm", { headers: { "x-forwarded-for": lockoutKey }, data: { pin: "0000" } });
-    expect(fifth.status()).toBe(429);
-
-    // Silence the alarm this just caused and get back to a clean disarmed
-    // baseline before driving the rest of this test through the real UI —
-    // only the synthetic lockoutKey is locked out, so the real PIN still
-    // works here.
-    await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
-
-    await page.route("**/api/disarm", async (route) => {
-      await route.continue({ headers: { ...route.request().headers(), "x-forwarded-for": lockoutKey } });
+    test.beforeEach(async ({ request }) => {
+      await setLockout(request, LOCKOUT_SEC);
+      // A correct PIN clears any failures earlier tests left in the shared bucket.
+      await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
     });
 
-    await page.goto("/panel");
-    await armViaConfirm(page);
-    await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
-
-    await typePin(page, "0000");
-    await expect(page.locator("#message")).toHaveText("Too many attempts. Alarm triggered. Locked out for a few minutes.");
-
-    // Even the *correct* PIN is rejected while locked out — not just wrong ones.
-    await typePin(page, STANDARD_PIN);
-    await expect(page.locator("#message")).toHaveText("Too many attempts. Alarm triggered. Locked out for a few minutes.");
-  });
-
-  test("5 wrong PINs typed at the real keypad count down and drive the panel live into ALARM", async ({
-    page,
-    request,
-  }) => {
-    // The previous test leaves the system armed and locked out under its
-    // own synthetic key (even the correct PIN is rejected while locked —
-    // that's the point of it), so the real PIN via a plain, unrouted
-    // request is what actually gets this test back to a disarmed baseline;
-    // armViaConfirm below only works from DISARMED.
-    await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
-
-    // Own synthetic key (see the test above) so this doesn't share a bucket
-    // with anything else — and being exclusively this test's, the exact
-    // remaining-attempts count on each attempt is asserted precisely, not
-    // just pattern-matched.
-    const lockoutKey = `e2e-lockout-live-${Date.now()}`;
-    await page.route("**/api/disarm", async (route) => {
-      await route.continue({ headers: { ...route.request().headers(), "x-forwarded-for": lockoutKey } });
+    test.afterEach(async ({ request }) => {
+      await new Promise((r) => setTimeout(r, (LOCKOUT_SEC + 0.5) * 1000));
+      await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
+      await setLockout(request, 300);
     });
 
-    await page.goto("/panel");
-    await armViaConfirm(page);
-    await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
+    test("5 wrong PINs locks the panel out, triggers the alarm, and rejects even the correct PIN while locked", async ({
+      page,
+      request,
+    }) => {
+      await page.goto("/panel");
+      await armViaConfirm(page);
+      await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
 
-    for (let remaining = 4; remaining >= 1; remaining--) {
+      // The 5 failures go through the API, not rapid real-UI clicks:
+      // submitPin() in panel.js doesn't disable the button while a request is
+      // in flight, so back-to-back clicks can race. Each claims a different
+      // source, which used to buy a fresh bucket per request and no lockout.
+      for (let i = 0; i < 4; i++) {
+        const res = await request.post("/api/disarm", { headers: { "x-forwarded-for": `10.66.0.${i}` }, data: { pin: "0000" } });
+        expect(res.status()).toBe(401);
+      }
+      // The 5th tips the shared bucket into lockout: 429, and a real ALARM (see handlePinLockout in lib/state/machine.ts).
+      const fifth = await request.post("/api/disarm", { headers: { "x-forwarded-for": "10.66.0.4" }, data: { pin: "0000" } });
+      expect(fifth.status()).toBe(429);
+
+      // At the real keypad, even the *correct* PIN is rejected while locked
+      // out. Checked on the keypad's own request, not the message line: the
+      // system is already in ALARM, so the ~2s status poll overwrites the
+      // lockout message with "Enter PIN to silence and disarm".
+      await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
+      const rejected = page.waitForResponse((res) => res.url().endsWith("/api/disarm"));
+      await typePin(page, STANDARD_PIN);
+      expect((await rejected).status()).toBe(429);
+      await expect(page.locator("#banner-label")).toHaveText("ALARM");
+    });
+
+    test("5 wrong PINs typed at the real keypad count down and drive the panel live into ALARM", async ({ page }) => {
+      await page.goto("/panel");
+      await armViaConfirm(page);
+      await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
+
+      for (let remaining = 4; remaining >= 1; remaining--) {
+        await typePin(page, "0000");
+        await expect(page.locator("#message")).toHaveText(
+          remaining === 1
+            ? "LAST TRY: one more wrong PIN triggers the alarm"
+            : `Incorrect PIN. ${remaining} tries remaining`,
+        );
+      }
+
+      // The 5th wrong PIN tips the bucket into lockout, through the real
+      // keypad this time, and the panel itself shows the alarm it triggered.
+      // Not asserting the lockout response's own message text here: the
+      // panel's ~2s status poll (see pollStatus/applyStatus in panel.js)
+      // notices ALARM right on its heels and overwrites it with the generic
+      // "Enter PIN to silence and disarm" — a harmless race between two
+      // legitimate messages. The banner settling into ALARM is the non-racy check.
       await typePin(page, "0000");
-      await expect(page.locator("#message")).toHaveText(
-        remaining === 1
-          ? "LAST TRY: one more wrong PIN triggers the alarm"
-          : `Incorrect PIN. ${remaining} tries remaining`,
-      );
-    }
-
-    // The 5th wrong PIN ties the bucket into lockout — driven through the
-    // real keypad this time, not the API — and the panel itself, not just
-    // the response, shows the alarm it triggered. Not asserting the
-    // lockout response's own message text here: the panel's regular ~2s
-    // status poll (see pollStatus/applyStatus in panel.js) notices the
-    // state change to ALARM right on its heels and overwrites it with the
-    // generic "Enter PIN to silence and disarm" — a real, harmless race
-    // between two legitimate messages, not a bug. The banner settling into
-    // ALARM is the actual, non-racy thing this test is checking.
-    await typePin(page, "0000");
-    await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
-    await expect(page.locator("#status-banner")).toHaveClass(/state-alarm/);
-
-    // Silence it via the real PIN (unaffected — only the synthetic
-    // lockoutKey above is locked out) so this test doesn't strand the
-    // shared system in ALARM for whatever runs after it.
-    await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
+      await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
+      await expect(page.locator("#status-banner")).toHaveClass(/state-alarm/);
+    });
   });
 
   test("landscape orientation swaps to the two-column layout", async ({ page }) => {

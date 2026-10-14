@@ -230,7 +230,7 @@ The kiosk plays short WAVs from `public/sounds/`. They are rendered by `python3 
 
 ## PIN lockout
 
-Wrong PINs show the remaining attempts. The attempt that tips into lockout also raises a real `ALARM`, whatever the arm state. Repeated wrong PINs at the physical keypad are the one signal here that is alarming on their own. PIN entry auto-submits on the 4th digit.
+Wrong PINs show the remaining attempts. The count is shared by every device that enters PINs (the kiosk, the admin's disarm dialog, the API), not kept per caller: the caller's address comes from `X-Forwarded-For`, which a client can forge, so a per-caller count could be dodged by changing that header on every try. The attempt that tips into lockout also raises a real `ALARM`, whatever the arm state. Repeated wrong PINs at the physical keypad are the one signal here that is alarming on their own. PIN entry auto-submits on the 4th digit.
 
 ## Deployment without Docker (systemd)
 

@@ -40,7 +40,7 @@ export interface ArmResult {
 export interface DisarmResult {
   ok: boolean;
   lockedOut?: boolean;
-  /** Only set on a wrong-PIN failure — how many more attempts remain before this source locks out (and, per PIN_LOCKOUT, triggers the alarm). Absent on success or once already locked out (there's nothing left to count down). */
+  /** Only set on a wrong-PIN failure — how many more attempts remain before the keypad locks out (and, per PIN_LOCKOUT, triggers the alarm). Absent on success or once already locked out (there's nothing left to count down). */
   remainingAttempts?: number;
 }
 
@@ -109,13 +109,15 @@ function serializePinAttempt<T>(fn: () => Promise<T>): Promise<T> {
   return result;
 }
 
-// Every rate-limit bucket key is "<namespace>:<source>". The PIN bucket was
-// previously the bare source, which let a caller aim failures at another
-// guard's namespace by spoofing X-Forwarded-For (lib/auth/client-key.ts also
-// neutralizes ":" now, so this is belt and braces).
-function pinBucket(source: string): string {
-  return `pin:${source}`;
-}
+// One PIN bucket for every caller, not one per source. The source comes from
+// X-Forwarded-For, which the caller controls (Next only fills it in when the
+// request has none), so a per-source bucket let anyone on the LAN rotate the
+// header and try all 10,000 PINs without ever hitting the lockout. Shared, any
+// five wrong PINs lock the keypad and raise ALARM (PIN_LOCKOUT), which is the
+// point: wrong PINs are the one alarming signal here. The source is still
+// audited. Other guards keep per-source buckets: their secrets are long and
+// random, so rotating sources buys nothing there.
+const PIN_BUCKET = "pin:all";
 
 /**
  * Owns the timers and persistence around the pure state machine. One
@@ -390,7 +392,7 @@ export class AlarmEngine {
   }
 
   private async armAttempt(pin: string, rateLimitKey: string, force: boolean): Promise<ArmResult> {
-    const bucket = pinBucket(rateLimitKey);
+    const bucket = PIN_BUCKET;
     if (isLockedOut(bucket)) {
       recordAudit(this.db, "arm_locked_out", { detail: { source: rateLimitKey } });
       return { ok: false, lockedOut: true };
@@ -488,7 +490,7 @@ export class AlarmEngine {
   }
 
   private async disarmAttempt(pin: string, rateLimitKey: string): Promise<DisarmResult> {
-    const bucket = pinBucket(rateLimitKey);
+    const bucket = PIN_BUCKET;
     if (isLockedOut(bucket)) {
       recordAudit(this.db, "disarm_locked_out", { detail: { source: rateLimitKey } });
       return { ok: false, lockedOut: true };

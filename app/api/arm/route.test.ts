@@ -6,6 +6,7 @@ import { upsertSensor } from "@/lib/services/sensors";
 import { POST } from "./route";
 
 beforeEach(() => {
+  delete globalThis.__uapRateLimitBuckets;
   process.env.DATABASE_PATH = ":memory:";
   closeDb();
   delete globalThis.__uapEngine;
