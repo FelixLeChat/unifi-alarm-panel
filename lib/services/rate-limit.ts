@@ -68,7 +68,14 @@ function getBuckets(): Map<string, Bucket> {
 export function isLockedOut(key: string): boolean {
   const buckets = getBuckets();
   const bucket = buckets.get(key);
-  if (!bucket?.lockedUntil) return false;
+  if (!bucket) return false;
+  if (!bucket.lockedUntil) {
+    // Failures that aged out of the window are dropped here, on read, not
+    // only on the next failure: otherwise a later, longer window would bring
+    // them back into the count.
+    if (Date.now() - bucket.firstFailAt > getWindowMs()) buckets.delete(key);
+    return false;
+  }
   if (Date.now() >= bucket.lockedUntil) {
     buckets.delete(key);
     return false;

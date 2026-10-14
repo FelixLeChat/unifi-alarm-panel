@@ -343,6 +343,8 @@ test.describe("panel kiosk", () => {
       // A short window first, so earlier tests' wrong PINs age out...
       await setLimits(request, SHORT_SEC, SHORT_SEC);
       await waitOut();
+      // Any PIN attempt reads the bucket, which drops the aged-out failures (see isLockedOut).
+      await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
       // ...then a long one, so this test's own five tries all count however slowly they're typed.
       await setLimits(request, 60, SHORT_SEC);
     });
