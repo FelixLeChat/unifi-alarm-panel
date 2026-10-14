@@ -1,9 +1,12 @@
 /**
  * Regenerates the README screenshots in docs/screenshots/ against a throwaway
- * instance with demo data (fake names, fake PINs, no UniFi console). Needs
- * internet for the kiosk weather strip (Open-Meteo).
+ * instance with demo data (fake names, fake PINs, the fake console from
+ * scripts/mock-protect-server.ts). Needs internet for the kiosk weather strip
+ * (Open-Meteo).
  *
  *   rm -f data/shot.db*
+ *   pnpm protect:mock &     # the setup wizard's "Test connection" runs against it
+ *   docker run --rm -d --name shot-go2rtc -p 127.0.0.1:1984:1984 alexxit/go2rtc   # so the go2rtc check passes too
  *   pnpm build
  *   echo v1.1.0 > VERSION   # the panel footer shows it; "dev" otherwise (delete the file after)
  *   PORT=3188 DATABASE_PATH=./data/shot.db ADMIN_TOKEN=t WEBHOOK_SHARED_SECRET=s \
@@ -16,6 +19,7 @@ const BASE = process.env.SHOT_BASE ?? "http://localhost:3188";
 const TOKEN = process.env.SHOT_ADMIN_TOKEN ?? "t";
 const SECRET = process.env.SHOT_WEBHOOK_SECRET ?? "s";
 const OUT = "docs/screenshots";
+const MOCK_CONSOLE = process.env.SHOT_MOCK_CONSOLE ?? "http://localhost:8089";
 
 const admin = (method: string, path: string, body?: unknown) =>
   fetch(BASE + path, { method, headers: { "x-admin-token": TOKEN, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
@@ -34,10 +38,26 @@ await admin("PUT", "/api/admin/config", {
     { unifiId: "lab", name: "Lab Motion", mode: "instant", sensorType: "motion" },
   ],
 });
-// A configured console (unreachable on purpose) so the admin opens on Overview, not the setup wizard.
+const browser = await chromium.launch();
+
+// First run: no console yet, so /admin opens the setup wizard. Fill the console step and test it.
+const wizard = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await wizard.goto(`${BASE}/admin`);
+await wizard.locator("#admin-token").fill(TOKEN);
+await wizard.getByRole("button", { name: "Enter" }).click();
+await wizard.getByRole("button", { name: "Continue" }).click();
+await wizard.getByLabel("Console URL").fill(MOCK_CONSOLE);
+await wizard.getByLabel("Protect API key").fill("demo-key");
+await wizard.getByRole("button", { name: "Test connection" }).click();
+await wizard.getByText("Protect Integration API").waitFor();
+await sleep(1000);
+await wizard.screenshot({ path: `${OUT}/admin-setup-wizard.png`, fullPage: true });
+await wizard.close();
+
+// From here on the console is configured, so the admin opens on Overview.
 await admin("PUT", "/api/admin/settings", {
   group: "console",
-  values: { protectApiBaseUrl: "https://192.0.2.10", protectApiKey: "demo-key", protectDefaultCameraId: "cam-lobby" },
+  values: { protectApiBaseUrl: MOCK_CONSOLE, protectApiKey: "demo-key" },
 });
 await admin("PUT", "/api/admin/settings", {
   group: "panel",
@@ -56,7 +76,6 @@ await admin("POST", "/api/admin/pins", { label: "Sam Lee", pin: "5678", isDuress
 await hook("front", "close");
 await hook("back", "close");
 
-const browser = await chromium.launch();
 const panel = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const shot = async (page: typeof panel, name: string) => {
   await sleep(2500);

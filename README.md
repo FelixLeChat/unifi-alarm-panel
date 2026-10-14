@@ -28,7 +28,11 @@ The admin UI (`/admin`):
 | --- | --- |
 | ![Admin sensors screen](docs/screenshots/admin-sensors.png) | ![Admin settings, UniFi console section](docs/screenshots/admin-settings.png) |
 
-Demo data, regenerated with `scripts/screenshots.mts` (the header of that file has the steps).
+First run: the setup wizard tests the console connection before you move on.
+
+![Setup wizard, UniFi console step with the connection test results](docs/screenshots/admin-setup-wizard.png)
+
+Demo data against the fake console from `pnpm protect:mock`, regenerated with `scripts/screenshots.mts` (the header of that file has the steps).
 
 ## The one design decision to understand first
 
