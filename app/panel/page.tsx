@@ -167,11 +167,10 @@ export default function PanelPage() {
               <svg className="forecast-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
                 <path id="forecast-icon-path" d="" />
               </svg>
-              <div className="forecast-now-text">
-                <span id="forecast-temp" className="forecast-temp" />
-                <span id="forecast-condition" className="forecast-condition" />
-              </div>
+              <span id="forecast-temp" className="forecast-temp" />
             </div>
+            {/* Own line, centred like the H/L line below, so both share the block's axis. */}
+            <div id="forecast-condition" className="forecast-condition" />
             <div className="forecast-hilo">
               H <span id="forecast-hi" />° · L <span id="forecast-lo" />°
             </div>

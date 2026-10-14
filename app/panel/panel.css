@@ -514,24 +514,20 @@ button {
   color: var(--panel-gray-2);
 }
 
-.forecast-now-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
 .forecast-temp {
   font: 400 3.5rem/1 var(--panel-font-display);
 }
 
 .forecast-condition {
-  margin-top: 4px;
+  margin-top: 6px;
+  text-align: center;
   font: 400 0.875rem var(--panel-font-sans);
   color: var(--panel-gray-2);
 }
 
 .forecast-hilo {
-  margin-top: 10px;
+  margin-top: 4px;
+  text-align: center;
   font: 400 0.875rem var(--panel-font-sans);
   color: var(--panel-gray-2);
 }
