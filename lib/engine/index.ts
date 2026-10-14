@@ -5,7 +5,7 @@ import { recordAudit } from "@/lib/services/audit";
 import { getConfigValue, getDelays, getExternalArmSyncDelaySec, isPanelTestMode } from "@/lib/services/config";
 import { getNotifier, type Notifier } from "@/lib/services/notifier";
 import { verifyPin } from "@/lib/services/pins";
-import { getRemainingAttempts, isLockedOut, recordFailure, recordSuccess } from "@/lib/services/rate-limit";
+import { getRemainingAttempts, isLockedOut, recordFailure } from "@/lib/services/rate-limit";
 import { getProtectClient, type ProtectClient } from "@/lib/services/protect-client";
 import { getSensor, listDoorStatuses, listOpenGatingSensors } from "@/lib/services/sensors";
 import { getSetting } from "@/lib/services/settings";
@@ -117,6 +117,11 @@ function serializePinAttempt<T>(fn: () => Promise<T>): Promise<T> {
 // point: wrong PINs are the one alarming signal here. The source is still
 // audited. Other guards keep per-source buckets: their secrets are long and
 // random, so rotating sources buys nothing there.
+//
+// A correct PIN does not clear this bucket: shared, a reset on success would
+// wipe an attacker's failures every time someone legitimately disarmed,
+// giving them four silent guesses per disarm forever. Failures only age out
+// with rateLimitWindowSec.
 const PIN_BUCKET = "pin:all";
 
 /**
@@ -403,7 +408,6 @@ export class AlarmEngine {
       recordAudit(this.db, "arm_failed_invalid_pin", { detail: { source: rateLimitKey } });
       return { ok: false };
     }
-    recordSuccess(bucket);
 
     const openSensors = this.getOpenGatingSensors();
     if (openSensors.length > 0) {
@@ -509,7 +513,6 @@ export class AlarmEngine {
       }
       return { ok: false, remainingAttempts: getRemainingAttempts(bucket) };
     }
-    recordSuccess(bucket);
     this.dispatch({ type: "DISARM", now: Date.now(), duress: verified.isDuress ?? false }, verified.label);
     return { ok: true };
   }

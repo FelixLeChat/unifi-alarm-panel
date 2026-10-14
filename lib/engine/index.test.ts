@@ -363,6 +363,18 @@ describe("AlarmEngine", () => {
     expect(engine.getStatus().state).toBe("DISARMED");
   });
 
+  it("a legitimate PIN in between doesn't reset an attacker's failures", async () => {
+    await createPin(db, "Alex", "1234");
+    const engine = new AlarmEngine(db);
+
+    for (let i = 0; i < 4; i++) await engine.disarm("0000", "attacker");
+    // Someone disarms normally at the kiosk.
+    expect((await engine.disarm("1234", "kiosk")).ok).toBe(true);
+    // The attacker's next wrong PIN is still the 5th, so it locks out instead of starting a fresh count.
+    const fifth = await engine.disarm("0000", "attacker");
+    expect(fifth.lockedOut).toBe(true);
+  });
+
   it("an ALARM from a sensor with a mapped camera attaches its snapshot and live-view link", async () => {
     await createPin(db, "Alex", "1234");
     upsertSensor(db, "back-door", "Back Door", "instant", "cam-1");

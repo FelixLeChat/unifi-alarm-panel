@@ -322,25 +322,32 @@ test.describe("panel kiosk", () => {
   });
 
   // Every PIN attempt shares one lockout bucket, whatever X-Forwarded-For says
-  // (see PIN_BUCKET in lib/engine/index.ts), so these tests can't isolate
-  // themselves with a made-up source. Instead the lockout is shortened to a
-  // few seconds, then waited out and the alarm silenced, so nothing after
-  // them inherits a locked keypad or an ALARM.
+  // (see PIN_BUCKET in lib/engine/index.ts), and a correct PIN doesn't clear
+  // it, so these tests can't isolate themselves. Instead the window and the
+  // lockout are shortened to a few seconds and waited out on both sides, so
+  // these start from a clean count and nothing after them inherits a locked
+  // keypad or an ALARM.
   test.describe("PIN lockout", () => {
-    const LOCKOUT_SEC = 3;
-    const setLockout = (request: import("@playwright/test").APIRequestContext, sec: number) =>
-      request.put("/api/admin/config", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { config: { rateLimitLockoutSec: sec } } });
+    const SHORT_SEC = 3;
+    const setLimits = (request: import("@playwright/test").APIRequestContext, windowSec: number, lockoutSec: number) =>
+      request.put("/api/admin/config", {
+        headers: { "x-admin-token": ADMIN_TOKEN },
+        data: { config: { rateLimitWindowSec: windowSec, rateLimitLockoutSec: lockoutSec } },
+      });
+    const waitOut = () => new Promise((r) => setTimeout(r, (SHORT_SEC + 0.5) * 1000));
 
     test.beforeEach(async ({ request }) => {
-      await setLockout(request, LOCKOUT_SEC);
-      // A correct PIN clears any failures earlier tests left in the shared bucket.
-      await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
+      // A short window first, so earlier tests' wrong PINs age out...
+      await setLimits(request, SHORT_SEC, SHORT_SEC);
+      await waitOut();
+      // ...then a long one, so this test's own five tries all count however slowly they're typed.
+      await setLimits(request, 60, SHORT_SEC);
     });
 
     test.afterEach(async ({ request }) => {
-      await new Promise((r) => setTimeout(r, (LOCKOUT_SEC + 0.5) * 1000));
+      await waitOut(); // the lockout expires, which drops the bucket
       await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
-      await setLockout(request, 300);
+      await setLimits(request, 300, 300);
     });
 
     test("5 wrong PINs locks the panel out, triggers the alarm, and rejects even the correct PIN while locked", async ({
