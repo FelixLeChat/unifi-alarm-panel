@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for a pending unifi-alarm-panel update every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=unifi-alarm-panel-updater.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,26 @@
+# go2rtc sidecar config — bridges UniFi Protect's RTSPS camera feeds into the
+# admin UI's live preview (see lib/services/go2rtc-client.ts and
+# app/api/admin/cameras/live/route.ts). Streams aren't listed here — the app
+# registers/unregisters them at runtime via go2rtc's own API as sensors are
+# saved with an RTSPS URL on the Sensors admin screen.
+#
+# Install: sudo cp deploy/go2rtc.yaml /etc/go2rtc.yaml
+# Then see deploy/install-go2rtc.sh and deploy/unifi-alarm-panel-go2rtc.service.
+
+api:
+  # Localhost only — app/api/admin/cameras/live proxies this for the browser;
+  # go2rtc itself has no auth and must never be reachable off this box.
+  listen: "127.0.0.1:1984"
+
+rtsp:
+  # Localhost only, but NOT disabled: the MJPEG producer this app registers
+  # (ffmpeg:{name}#video=mjpeg — see lib/services/go2rtc-client.ts) works by
+  # spawning ffmpeg to pull the stream back from go2rtc's OWN RTSP server on
+  # loopback, not from the camera directly. Disabling this (listen: "", the
+  # original value here) breaks live view with a confusing
+  # "Port missing in uri" error from ffmpeg — confirmed against a real
+  # deploy. Genuinely unused only if you never register an MJPEG producer.
+  listen: "127.0.0.1:8554"
+
+webrtc:
+  listen: "" # actually unused — this app only ever proxies MJPEG, never WebRTC

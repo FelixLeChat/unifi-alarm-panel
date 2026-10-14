@@ -1,0 +1,39 @@
+# deps
+node_modules/
+
+# next
+.next/
+out/
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+/ufp.json
+
+# db
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/
+
+# misc
+.DS_Store
+*.tsbuildinfo
+*.pem
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+
+# e2e (playwright)
+/playwright-report/
+/test-results/
+/blob-report/
+
+# vitest JSON reporter output (ad-hoc debugging runs)
+/.vitest/
+
+# visual baseline (pnpm shots:baseline)
+/visual-baseline
+/test-results-visual

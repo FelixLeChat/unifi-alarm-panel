@@ -1,0 +1,21 @@
+name: Feature request
+description: Something the alarm should do that it doesn't
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or missing today. A concrete situation beats a general wish.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you'd like to happen. Options are welcome, as a short list.
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: "Does it need new hardware, a new outbound call, or a UniFi behavior we haven't confirmed on a real console?"

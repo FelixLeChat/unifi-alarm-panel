@@ -1,0 +1,37 @@
+# Install: sudo cp deploy/unifi-alarm-panel.service /etc/systemd/system/
+#          sudo systemctl daemon-reload
+#          sudo systemctl enable --now unifi-alarm-panel
+#
+# Assumes:
+#   - /opt/unifi-alarm-panel/current symlinks to the active release, built
+#     and switched into place by deploy/update.sh (releases/<tag>/)
+#   - A dedicated system user/group "uap" (sudo useradd --system --home /opt/unifi-alarm-panel --shell /usr/sbin/nologin uap)
+#   - Secrets in /etc/unifi-alarm-panel.env (chmod 600, owned by uap), copied from .env.example
+#   - DATABASE_PATH in that env file points under /var/lib/unifi-alarm-panel/
+
+[Unit]
+Description=UniFi Alarm Panel
+After=network.target
+
+[Service]
+Type=simple
+User=uap
+Group=uap
+WorkingDirectory=/opt/unifi-alarm-panel/current
+EnvironmentFile=/etc/unifi-alarm-panel.env
+ExecStart=/usr/bin/node server.js
+# always, not on-failure: deploy/update.sh restarts this unit after every
+# release switch, including a clean exit — on-failure would ignore that.
+Restart=always
+RestartSec=5
+
+# Sandboxing — this process only needs its own state directory and the network.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+StateDirectory=unifi-alarm-panel
+ReadWritePaths=/var/lib/unifi-alarm-panel
+
+[Install]
+WantedBy=multi-user.target

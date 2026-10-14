@@ -1,0 +1,29 @@
+# Install: sudo cp deploy/unifi-alarm-panel-go2rtc.service /etc/systemd/system/
+#          sudo systemctl daemon-reload
+#          sudo systemctl enable --now unifi-alarm-panel-go2rtc
+#
+# Assumes:
+#   - go2rtc binary at /usr/local/bin/go2rtc (see deploy/install-go2rtc.sh)
+#   - Config at /etc/go2rtc.yaml (sudo cp deploy/go2rtc.yaml /etc/go2rtc.yaml)
+#   - Runs as the same "uap" system user as unifi-alarm-panel.service (see
+#     deploy/bootstrap.sh) — no shared filesystem access needed, least privilege
+
+[Unit]
+Description=go2rtc (UniFi Protect live camera streaming for UniFi Alarm Panel)
+After=network.target
+
+[Service]
+Type=simple
+User=uap
+Group=uap
+ExecStart=/usr/local/bin/go2rtc -config /etc/go2rtc.yaml
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
