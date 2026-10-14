@@ -1,0 +1,45 @@
+name: Bug report
+description: Something behaves wrong, or an alert fired or didn't fire when it should have
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Panel (kiosk)
+        - Admin UI
+        - Alerts (Slack / ntfy)
+        - Sensors / UniFi intake
+        - Camera streaming (go2rtc)
+        - Deploy / update
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Arm from the panel
+        2. Open the back door
+        3. ...
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: From `GET /api/health`, or the admin footer.
+      placeholder: v1.0.2
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and audit events
+      description: "`sudo journalctl -u unifi-alarm-panel`, the `/api/health` output, or the audit log rows around the time. Remove secrets and PINs."
+      render: shell

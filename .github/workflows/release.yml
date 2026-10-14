@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+
+      - run: ./deploy/build.sh
+
+      - run: tar czf "unifi-alarm-panel-${GITHUB_REF_NAME}.tar.gz" -C .next/standalone .
+
+      # Assumes the tag's GitHub Release already exists (created via the
+      # GitHub UI/API when the tag was cut); --clobber lets a re-run replace
+      # the asset. Falls back to creating the release if it's genuinely missing.
+      - run: |
+          gh release upload "$GITHUB_REF_NAME" "unifi-alarm-panel-${GITHUB_REF_NAME}.tar.gz" --clobber || \
+          gh release create "$GITHUB_REF_NAME" "unifi-alarm-panel-${GITHUB_REF_NAME}.tar.gz" --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Docker image for docker-compose.yml: ghcr.io/<owner>/unifi-alarm-panel:<tag> and :latest, amd64 + arm64.
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/unifi-alarm-panel" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: VERSION=${{ github.ref_name }}
+          tags: |
+            ${{ steps.image.outputs.name }}:${{ github.ref_name }}
+            ${{ steps.image.outputs.name }}:latest
