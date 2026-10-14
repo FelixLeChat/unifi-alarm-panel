@@ -79,6 +79,8 @@ export default function PanelPage() {
         Test mode: siren off
       </div>
 
+      <span className="line-bg" aria-hidden="true" />
+
       <div className="col-left">
         <div className="header">
           <div className="brand">
