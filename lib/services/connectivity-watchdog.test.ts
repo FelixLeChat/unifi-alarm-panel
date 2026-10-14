@@ -16,7 +16,7 @@ vi.mock("@/lib/services/protect-event-stream", () => ({ getStreamStatus: () => g
 
 type SentAlert = { kind: string; message?: string };
 const send = vi.fn<(alert: SentAlert) => Promise<void>>(async () => {});
-vi.mock("@/lib/services/notifier", () => ({ getNotifier: () => ({ send }) }));
+vi.mock("@/lib/services/notifiers", () => ({ getNotifier: () => ({ send }) }));
 
 const checkDeviceHealth = vi.fn(async () => {});
 vi.mock("@/lib/services/protect-device-health", () => ({

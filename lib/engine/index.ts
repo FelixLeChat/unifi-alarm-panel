@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { recordAudit } from "@/lib/services/audit";
 import { getConfigValue, getDelays, getExternalArmSyncDelaySec, isPanelTestMode } from "@/lib/services/config";
-import { getNotifier, type Notifier } from "@/lib/services/notifier";
+import { getNotifier, type Notifier } from "@/lib/services/notifiers";
 import { verifyPin } from "@/lib/services/pins";
 import { getRemainingAttempts, isLockedOut, recordFailure } from "@/lib/services/rate-limit";
 import { getProtectClient, type ProtectClient } from "@/lib/services/protect-client";

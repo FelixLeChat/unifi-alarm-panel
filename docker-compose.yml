@@ -24,5 +24,19 @@ services:
     volumes:
       - ./deploy/go2rtc.docker.yaml:/config/go2rtc.yaml:ro
 
+  # Optional Signal alerts: `docker compose --profile signal up -d`, then link a number (docs/SIGNAL.md).
+  # The app reaches it at http://signal-cli:8080. The container has no login, so it is published on this host's loopback only.
+  signal-cli:
+    profiles: ["signal"]
+    image: bbernhard/signal-cli-rest-api:latest
+    restart: unless-stopped
+    environment:
+      MODE: json-rpc
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - signal-cli:/home/.local/share/signal-cli
+
 volumes:
   data:
+  signal-cli:

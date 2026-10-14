@@ -363,11 +363,12 @@ export interface SettingsCheckResult {
   detail: string;
 }
 
-export async function testSettings(token: string, target: "console" | "notifications"): Promise<SettingsCheckResult[] | null> {
+/** `channel`: test one notification channel (its id, like "telegram") instead of all of them. */
+export async function testSettings(token: string, target: "console" | "notifications", channel?: string): Promise<SettingsCheckResult[] | null> {
   const res = await fetch("/api/admin/settings/test", {
     method: "POST",
     headers: authedHeaders(token),
-    body: JSON.stringify({ target }),
+    body: JSON.stringify({ target, channel }),
   });
   if (!res.ok) return null;
   return ((await res.json()) as { results: SettingsCheckResult[] }).results;

@@ -8,7 +8,7 @@ Self-hosted UniFi-centric alarm system: a Next.js app that is the kiosk PIN pane
 
 ## Outbound calls
 
-LAN-only by design, no cloud services, no telemetry. The only outbound calls are Slack, ntfy (if self-hosted), the local UniFi console, GitHub (update check) and one accepted exception: Open-Meteo for the panel's weather strip, proxied server-side through `GET /api/panel/context` with a ~30 min cache so the kiosk itself never calls out.
+LAN-only by design, no cloud services, no telemetry. The only outbound calls are Slack, ntfy (if self-hosted), the local UniFi console, GitHub (update check), `api.telegram.org` (only when the Telegram channel is set up) and one accepted exception: Open-Meteo for the panel's weather strip, proxied server-side through `GET /api/panel/context` with a ~30 min cache so the kiosk itself never calls out. Signal goes through a self-hosted signal-cli-rest-api container on the LAN, so it adds no host to this list.
 
 ## Runtime model, don't break this
 
@@ -16,7 +16,7 @@ Single long-lived Node process (`output: "standalone"`), one instance, no Edge o
 
 - `lib/state/`: pure alarm state machine, no I/O, fully unit-tested.
 - `lib/engine/`: wires timers, SQLite, notifier and Protect client to the state machine.
-- `lib/services/`: pins, audit, config, settings + secrets, sensors, notifier (Slack/ntfy), Protect client, go2rtc client, rate-limit, and the scheduled jobs (update-check, connectivity-watchdog, protect-alarm-sync, protect-device-health, protect-event-stream, audit-archive, db-backup).
+- `lib/services/`: pins, audit, config, settings + secrets, sensors, notifiers (Slack, ntfy, Telegram, Signal), Protect client, go2rtc client, rate-limit, and the scheduled jobs (update-check, connectivity-watchdog, protect-alarm-sync, protect-device-health, protect-event-stream, audit-archive, db-backup).
 - `app/panel/`: server-rendered kiosk, vanilla JS on purpose (`public/panel.js`), no React or hydration dependency.
 - `app/admin/`: React, eight screens (Overview, Sensors, PINs, Delays, Audit log, Events, Tasks, Settings) and the first-run setup wizard, token-gated by `ADMIN_TOKEN`.
 
@@ -26,6 +26,20 @@ Console, notification and panel settings are edited in the admin UI and stored i
 
 - Read a setting with `getSetting(key)`, never `process.env`. Add a new one to `SETTINGS` with a zod schema, then to `GROUP_SECTIONS` in `app/admin/SettingsGroupForm.tsx`.
 - Every save bumps `getSettingsRevision()`. Long-lived clients (`getProtectClient`, `getNotifier`) compare it and rebuild; the event stream's job compares its own credentials. Don't cache a setting-derived object anywhere else without the same check, or a save won't apply until restart.
+
+## Notification channels
+
+One module per channel in `lib/services/notifiers/` (`slack.ts`, `ntfy.ts`, `telegram.ts`, `signal.ts`), a shared `index.ts` (`getNotifier()`, `CHANNELS`, `listChannels()`), `routing.ts` (alert kinds, per-channel routing) and the `Channel` / `ChannelDef` types in `types.ts`. A channel declares its settings fields (secret ones flagged), `isConfigured()`, `send()` (retry once, never throw) and `test()` (one attempt, throws a readable reason). Routing is two settings per channel, `<id>Enabled` (unset means on) and `<id>AlertKinds` (unset means every kind), so an install from before routing keeps receiving everything.
+
+To add a channel:
+
+1. Create `notifiers/<id>.ts`: export `<id>Fields` (`satisfies Record<string, FieldDef>`, with `<id>Enabled` and `<id>AlertKinds`), a `Channel` class, and a `ChannelDef`.
+2. Add the id to `ChannelId` in `types.ts`, the def to `CHANNELS` in `index.ts`, and `...<id>Fields` to `SETTINGS` in `settings.ts`. A channel module must not import `settings.ts` (it imports the fields), or the module cycle breaks `SETTINGS`.
+3. Add a section with `channel: "<id>"` to the notifications group in `GROUP_SECTIONS` (`app/admin/SettingsGroupForm.tsx`). The card gets the switch, the alert-type checkboxes and the test button from that.
+4. Secrets: flag `secret: true`, and never put one in a log line or error message. Telegram's token is in its URL path, so `telegram.ts` never includes the URL in an error.
+5. Tests with a mocked `fetch`, README Configuration and `.env.example` seed list, and the outbound list above if the channel calls a host that isn't on the LAN.
+
+DURESS goes only to the channels the admin routed it to. Never add a channel that shows or sounds on site.
 
 ## Security-sensitive, don't casually change
 

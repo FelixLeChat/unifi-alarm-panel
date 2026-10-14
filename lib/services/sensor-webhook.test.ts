@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb } from "@/lib/db";
 import { AlarmEngine } from "@/lib/engine";
-import type { Notifier } from "./notifier";
+import type { Notifier } from "./notifiers";
 import { createPin } from "./pins";
 import { handleSensorWebhook } from "./sensor-webhook";
 import { listAudit } from "./audit";

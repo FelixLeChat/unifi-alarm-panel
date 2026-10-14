@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { closeDb } from "@/lib/db";
-import { getNotifier, NullNotifier, SlackNotifier } from "./notifier";
+import { getNotifier, NullNotifier, SlackChannel } from "./notifiers";
 import { getProtectClient, UnifiProtectClient } from "./protect-client";
 import { saveSettings } from "./settings";
 
@@ -32,7 +32,7 @@ describe("settings hot reload", () => {
   it("rebuilds the notifier after a notifications save", () => {
     expect(getNotifier()).toBeInstanceOf(NullNotifier);
     saveSettings("notifications", { slackWebhookUrl: "https://hooks.slack.example/x" });
-    expect(getNotifier()).toBeInstanceOf(SlackNotifier);
+    expect(getNotifier()).toBeInstanceOf(SlackChannel);
     saveSettings("notifications", { slackWebhookUrl: null });
     expect(getNotifier()).toBeInstanceOf(NullNotifier);
   });
