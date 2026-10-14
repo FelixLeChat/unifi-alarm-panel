@@ -56,7 +56,7 @@ export function LoginScreen({ tokenInput, onTokenInputChange, onSubmit, error }:
             </Button>
           </form>
           <p className="m-0 text-xs leading-[1.55] text-muted-foreground">
-            {"LAN only. The token rotates when the controller restarts. Find it in the boot log."}
+            {"LAN only. The token is the ADMIN_TOKEN value in the server's environment (.env, or /etc/unifi-alarm-panel.env on systemd)."}
           </p>
         </Card>
         {host && (
