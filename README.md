@@ -28,6 +28,10 @@ The admin UI (`/admin`):
 | --- | --- |
 | ![Admin sensors screen](docs/screenshots/admin-sensors.png) | ![Admin settings, UniFi console section](docs/screenshots/admin-settings.png) |
 
+Notifications: one card per channel, with the alert types it receives and its own test button.
+
+![Admin settings, notification channels with per-channel alert types](docs/screenshots/admin-notifications.png)
+
 First run: the setup wizard tests the console connection before you move on.
 
 ![Setup wizard, UniFi console step with the connection test results](docs/screenshots/admin-setup-wizard.png)

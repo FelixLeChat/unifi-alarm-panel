@@ -8,7 +8,7 @@
  *   pnpm protect:mock &     # the setup wizard's "Test connection" runs against it
  *   docker run --rm -d --name shot-go2rtc -p 127.0.0.1:1984:1984 alexxit/go2rtc   # so the go2rtc check passes too
  *   pnpm build
- *   echo v1.1.0 > VERSION   # the panel footer shows it; "dev" otherwise (delete the file after)
+ *   echo v1.2.0 > VERSION   # the panel footer shows it; "dev" otherwise (delete the file after)
  *   PORT=3188 DATABASE_PATH=./data/shot.db ADMIN_TOKEN=t WEBHOOK_SHARED_SECRET=s \
  *     SECRETS_KEY=$(openssl rand -base64 32) DEFAULT_EXIT_DELAY_SEC=60 pnpm start &
  *   pnpm exec tsx scripts/screenshots.mts
@@ -116,5 +116,23 @@ for (const [label, file] of [["Sensors", "admin-sensors"], ["Settings", "admin-s
   await adminPage.getByText(label, { exact: true }).click();
   await shot(adminPage, file);
 }
+
+// Settings > Notifications: ntfy without Duress. Fake endpoints, never called.
+await admin("PUT", "/api/admin/settings", {
+  group: "notifications",
+  values: {
+    ntfyUrl: "https://ntfy.example.com",
+    ntfyTopic: "office-alarm",
+    ntfyAlertKinds: "ALARM,HEALTH",
+    signalApiUrl: "http://signal-cli:8080",
+    signalNumber: "+15145550100",
+    signalRecipients: "+15145550101",
+  },
+});
+await adminPage.reload();
+await adminPage.getByRole("heading", { name: "Notifications" }).waitFor();
+await adminPage.getByRole("heading", { name: "ntfy", exact: true }).scrollIntoViewIfNeeded();
+await sleep(500);
+await adminPage.getByRole("heading", { name: "ntfy", exact: true }).locator("xpath=../..").screenshot({ path: `${OUT}/admin-notifications.png` });
 
 await browser.close();
