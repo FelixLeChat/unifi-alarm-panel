@@ -1,12 +1,15 @@
 import { httpUrl, text } from "../setting-schemas";
 import type { FieldDef } from "../setting-schemas";
 import { formatAlertTime } from "./format";
+import { alertKindsSchema, enabledSchema } from "./routing";
 import type { AlertPayload, Channel, ChannelContext, ChannelDef } from "./types";
 import { postOnce, sendWithRetry, TEST_MESSAGE } from "./util";
 
 export const ntfyFields = {
   ntfyUrl: { group: "notifications", schema: httpUrl, env: "NTFY_URL" },
   ntfyTopic: { group: "notifications", schema: text(255), env: "NTFY_TOPIC" },
+  ntfyEnabled: { group: "notifications", schema: enabledSchema },
+  ntfyAlertKinds: { group: "notifications", schema: alertKindsSchema },
 } satisfies Record<string, FieldDef>;
 
 export interface NtfyConfig {
@@ -39,7 +42,8 @@ export class NtfyChannel implements Channel {
         ? "Alarm system health"
         : alert.kind === "DURESS"
           ? "Duress code used"
-          : `Alarm triggered${alert.sensorId ? ` — ${alert.sensorId}` : ""}`;
+          : // Header values must be Latin-1: fetch throws on an em dash, which dropped every ALARM push that named a sensor.
+            `Alarm triggered${alert.sensorId ? ` - ${alert.sensorId}` : ""}`;
     const headers: Record<string, string> = {
       Title: title,
       // A health warning is not a break-in: it must not bypass a phone's

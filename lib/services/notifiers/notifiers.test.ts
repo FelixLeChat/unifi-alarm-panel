@@ -275,6 +275,18 @@ describe("NtfyChannel", () => {
     expect(init.headers.Click).toBe("https://udm.local/protect/dashboard/cam-1");
   });
 
+  it("sends headers fetch accepts, for every kind and a sensor name", async () => {
+    fetchMock.mockResolvedValue({ ok: true });
+    const notifier = ntfy("https://ntfy.internal", "alarms");
+
+    for (const kind of ["ALARM", "DURESS", "HEALTH"] as const) {
+      await notifier.send({ kind, sensorId: "front-door", message: "feed quiet", at: "now", liveViewUrl: "https://udm.local/cam" });
+    }
+
+    for (const [, init] of fetchMock.mock.calls) expect(() => new Headers(init.headers)).not.toThrow();
+    expect(fetchMock.mock.calls[0][1].headers.Title).toBe("Alarm triggered - front-door");
+  });
+
   it("retries once then gives up without throwing", async () => {
     fetchMock.mockRejectedValueOnce(new Error("down")).mockResolvedValueOnce({ ok: true });
     const notifier = ntfy("https://ntfy.internal", "alarms");
