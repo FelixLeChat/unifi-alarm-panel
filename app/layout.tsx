@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   title: "UniFi Alarm Panel",
   description: "Self-hosted alarm panel and PIN keypad for UniFi Protect.",
   manifest: "/site.webmanifest",
-  icons: { icon: { url: "/icon.svg", type: "image/svg+xml" } },
+  icons: {
+    // The SVG follows the browser's light or dark theme on its own (see the media query inside it).
+    icon: { url: "/icon.svg", type: "image/svg+xml" },
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+  },
 };
 
 // Every route in this app is already meant to be dynamic (no I/O should ever

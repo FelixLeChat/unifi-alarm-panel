@@ -100,4 +100,15 @@ describe("rate-limit", () => {
     vi.advanceTimersByTime(2_000);
     expect(isLockedOut(key)).toBe(false);
   });
+
+  it("forgets failures that aged out of the window, even if the window is lengthened later", () => {
+    const key = "10.0.0.1-window";
+    setConfigValue(getDb(), "rateLimitWindowSec", "3");
+    for (let i = 0; i < 4; i++) recordFailure(key);
+    vi.advanceTimersByTime(4_000);
+    expect(isLockedOut(key)).toBe(false); // the read drops the aged-out bucket
+    setConfigValue(getDb(), "rateLimitWindowSec", "60");
+    recordFailure(key);
+    expect(isLockedOut(key)).toBe(false); // one failure, not five
+  });
 });

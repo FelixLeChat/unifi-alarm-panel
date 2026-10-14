@@ -6,9 +6,12 @@ trademark of Ubiquiti Inc.
 
 Third-party material:
 
-- Material Symbols (icons in components/ui/icons/, components/ui/logo.tsx,
-  public/icon.svg and app/panel/page.tsx), by Google, Apache License 2.0.
-  https://github.com/google/material-design-icons
+- Material Symbols (icons in components/ui/icons/ and app/panel/page.tsx), by
+  Google, Apache License 2.0. https://github.com/google/material-design-icons
+
+- The logo, favicon, app icons and kiosk background (components/ui/logo.tsx,
+  public/icon.svg, public/app-icon.svg, public/*.png, public/kiosk-band.svg)
+  are part of this project.
 
 - Figtree, Fraunces and JetBrains Mono fonts, loaded at build time through
   next/font/google, SIL Open Font License 1.1.

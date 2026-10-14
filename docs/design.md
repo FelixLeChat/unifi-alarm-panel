@@ -7,7 +7,10 @@ The admin UI uses [shadcn/ui](https://ui.shadcn.com) (base-luma style, Base UI p
 - `app/globals.css` imports Tailwind, `tw-animate-css` and `shadcn/tailwind.css`, then defines the theme: stock shadcn neutral variables for light (`:root`) and dark (`.dark`), plus the few tokens this app adds (`success`, `warning`, `emphasis`, the type scale).
 - `components.json` sets the shadcn style to `base-luma`. Add components with `pnpm dlx shadcn@latest add <name>` and check what it writes (imports, new packages).
 - `components/ui/` holds the installed components: alert, alert-dialog, badge, button, card, dialog, empty, field, input, item, label, native-select, radio-group, scroll-area, separator, sheet, sidebar, skeleton, sonner, spinner, switch, table, textarea, tooltip, plus `logo.tsx` and the icon modules in `icons/`.
-- `logo.tsx` is a placeholder: the Material Symbols `shield_lock` glyph and an "Alarm Panel" wordmark, in `currentColor`. `public/icon.svg` is the same glyph as the favicon. A proper logo is tracked separately.
+- **Logo:** a shield with four keypad holes ("Shield + PIN"), drawn on a 24x24 grid as one even-odd path in `components/ui/logo.tsx` (`Logomark`, and `Logo` with the "Alarm Panel" wordmark in Figtree). Mono only: it takes `currentColor`, no accent. The same shape is in:
+  - `public/icon.svg`: the favicon, which switches between dark and light with the browser's theme;
+  - `public/app-icon.svg`: the light mark on the kiosk's dark ground, rendered to `apple-touch-icon.png`, `icon-192.png` and `icon-512.png` by `scripts/render-icons.mts` (rerun it after changing the mark);
+  - `public/kiosk-band.svg`: three nested outlines, the kiosk's background.
 - Only the light theme is reachable in the admin: nothing sets `.dark` on `<html>`.
 
 ## Colours
@@ -45,6 +48,7 @@ Add one by copying a module and changing the glyph. Icons are decorative (`aria-
   - **Arm button:** the only orange fill (`--panel-arm` `#ea580c`). It is the one action on the wall, read from across the room. An open door uses a lighter orange outline (`--panel-attention`), so arming stays the loudest thing on screen.
   - **Shape:** 10px corners on controls and containers, circles for the PIN dots and door dots.
   - **Type:** sizes sit on the same scale as the admin, in rem. Buttons and keys are sentence case; only eyebrow labels are mono uppercase.
+  - **Background:** `kiosk-band.svg`, three thin outlines of the shield in `#3a3a3a`, cropped at the bottom left. A plain background image, no mask, so iOS 12 renders it.
   - **iOS 12:** no `gap` on flex containers, no `aspect-ratio`, no `clamp()`, no `:focus-visible` (see the notes at the top of `panel.css`).
 - `panel.js` loads through `next/script` with `strategy="afterInteractive"`: a plain deferred script can mutate the DOM before Next's hydration pass and leave `getElementById` references pointing at detached nodes. Keep that in mind when adding a script tag or a dynamically mutated element to the page.
 

@@ -8,6 +8,9 @@ test.describe("brand assets", () => {
       .locator("head link[rel~='icon'], head link[rel='manifest']")
       .evaluateAll((els) => els.map((el) => el.getAttribute("href")));
     expect(hrefs.some((h) => h?.split("?")[0] === "/icon.svg")).toBe(true);
+    const apple = await page.locator("head link[rel='apple-touch-icon']").getAttribute("href");
+    expect(apple?.split("?")[0]).toBe("/apple-touch-icon.png");
+    hrefs.push(apple);
     expect(hrefs).toContain("/site.webmanifest");
 
     for (const href of hrefs) {
@@ -16,6 +19,7 @@ test.describe("brand assets", () => {
     }
     const manifest = await (await request.get("/site.webmanifest")).json();
     expect(manifest.name).toBe("UniFi Alarm Panel");
+    expect(manifest.icons.map((i: { sizes: string }) => i.sizes)).toEqual(expect.arrayContaining(["192x192", "512x512"]));
     for (const icon of manifest.icons) expect((await request.get(icon.src)).status(), icon.src).toBe(200);
   });
 
