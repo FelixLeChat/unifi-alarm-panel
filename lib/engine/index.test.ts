@@ -14,6 +14,8 @@ let db: Database.Database;
 
 beforeEach(() => {
   vi.useFakeTimers();
+  // Rate-limit buckets live on globalThis, and every PIN attempt shares one bucket, so reset it per test.
+  delete globalThis.__uapRateLimitBuckets;
   db = createDb(":memory:");
   setConfigValue(db, "exitDelaySec", "5");
   setConfigValue(db, "entryDelaySec", "10");
@@ -347,21 +349,30 @@ describe("AlarmEngine", () => {
     expect(protectClient.triggerAlarmManagerWebhook).not.toHaveBeenCalled();
   });
 
-  it("locks out a source after repeated invalid PINs, independent of other sources", async () => {
+  it("locks the keypad after repeated invalid PINs, even when each attempt claims a different source", async () => {
     await createPin(db, "Alex", "1234");
     const engine = new AlarmEngine(db);
 
+    // The source comes from X-Forwarded-For, which a caller can rotate on every request.
     for (let i = 0; i < 5; i++) {
-      await engine.arm("0000", "attacker-ip");
+      await engine.arm("0000", `spoofed-${i}`);
     }
-    const locked = await engine.arm("1234", "attacker-ip");
+    const locked = await engine.arm("1234", "yet-another-source");
     expect(locked.ok).toBe(false);
     expect(locked.lockedOut).toBe(true);
     expect(engine.getStatus().state).toBe("DISARMED");
+  });
 
-    // A different source (e.g. a different kiosk/IP) is unaffected.
-    const other = await engine.arm("1234", "other-ip");
-    expect(other.ok).toBe(true);
+  it("a legitimate PIN in between doesn't reset an attacker's failures", async () => {
+    await createPin(db, "Alex", "1234");
+    const engine = new AlarmEngine(db);
+
+    for (let i = 0; i < 4; i++) await engine.disarm("0000", "attacker");
+    // Someone disarms normally at the kiosk.
+    expect((await engine.disarm("1234", "kiosk")).ok).toBe(true);
+    // The attacker's next wrong PIN is still the 5th, so it locks out instead of starting a fresh count.
+    const fifth = await engine.disarm("0000", "attacker");
+    expect(fifth.lockedOut).toBe(true);
   });
 
   it("an ALARM from a sensor with a mapped camera attaches its snapshot and live-view link", async () => {
@@ -689,11 +700,11 @@ describe("AlarmEngine", () => {
       // A caller controls X-Forwarded-For, so it controls this value entirely.
       for (let i = 0; i < 6; i++) await engine.disarm("0000", "webhook_1.2.3.4");
 
-      // The failures land in the PIN namespace only — the webhook guard's own
-      // bucket for that source is untouched, so UniFi's sensor webhook keeps
-      // working. (lib/auth/client-key.ts also strips ":" so the spoofed value
-      // can't be shaped like another namespace's key in the first place.)
-      expect(isLockedOut("pin:webhook_1.2.3.4")).toBe(true);
+      // The failures land in the shared PIN bucket only — the webhook guard's
+      // own bucket for that source is untouched, so UniFi's sensor webhook
+      // keeps working. (lib/auth/client-key.ts also strips ":" so the spoofed
+      // value can't be shaped like another namespace's key in the first place.)
+      expect(isLockedOut("pin:all")).toBe(true);
       expect(isLockedOut("webhook:1.2.3.4")).toBe(false);
       expect(isLockedOut("webhook:webhook_1.2.3.4")).toBe(false);
     });

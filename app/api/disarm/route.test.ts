@@ -5,6 +5,7 @@ import { createPin } from "@/lib/services/pins";
 import { POST } from "./route";
 
 beforeEach(() => {
+  delete globalThis.__uapRateLimitBuckets;
   process.env.DATABASE_PATH = ":memory:";
   closeDb();
   delete globalThis.__uapEngine;
@@ -24,6 +25,16 @@ function disarmReq(pin: unknown, forwardedFor: string): Request {
 }
 
 describe("disarm route", () => {
+  it("locks out after 5 wrong PINs even when X-Forwarded-For changes on every request", async () => {
+    await createPin(getDb(), "Alex", "1234");
+    for (let i = 0; i < 5; i++) {
+      await POST(disarmReq("0000", `10.66.0.${i}`));
+    }
+    // The right PIN from a fresh "source" is still refused: the lockout isn't per caller-supplied header.
+    const res = await POST(disarmReq("1234", "10.66.0.99"));
+    expect(res.status).toBe(429);
+  });
+
   it("rejects a body that isn't exactly 4 digits", async () => {
     const res = await POST(disarmReq("123456", "10.20.40.1"));
     expect(res.status).toBe(400);

@@ -49,7 +49,8 @@ const configPutSchema = z.object({
         unifiId: z.string().trim().min(1),
         name: z.string().trim().min(1).optional(),
         mode: z.enum(["delayed", "instant", "ignore"]),
-        cameraId: z.string().trim().min(1).nullable().optional(),
+        // Becomes a go2rtc stream name (see isSafeStreamName): plain ID characters only.
+        cameraId: z.string().trim().regex(/^[A-Za-z0-9_.:-]{1,128}$/, "must be a camera ID").nullable().optional(),
         // rtsp:// and rtsps:// both accepted — go2rtc-client.ts only rewrites
         // the latter (UniFi's self-signed-cert workaround), a plain rtsp://
         // source is a legitimate input too (e.g. non-UniFi cameras, testing).

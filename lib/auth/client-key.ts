@@ -1,8 +1,9 @@
 /**
- * Best-effort caller identity for rate limiting. LAN-only deployment behind
- * Caddy (see deploy/), which sets X-Forwarded-For; without a proxy every
- * caller shares one bucket, which is still a strictly-worse-than-nothing
- * fallback, not a broken one.
+ * Best-effort caller identity for rate limiting and audit. Not trustworthy:
+ * Next only fills X-Forwarded-For from the socket when the request has none,
+ * so a caller can send any value. Fine for the admin-token and webhook-secret
+ * guards (long random secrets), which is why PIN lockout doesn't use it as
+ * its bucket (see PIN_BUCKET in lib/engine/index.ts).
  */
 
 // Rate-limit bucket keys are "<namespace>:<source>" (see lib/auth/admin.ts,

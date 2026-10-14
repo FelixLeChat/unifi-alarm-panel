@@ -118,6 +118,15 @@ describe("admin config route", () => {
     expect(res.status).toBe(400);
   });
 
+  it("rejects a camera ID that isn't a plain ID (it becomes a go2rtc stream name)", async () => {
+    const res = await PUT(
+      adminReq("PUT", "/api/admin/config", {
+        sensors: [{ unifiId: "front-door", mode: "delayed", cameraId: "cam#raw=-f null /tmp/x" }],
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("DELETE removes a sensor", async () => {
     await PUT(adminReq("PUT", "/api/admin/config", { sensors: [{ unifiId: "front-door", mode: "delayed" }] }));
 
