@@ -24,7 +24,21 @@ function baseUrl(): string {
 export function toGo2rtcSource(rtspUrl: string): string {
   const url = new URL(rtspUrl.replace(/^rtsps:\/\//, "rtspx://"));
   url.searchParams.delete("enableSrtp");
+  // go2rtc reads `#key=value` after a source as its own options; a camera URL never needs one.
+  url.hash = "";
   return url.toString();
+}
+
+/**
+ * A stream name is spliced into go2rtc's `ffmpeg:<name>#video=mjpeg` source,
+ * where `#` starts go2rtc options (including raw ffmpeg arguments). Names come
+ * from sensor and camera IDs, which an admin types or a webhook reports, so
+ * only plain ID characters get through. Protect IDs and MACs fit.
+ */
+const STREAM_NAME = /^[A-Za-z0-9_.:-]{1,128}$/;
+
+export function isSafeStreamName(name: string): boolean {
+  return STREAM_NAME.test(name);
 }
 
 /**
@@ -44,6 +58,10 @@ export function toGo2rtcSource(rtspUrl: string): string {
  * Never throws — a failed registration must not block saving the sensor.
  */
 export async function upsertGo2rtcStream(name: string, rtspUrl: string): Promise<boolean> {
+  if (!isSafeStreamName(name)) {
+    logger.warn({ name }, "go2rtc stream not registered: the camera or sensor ID has characters a stream name can't hold");
+    return false;
+  }
   const params = new URLSearchParams({ name });
   params.append("src", toGo2rtcSource(rtspUrl));
   params.append("src", `ffmpeg:${name}#video=mjpeg`);

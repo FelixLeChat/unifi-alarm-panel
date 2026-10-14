@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb } from "@/lib/db";
-import { go2rtcMjpegUrl, removeGo2rtcStream, resyncGo2rtcStreams, toGo2rtcSource, upsertGo2rtcStream } from "./go2rtc-client";
+import { go2rtcMjpegUrl, isSafeStreamName, removeGo2rtcStream, resyncGo2rtcStreams, toGo2rtcSource, upsertGo2rtcStream } from "./go2rtc-client";
 import { upsertSensor } from "./sensors";
 
 const settings = vi.hoisted(() => new Map<string, string>());
@@ -13,6 +13,10 @@ vi.mock("./settings", async (importOriginal) => ({
 describe("toGo2rtcSource", () => {
   it("rewrites rtsps:// to rtspx:// and strips ?enableSrtp, per go2rtc's documented UniFi workaround", () => {
     expect(toGo2rtcSource("rtsps://192.168.1.1:7441/aBcDeFgHiJkLmNoP?enableSrtp")).toBe("rtspx://192.168.1.1:7441/aBcDeFgHiJkLmNoP");
+  });
+
+  it("drops a #fragment, which go2rtc would read as its own source options", () => {
+    expect(toGo2rtcSource("rtsps://192.168.1.1:7441/abc#raw=-f null")).toBe("rtspx://192.168.1.1:7441/abc");
   });
 
   it("leaves a non-UniFi rtsp:// source untouched aside from query normalization", () => {
@@ -75,6 +79,18 @@ describe("upsertGo2rtcStream / removeGo2rtcStream", () => {
   it("swallows a failed removal instead of throwing", async () => {
     fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
     await expect(removeGo2rtcStream("cam-1")).resolves.toBeUndefined();
+  });
+
+  it("refuses a stream name that could inject go2rtc options into the ffmpeg source", async () => {
+    fetchMock.mockResolvedValue({ ok: true });
+    await expect(upsertGo2rtcStream("cam#raw=-f null /tmp/x", "rtsps://192.168.1.1:7441/abc")).resolves.toBe(false);
+    await expect(upsertGo2rtcStream("cam 1", "rtsps://192.168.1.1:7441/abc")).resolves.toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts Protect camera IDs and MAC addresses as stream names", () => {
+    expect(isSafeStreamName("65a1b2c3d4e5f60718293a4b")).toBe(true);
+    expect(isSafeStreamName("AA:BB:CC:DD:EE:FF")).toBe(true);
   });
 
   it("respects the go2rtc URL setting when set", async () => {
