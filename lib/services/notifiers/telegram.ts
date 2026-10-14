@@ -1,6 +1,7 @@
 import { logger } from "@/lib/logger";
 import { secret, text } from "../setting-schemas";
 import type { FieldDef } from "../setting-schemas";
+import { alertKindsSchema, enabledSchema } from "./routing";
 import { formatMessage } from "./format";
 import type { AlertPayload, Channel, ChannelContext, ChannelDef } from "./types";
 import { describeNetworkError, sendWithRetry, TEST_MESSAGE } from "./util";
@@ -8,6 +9,8 @@ import { describeNetworkError, sendWithRetry, TEST_MESSAGE } from "./util";
 export const telegramFields = {
   telegramBotToken: { group: "notifications", schema: secret, env: "TELEGRAM_BOT_TOKEN", secret: true },
   telegramChatId: { group: "notifications", schema: text(64), env: "TELEGRAM_CHAT_ID" },
+  telegramEnabled: { group: "notifications", schema: enabledSchema },
+  telegramAlertKinds: { group: "notifications", schema: alertKindsSchema },
 } satisfies Record<string, FieldDef>;
 
 export interface TelegramConfig {

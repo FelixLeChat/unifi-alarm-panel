@@ -1,4 +1,4 @@
-import { buildChannels } from "./notifiers";
+import { CHANNELS, listChannels, type ChannelId } from "./notifiers";
 import { getCredentials, ProtectAlarmPermissionError, ProtectAlarmSyncClient } from "./protect-alarm-sync";
 import { describeFetchError, UnifiProtectClient } from "./protect-client";
 import { getSetting } from "./settings";
@@ -71,16 +71,22 @@ export async function checkConsole(): Promise<CheckResult[]> {
   return results;
 }
 
-export async function checkNotifications(): Promise<CheckResult[]> {
-  const channels = buildChannels();
+/** Sends one test alert per configured channel, or only `channelId`'s. Routing doesn't apply: a test goes out even if the channel is switched off. */
+export async function checkNotifications(channelId?: ChannelId): Promise<CheckResult[]> {
+  const channels = listChannels().filter((c) => !channelId || c.channel.id === channelId);
   if (channels.length === 0) {
-    return [{ name: "Notifications", status: "skipped", detail: "No channel configured. Alerts only show on the kiosk and in the audit log." }];
+    return [
+      channelId
+        ? { name: CHANNELS.find((d) => d.id === channelId)?.name ?? channelId, status: "skipped", detail: "Not configured. Fill in its fields and save." }
+        : { name: "Notifications", status: "skipped", detail: "No channel configured. Alerts only show on the kiosk and in the audit log." },
+    ];
   }
   return Promise.all(
-    channels.map(async (channel): Promise<CheckResult> => {
+    channels.map(async ({ channel, enabled, kinds }): Promise<CheckResult> => {
       try {
         await channel.test();
-        return { name: channel.name, status: "ok", detail: "Test alert sent." };
+        const note = !enabled ? " The channel is switched off, so real alerts skip it." : kinds.size === 0 ? " No alert types are routed to it." : "";
+        return { name: channel.name, status: "ok", detail: `Test alert sent.${note}` };
       } catch (err) {
         return { name: channel.name, status: "failed", detail: describeFetchError(err) };
       }

@@ -4,9 +4,11 @@ import { ntfy } from "./ntfy";
 import { signal } from "./signal";
 import { slack } from "./slack";
 import { telegram } from "./telegram";
+import { ALERT_KINDS, parseAlertKinds, RoutedNotifier, type AlertKind } from "./routing";
 import type { Channel, ChannelDef, Notifier } from "./types";
 
-export type { AlertPayload, Channel, ChannelContext, ChannelDef, Notifier } from "./types";
+export type { AlertPayload, Channel, ChannelContext, ChannelDef, ChannelId, Notifier } from "./types";
+export { ALERT_KINDS, type AlertKind } from "./routing";
 export { NtfyChannel } from "./ntfy";
 export { SignalChannel } from "./signal";
 export { SlackChannel } from "./slack";
@@ -45,17 +47,30 @@ export function getNotifier(): Notifier {
   return notifierCache.notifier;
 }
 
-/** Every channel configured in Settings > Notifications, combined. */
+/** Every enabled channel, each limited to the alert kinds routed to it. */
 export function buildNotifier(): Notifier {
-  const channels = buildChannels();
-  return channels.length === 0 ? new NullNotifier() : channels.length === 1 ? channels[0] : new CompositeNotifier(channels);
+  const notifiers = listChannels()
+    .filter((c) => c.enabled)
+    .map((c) => (c.kinds.size === ALERT_KINDS.length ? c.channel : new RoutedNotifier(c.channel, c.kinds)));
+  return notifiers.length === 0 ? new NullNotifier() : notifiers.length === 1 ? notifiers[0] : new CompositeNotifier(notifiers);
 }
 
-/** The configured channels, for fan-out and for Settings > Send test alert. */
-export function buildChannels(): Channel[] {
+export interface ListedChannel {
+  channel: Channel;
+  enabled: boolean;
+  kinds: ReadonlySet<AlertKind>;
+}
+
+/** The channels with their fields filled in, switched on or not, for fan-out and for Settings > Send test alert. */
+export function listChannels(): ListedChannel[] {
   const ctx = {
     consoleCamerasUrl: getSetting("protectConsoleCamerasUrl") ?? undefined,
     timeZone: getSetting("alertTimezone") ?? "UTC",
   };
-  return CHANNELS.map((def) => def.create((key) => getSetting(key), ctx)).filter((channel) => channel.isConfigured());
+  return CHANNELS.map((def) => ({
+    channel: def.create((key) => getSetting(key), ctx),
+    // Unset means on, and every kind: installs from before routing existed keep working untouched.
+    enabled: getSetting(`${def.id}Enabled`) !== "false",
+    kinds: parseAlertKinds(getSetting(`${def.id}AlertKinds`)),
+  })).filter((c) => c.channel.isConfigured());
 }

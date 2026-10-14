@@ -1,6 +1,7 @@
 import { logger } from "@/lib/logger";
 import { httpUrl, text } from "../setting-schemas";
 import type { FieldDef } from "../setting-schemas";
+import { alertKindsSchema, enabledSchema } from "./routing";
 import { formatMessage } from "./format";
 import type { AlertPayload, Channel, ChannelContext, ChannelDef } from "./types";
 import { describeNetworkError, sendWithRetry, TEST_MESSAGE } from "./util";
@@ -26,6 +27,8 @@ export const signalFields = {
     ),
     env: "SIGNAL_RECIPIENTS",
   },
+  signalEnabled: { group: "notifications", schema: enabledSchema },
+  signalAlertKinds: { group: "notifications", schema: alertKindsSchema },
 } satisfies Record<string, FieldDef>;
 
 export interface SignalConfig {

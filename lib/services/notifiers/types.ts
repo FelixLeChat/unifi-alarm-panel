@@ -26,6 +26,8 @@ export interface ChannelContext {
   timeZone: string;
 }
 
+export type ChannelId = "slack" | "ntfy" | "telegram" | "signal";
+
 export type SettingReader = (key: SettingKey) => string | null;
 
 /**
@@ -35,14 +37,14 @@ export type SettingReader = (key: SettingKey) => string | null;
  * readable reason, for Settings > Send test alert.
  */
 export interface Channel extends Notifier {
-  readonly id: string;
+  readonly id: ChannelId;
   readonly name: string;
   isConfigured(): boolean;
   test(): Promise<void>;
 }
 
 export interface ChannelDef {
-  id: string;
+  id: ChannelId;
   name: string;
   /** The settings this channel owns, spread into SETTINGS. Secret ones are flagged. */
   fields: Record<string, FieldDef>;

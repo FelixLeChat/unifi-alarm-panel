@@ -2,6 +2,7 @@ import { logger } from "@/lib/logger";
 import type { Snapshot } from "../protect-client";
 import { secret, text } from "../setting-schemas";
 import type { FieldDef } from "../setting-schemas";
+import { alertKindsSchema, enabledSchema } from "./routing";
 import { formatMessage } from "./format";
 import type { AlertPayload, Channel, ChannelContext, ChannelDef } from "./types";
 import { postOnce, sendWithRetry, TEST_MESSAGE } from "./util";
@@ -10,6 +11,8 @@ export const slackFields = {
   slackWebhookUrl: { group: "notifications", schema: secret, env: "SLACK_WEBHOOK_URL", secret: true },
   slackBotToken: { group: "notifications", schema: secret, env: "SLACK_BOT_TOKEN", secret: true },
   slackChannelId: { group: "notifications", schema: text(64), env: "SLACK_CHANNEL_ID" },
+  slackEnabled: { group: "notifications", schema: enabledSchema },
+  slackAlertKinds: { group: "notifications", schema: alertKindsSchema },
 } satisfies Record<string, FieldDef>;
 
 export interface SlackConfig {
