@@ -3,7 +3,7 @@ import { secret, text } from "../setting-schemas";
 import type { FieldDef } from "../setting-schemas";
 import { formatMessage } from "./format";
 import type { AlertPayload, Channel, ChannelContext, ChannelDef } from "./types";
-import { sendWithRetry, TEST_MESSAGE } from "./util";
+import { describeNetworkError, sendWithRetry, TEST_MESSAGE } from "./util";
 
 export const telegramFields = {
   telegramBotToken: { group: "notifications", schema: secret, env: "TELEGRAM_BOT_TOKEN", secret: true },
@@ -88,10 +88,7 @@ export class TelegramChannel implements Channel {
   }
 
   private describe(err: unknown): string {
-    const cause = (err as { cause?: { code?: string } })?.cause;
-    if (cause?.code) return cause.code;
-    if ((err as Error)?.name === "TimeoutError") return "timed out";
-    const raw = err instanceof Error ? err.message : String(err);
+    const raw = typeof err === "string" ? err : describeNetworkError(err);
     return raw.split(this.config.botToken!).join("[token]").replace(/\/bot[^/\s]+/g, "/bot[token]");
   }
 }

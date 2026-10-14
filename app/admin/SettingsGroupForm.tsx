@@ -88,6 +88,15 @@ export const GROUP_SECTIONS: Record<SettingsGroup, SectionSpec[]> = {
         { key: "telegramChatId", label: "Chat ID", placeholder: "-1001234567890", hint: "A person, group or channel the bot can write to." },
       ],
     },
+    {
+      title: "Signal",
+      description: "Through a signal-cli-rest-api container on your network (docs/SIGNAL.md). It has no login of its own, so keep it reachable only from this app.",
+      fields: [
+        { key: "signalApiUrl", label: "API URL", placeholder: "http://signal-cli:8080" },
+        { key: "signalNumber", label: "Sender number", placeholder: "+15145550100", hint: "The number registered or linked in the container." },
+        { key: "signalRecipients", label: "Recipients", placeholder: "+15145550101, group.abc…", hint: "Comma-separated numbers or group ids." },
+      ],
+    },
   ],
   panel: [
     {

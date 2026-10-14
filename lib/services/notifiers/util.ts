@@ -25,3 +25,13 @@ export async function sendWithRetry(failureMessage: string, attempt: () => Promi
     }
   }
 }
+
+/** A short reason for a failed request, without the URL: Node repeats it in some errors. */
+export function describeNetworkError(err: unknown): string {
+  const cause = (err as { cause?: { code?: string; errors?: { code?: string }[] } })?.cause;
+  // A host that resolves to IPv4 and IPv6 fails as an AggregateError with the code on its members.
+  const code = cause?.code ?? cause?.errors?.find((e) => e.code)?.code;
+  if (code) return code;
+  if ((err as Error)?.name === "TimeoutError") return "timed out";
+  return err instanceof Error ? err.message : String(err);
+}

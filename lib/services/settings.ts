@@ -3,6 +3,7 @@ import type Database from "better-sqlite3";
 import { getDb } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ntfyFields } from "./notifiers/ntfy";
+import { signalFields } from "./notifiers/signal";
 import { slackFields } from "./notifiers/slack";
 import { telegramFields } from "./notifiers/telegram";
 import { decryptSecret, encryptSecret, secretsKeyStatus } from "./secrets";
@@ -56,6 +57,7 @@ export const SETTINGS = {
   ...slackFields,
   ...ntfyFields,
   ...telegramFields,
+  ...signalFields,
 
   weatherLat: { group: "panel", schema: numberIn(-90, 90), env: "PANEL_WEATHER_LAT" },
   weatherLon: { group: "panel", schema: numberIn(-180, 180), env: "PANEL_WEATHER_LON" },
