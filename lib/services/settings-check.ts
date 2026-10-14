@@ -1,4 +1,4 @@
-import { buildNotifierChannels } from "./notifier";
+import { buildChannels } from "./notifiers";
 import { getCredentials, ProtectAlarmPermissionError, ProtectAlarmSyncClient } from "./protect-alarm-sync";
 import { describeFetchError, UnifiProtectClient } from "./protect-client";
 import { getSetting } from "./settings";
@@ -72,7 +72,7 @@ export async function checkConsole(): Promise<CheckResult[]> {
 }
 
 export async function checkNotifications(): Promise<CheckResult[]> {
-  const channels = buildNotifierChannels();
+  const channels = buildChannels();
   if (channels.length === 0) {
     return [{ name: "Notifications", status: "skipped", detail: "No channel configured. Alerts only show on the kiosk and in the audit log." }];
   }

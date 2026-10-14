@@ -14,7 +14,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
 
 type SentAlert = { kind: string; message?: string };
 const send = vi.fn<(alert: SentAlert) => Promise<void>>(async () => {});
-vi.mock("./notifier", () => ({ getNotifier: () => ({ send }) }));
+vi.mock("./notifiers", () => ({ getNotifier: () => ({ send }) }));
 
 import { checkDeviceHealth, degradations, getDeviceHealthStatus, normalizeMac, toDeviceHealth } from "./protect-device-health";
 

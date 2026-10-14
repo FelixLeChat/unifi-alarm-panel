@@ -1,9 +1,13 @@
 import { readFileSync } from "node:fs";
 import type Database from "better-sqlite3";
-import { z } from "zod";
 import { getDb } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { ntfyFields } from "./notifiers/ntfy";
+import { slackFields } from "./notifiers/slack";
 import { decryptSecret, encryptSecret, secretsKeyStatus } from "./secrets";
+import { bool, httpUrl, secret, SETTINGS_GROUPS, text, type FieldDef, type SettingsGroup } from "./setting-schemas";
+
+export { SETTINGS_GROUPS, type SettingsGroup };
 
 /**
  * Console, notification and panel settings, edited from the admin UI and
@@ -20,9 +24,6 @@ import { decryptSecret, encryptSecret, secretsKeyStatus } from "./secrets";
  * every Next bundle at once (see the bundle-isolation note in lib/db/index.ts).
  */
 
-const text = (max = 500) => z.string().trim().min(1).max(max);
-const httpUrl = text(2000).refine((v) => /^https?:\/\/[^\s]+$/i.test(v), "must be an http:// or https:// URL");
-const bool = z.enum(["true", "false"]);
 const numberIn = (min: number, max: number) =>
   text(32).refine((v) => Number.isFinite(Number(v)) && Number(v) >= min && Number(v) <= max, `must be a number between ${min} and ${max}`);
 const hour = text(2).refine((v) => /^\d{1,2}$/.test(v) && Number(v) <= 23, "must be an hour from 0 to 23");
@@ -35,18 +36,6 @@ const timezone = text(64).refine((v) => {
   }
 }, "must be an IANA timezone, like Europe/Paris or UTC");
 const pem = text(20_000).refine((v) => v.includes("-----BEGIN CERTIFICATE-----"), "must be a PEM certificate");
-const secret = text(4000);
-
-interface FieldDef {
-  group: SettingsGroup;
-  schema: z.ZodType<string>;
-  /** Read once by seedSettingsFromEnv. */
-  env?: string;
-  secret?: boolean;
-}
-
-export const SETTINGS_GROUPS = ["console", "notifications", "panel"] as const;
-export type SettingsGroup = (typeof SETTINGS_GROUPS)[number];
 
 export const SETTINGS = {
   protectApiBaseUrl: { group: "console", schema: httpUrl, env: "PROTECT_API_BASE_URL" },
@@ -62,11 +51,9 @@ export const SETTINGS = {
   go2rtcApiBaseUrl: { group: "console", schema: httpUrl, env: "GO2RTC_API_BASE_URL" },
 
   alertTimezone: { group: "notifications", schema: timezone, env: "ALERT_TIMEZONE" },
-  slackWebhookUrl: { group: "notifications", schema: secret, env: "SLACK_WEBHOOK_URL", secret: true },
-  slackBotToken: { group: "notifications", schema: secret, env: "SLACK_BOT_TOKEN", secret: true },
-  slackChannelId: { group: "notifications", schema: text(64), env: "SLACK_CHANNEL_ID" },
-  ntfyUrl: { group: "notifications", schema: httpUrl, env: "NTFY_URL" },
-  ntfyTopic: { group: "notifications", schema: text(255), env: "NTFY_TOPIC" },
+  // Each notification channel declares its own fields (lib/services/notifiers/).
+  ...slackFields,
+  ...ntfyFields,
 
   weatherLat: { group: "panel", schema: numberIn(-90, 90), env: "PANEL_WEATHER_LAT" },
   weatherLon: { group: "panel", schema: numberIn(-180, 180), env: "PANEL_WEATHER_LON" },

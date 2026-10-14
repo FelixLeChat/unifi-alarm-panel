@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CompositeNotifier, NtfyNotifier, NullNotifier, SlackNotifier, type Notifier } from "./notifier";
+import { CompositeNotifier, NtfyChannel, NullNotifier, SlackChannel, type Notifier } from ".";
+
+const slack = (webhookUrl: string, botToken?: string, channelId?: string, consoleCamerasUrl?: string, timeZone = "UTC") =>
+  new SlackChannel({ webhookUrl, botToken, channelId }, { consoleCamerasUrl, timeZone });
+const ntfy = (url: string, topic: string, consoleCamerasUrl?: string, timeZone = "UTC") =>
+  new NtfyChannel({ url, topic }, { consoleCamerasUrl, timeZone });
 
 describe("NullNotifier", () => {
   it("does nothing and never throws", async () => {
@@ -8,7 +13,7 @@ describe("NullNotifier", () => {
   });
 });
 
-describe("SlackNotifier", () => {
+describe("SlackChannel", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -24,7 +29,7 @@ describe("SlackNotifier", () => {
 
   it("posts a message to the webhook URL", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook");
+    const notifier = slack("https://hooks.slack.example/webhook");
 
     await notifier.send({ kind: "ALARM", sensorId: "front-door", at: "2026-01-01T00:00:00Z" });
 
@@ -36,7 +41,7 @@ describe("SlackNotifier", () => {
 
   it("renders the alert time in UTC by default", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook");
+    const notifier = slack("https://hooks.slack.example/webhook");
 
     await notifier.send({ kind: "ALARM", sensorId: "front-door", at: "2026-09-01T18:32:47.828Z" });
 
@@ -46,7 +51,7 @@ describe("SlackNotifier", () => {
 
   it("renders the alert time in the configured timezone, not raw UTC", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook", undefined, undefined, undefined, "America/Toronto");
+    const notifier = slack("https://hooks.slack.example/webhook", undefined, undefined, undefined, "America/Toronto");
 
     // 18:32:47 UTC in September is EDT (UTC-4) -> 14:32:47 local.
     await notifier.send({ kind: "ALARM", sensorId: "front-door", at: "2026-09-01T18:32:47.828Z" });
@@ -57,7 +62,7 @@ describe("SlackNotifier", () => {
 
   it("falls back to the raw value when `at` isn't a parseable date, instead of throwing", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook");
+    const notifier = slack("https://hooks.slack.example/webhook");
 
     await expect(notifier.send({ kind: "ALARM", sensorId: "front-door", at: "not-a-date" })).resolves.toBeUndefined();
     const text = JSON.parse(fetchMock.mock.calls[0][1].body).text;
@@ -66,7 +71,7 @@ describe("SlackNotifier", () => {
 
   it("retries once on failure, then gives up without throwing", async () => {
     fetchMock.mockRejectedValueOnce(new Error("network down")).mockResolvedValueOnce({ ok: true });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook");
+    const notifier = slack("https://hooks.slack.example/webhook");
 
     const promise = notifier.send({ kind: "ALARM", at: "now" });
     await vi.advanceTimersByTimeAsync(1000);
@@ -76,7 +81,7 @@ describe("SlackNotifier", () => {
 
   it("swallows a second consecutive failure instead of throwing", async () => {
     fetchMock.mockRejectedValue(new Error("network down"));
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook");
+    const notifier = slack("https://hooks.slack.example/webhook");
 
     const promise = notifier.send({ kind: "ALARM", at: "now" });
     await vi.advanceTimersByTimeAsync(1000);
@@ -86,7 +91,7 @@ describe("SlackNotifier", () => {
 
   it("does not attempt a file upload without a bot token + channel configured", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook");
+    const notifier = slack("https://hooks.slack.example/webhook");
 
     await notifier.send({ kind: "ALARM", at: "now", snapshot: { buffer: Buffer.from([1]), contentType: "image/jpeg" } });
 
@@ -95,7 +100,7 @@ describe("SlackNotifier", () => {
 
   it("does not attempt a file upload when there's no snapshot", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook", "xoxb-token", "C123");
+    const notifier = slack("https://hooks.slack.example/webhook", "xoxb-token", "C123");
 
     await notifier.send({ kind: "ALARM", at: "now" });
 
@@ -121,7 +126,7 @@ describe("SlackNotifier", () => {
       }
       throw new Error(`unexpected fetch to ${url}`);
     });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook", "xoxb-token", "C123");
+    const notifier = slack("https://hooks.slack.example/webhook", "xoxb-token", "C123");
 
     await notifier.send({
       kind: "ALARM",
@@ -139,7 +144,7 @@ describe("SlackNotifier", () => {
 
   it("appends the general console-cameras link when configured, alongside any specific live-view link", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier(
+    const notifier = slack(
       "https://hooks.slack.example/webhook",
       undefined,
       undefined,
@@ -160,7 +165,7 @@ describe("SlackNotifier", () => {
 
   it("appends the console-cameras link to a DURESS alert too", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new SlackNotifier(
+    const notifier = slack(
       "https://hooks.slack.example/webhook",
       undefined,
       undefined,
@@ -178,7 +183,7 @@ describe("SlackNotifier", () => {
       if (url === "https://hooks.slack.example/webhook") return Promise.resolve({ ok: true });
       return Promise.resolve({ ok: true, json: async () => ({ ok: false, error: "invalid_auth" }) });
     });
-    const notifier = new SlackNotifier("https://hooks.slack.example/webhook", "bad-token", "C123");
+    const notifier = slack("https://hooks.slack.example/webhook", "bad-token", "C123");
 
     await expect(
       notifier.send({
@@ -192,7 +197,7 @@ describe("SlackNotifier", () => {
   });
 });
 
-describe("NtfyNotifier", () => {
+describe("NtfyChannel", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -208,7 +213,7 @@ describe("NtfyNotifier", () => {
 
   it("posts the snapshot bytes as the body when a snapshot is present", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new NtfyNotifier("https://ntfy.internal", "alarms");
+    const notifier = ntfy("https://ntfy.internal", "alarms");
     const buffer = Buffer.from([1, 2, 3]);
 
     await notifier.send({
@@ -228,7 +233,7 @@ describe("NtfyNotifier", () => {
 
   it("posts a plain text body when there's no snapshot", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new NtfyNotifier("https://ntfy.internal", "alarms");
+    const notifier = ntfy("https://ntfy.internal", "alarms");
 
     await notifier.send({ kind: "DURESS", at: "now" });
 
@@ -239,7 +244,7 @@ describe("NtfyNotifier", () => {
 
   it("falls back to the console-cameras link for Click when there's no sensor-specific one", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new NtfyNotifier(
+    const notifier = ntfy(
       "https://ntfy.internal",
       "alarms",
       "https://unifi.ui.com/consoles/abc/protect/dashboard",
@@ -253,7 +258,7 @@ describe("NtfyNotifier", () => {
 
   it("prefers the sensor-specific live-view link over the console-cameras fallback for Click", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = new NtfyNotifier(
+    const notifier = ntfy(
       "https://ntfy.internal",
       "alarms",
       "https://unifi.ui.com/consoles/abc/protect/dashboard",
@@ -272,7 +277,7 @@ describe("NtfyNotifier", () => {
 
   it("retries once then gives up without throwing", async () => {
     fetchMock.mockRejectedValueOnce(new Error("down")).mockResolvedValueOnce({ ok: true });
-    const notifier = new NtfyNotifier("https://ntfy.internal", "alarms");
+    const notifier = ntfy("https://ntfy.internal", "alarms");
 
     const promise = notifier.send({ kind: "ALARM", at: "now" });
     await vi.advanceTimersByTimeAsync(1000);
@@ -300,5 +305,25 @@ describe("CompositeNotifier", () => {
 
     await expect(composite.send({ kind: "ALARM", at: "now" })).resolves.toBeUndefined();
     expect(ok.send).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("channel configuration and test()", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("is configured only with what it needs", () => {
+    expect(new SlackChannel({}, { timeZone: "UTC" }).isConfigured()).toBe(false);
+    expect(slack("https://hooks.slack.example/x").isConfigured()).toBe(true);
+    expect(new NtfyChannel({ url: "https://ntfy.internal" }, { timeZone: "UTC" }).isConfigured()).toBe(false);
+    expect(ntfy("https://ntfy.internal", "alarms").isConfigured()).toBe(true);
+  });
+
+  it("test() makes one attempt and throws with the reason", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(slack("https://hooks.slack.example/x").test()).rejects.toThrow("answered 404");
+    await expect(ntfy("https://ntfy.internal", "alarms").test()).rejects.toThrow("answered 404");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

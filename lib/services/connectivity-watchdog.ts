@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger";
-import { getNotifier } from "@/lib/services/notifier";
+import { getNotifier } from "@/lib/services/notifiers";
 import { getProtectClient } from "@/lib/services/protect-client";
 import { getSetting } from "@/lib/services/settings";
 import { checkDeviceHealth, getDeviceHealthStatus, type DeviceHealth } from "@/lib/services/protect-device-health";

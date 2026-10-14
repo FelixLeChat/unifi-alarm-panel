@@ -6,7 +6,7 @@ import { listAudit } from "@/lib/services/audit";
 import { setConfigValue } from "@/lib/services/config";
 import { setSensorState, upsertSensor } from "@/lib/services/sensors";
 import { saveSettings } from "@/lib/services/settings";
-import type { Notifier, AlertPayload } from "@/lib/services/notifier";
+import type { Notifier, AlertPayload } from "@/lib/services/notifiers";
 import type { ProtectClient, Snapshot } from "@/lib/services/protect-client";
 import { AlarmEngine } from "./index";
 

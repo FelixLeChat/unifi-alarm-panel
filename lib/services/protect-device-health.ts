@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger";
 import { getDb } from "@/lib/db";
 import { recordAudit } from "./audit";
-import { getNotifier } from "./notifier";
+import { getNotifier } from "./notifiers";
 import { getClient, getCredentials, ProtectAlarmPermissionError } from "./protect-alarm-sync";
 
 /**
