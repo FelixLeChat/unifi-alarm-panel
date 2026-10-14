@@ -241,12 +241,15 @@ test.describe("panel kiosk", () => {
 
     test("a wrong PIN shakes and shows a generic error with tries remaining — never which PIN or duress", async ({ page }) => {
       await page.goto("/panel");
+      // Wait out the 2s exit delay first: the ARMING -> ARMED poll clears the
+      // message line (meant for "Door opened: …"), and used to wipe this
+      // test's error before it could be read whenever the reply landed just
+      // before that poll.
+      await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
       await typePin(page, "0000");
-      // Not an exact count: this bucket is shared with every other test's
-      // unauthenticated-source PIN attempts (no reverse proxy in the e2e
-      // env, so clientKey() collapses every caller to "unknown" — see
-      // lib/auth/client-key.ts), so the exact remaining count depends on
-      // suite run order.
+      // Not an exact count: every PIN attempt shares one lockout bucket (see
+      // PIN_BUCKET in lib/engine/index.ts), so the exact remaining count
+      // depends on suite run order.
       await expect(page.locator("#message")).toHaveText(/^(Incorrect PIN\. \d+ tries remaining|LAST TRY: one more wrong PIN triggers the alarm)$/);
       const message = await page.locator("#message").textContent();
       expect(message?.toLowerCase()).not.toContain("duress");
