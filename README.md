@@ -50,7 +50,7 @@ Open `http://<this-host>:3000/admin`, sign in with `ADMIN_TOKEN`, and the setup 
 
 Keep a copy of `SECRETS_KEY`: without it, stored credentials have to be re-entered. Run one app container only, the alarm's timers live in that process.
 
-Other ways to install (systemd on a bare box or LXC) are in [docs/INSTALL.md](docs/INSTALL.md).
+On Proxmox VE, one command creates the container and installs everything: see [docs/INSTALL.md](docs/INSTALL.md), which also covers systemd on a bare box.
 
 ## How it works
 

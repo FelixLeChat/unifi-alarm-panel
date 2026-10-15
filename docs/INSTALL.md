@@ -1,6 +1,6 @@
 # Install
 
-Pick one. All three run the same single Node process with one SQLite file: never run two copies, the alarm's timers live in that process.
+Pick one. All of them run the same single Node process with one SQLite file: never run two copies, the alarm's timers live in that process.
 
 ## Docker Compose
 
@@ -20,6 +20,31 @@ Open `http://<this-host>:3000/admin`, sign in with `ADMIN_TOKEN`, and the setup 
 `docker-compose.yml` runs the app and go2rtc (live camera view). Data lives in the `data` volume. Run one app container only: the alarm's timers live in that process.
 
 **Update:** `docker compose pull && docker compose up -d`. The admin Tasks screen shows when a release is out.
+
+## Proxmox VE (one command)
+
+On a Proxmox VE host, run this in the host shell as root:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/FelixLeChat/unifi-alarm-panel/main/deploy/proxmox/install.sh)"
+```
+
+Read [the script](../deploy/proxmox/install.sh) first if you like: it is short, and it fetches [one more](../deploy/proxmox/container-setup.sh) that runs inside the new container. Pin both to a ref with `UAP_REF=<tag or commit>`.
+
+It asks for Default or Advanced, then:
+
+1. Creates an unprivileged Debian 13 (or 12) container with nesting on. Defaults: 1 core, 1 GB RAM, 4 GB disk (6 GB with go2rtc), DHCP on `vmbr0`, started on boot.
+2. Installs Node.js 26 from NodeSource's signed apt repo, clones this repo to `/opt/unifi-alarm-panel` and runs the same `deploy/bootstrap.sh` and `deploy/update.sh` as the systemd install.
+3. Writes `/etc/unifi-alarm-panel.env` with fresh `ADMIN_TOKEN`, `WEBHOOK_SHARED_SECRET` and `SECRETS_KEY`, installs the service and the auto-update timer, and optionally go2rtc with ffmpeg for the live camera view.
+4. Prints the three secrets once and the URL. **Keep a copy of `SECRETS_KEY`.**
+
+Then finish the setup wizard at `http://<container-ip>:3000/admin`.
+
+Skip the prompts with `UAP_YES=1` and variables such as `CT_RAM=2048`, `CT_IP=192.168.1.50/24 CT_GATEWAY=192.168.1.1` or `WITH_GO2RTC=no`. The full list is in the header of `install.sh`.
+
+**Update:** `pct exec <CTID> -- update-unifi-alarm-panel`, or the "Update available" banner in the admin UI. **Remove:** `pct stop <CTID> && pct destroy <CTID>`.
+
+**Needs:** amd64, internet during the install (GitHub, `deb.nodesource.com`, the Debian mirrors, and GitHub again for go2rtc), and a storage that can hold container volumes. If the service fails with `Failed to set up mount namespacing`, turn on Nesting in the container's Options > Features.
 
 ## Without Docker (systemd)
 

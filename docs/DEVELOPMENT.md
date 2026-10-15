@@ -22,7 +22,8 @@ lib/
 components/ui/      shadcn/ui components and the Material Symbols icon modules (see docs/design.md)
 scripts/            CLI helpers (pin:add, sensor:trip, protect:mock, generate-sounds.py, screenshots.mts)
 public/sounds/      panel sounds (WAV)
-deploy/             systemd units, bootstrap/build/update scripts, go2rtc configs, optional Caddyfile
+deploy/             systemd units, bootstrap/build/update scripts, go2rtc configs, optional Caddyfile,
+                    proxmox/ (one-command LXC installer)
 docs/               see the table below
 ```
 
