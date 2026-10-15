@@ -1,0 +1,33 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking. Please check the [docs](https://github.com/FelixLeChat/unifi-alarm-panel/tree/main/docs) and search existing discussions first. A bug with steps to reproduce belongs in an issue.
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do?
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: From `GET /api/health`.
+      placeholder: v1.2.0
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it is installed
+      options:
+        - Docker Compose
+        - systemd (bare box or LXC)
+        - Proxmox script
+        - Other
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from `docker compose logs app` or `journalctl -u unifi-alarm-panel`. Remove secrets and PINs.
+      render: shell

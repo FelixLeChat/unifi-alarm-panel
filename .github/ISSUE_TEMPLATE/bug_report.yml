@@ -2,6 +2,14 @@ name: Bug report
 description: Something behaves wrong, or an alert fired or didn't fire when it should have
 labels: [bug]
 body:
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Checked first
+      options:
+        - label: I searched the existing issues, open and closed, and this isn't a duplicate.
+          required: true
+        - label: I read [docs/RUNBOOK.md](https://github.com/FelixLeChat/unifi-alarm-panel/blob/main/docs/RUNBOOK.md) and it doesn't cover this.
   - type: textarea
     id: what
     attributes:
@@ -16,7 +24,7 @@ body:
       options:
         - Panel (kiosk)
         - Admin UI
-        - Alerts (Slack / ntfy)
+        - Alerts (Slack / ntfy / Telegram / Signal)
         - Sensors / UniFi intake
         - Camera streaming (go2rtc)
         - Deploy / update
@@ -36,7 +44,25 @@ body:
     attributes:
       label: Version
       description: From `GET /api/health`, or the admin footer.
-      placeholder: v1.0.2
+      placeholder: v1.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it is installed
+      options:
+        - Docker Compose
+        - systemd (bare box or LXC)
+        - Proxmox script
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: unifi
+    attributes:
+      label: UniFi console and Protect version
+      placeholder: UDM Pro, Protect 7.0.x
   - type: textarea
     id: logs
     attributes:

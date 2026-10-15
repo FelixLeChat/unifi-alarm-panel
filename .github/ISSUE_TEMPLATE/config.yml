@@ -1,1 +1,11 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
+contact_links:
+  - name: Question or help setting it up
+    url: https://github.com/FelixLeChat/unifi-alarm-panel/discussions/new?category=q-a
+    about: Install, UniFi or alert questions. Search the docs and discussions first.
+  - name: Idea or proposal
+    url: https://github.com/FelixLeChat/unifi-alarm-panel/discussions/new?category=ideas
+    about: Talk a bigger change through before you build it.
+  - name: Security vulnerability
+    url: https://github.com/FelixLeChat/unifi-alarm-panel/security/advisories/new
+    about: Report it privately. Please don't open a public issue.

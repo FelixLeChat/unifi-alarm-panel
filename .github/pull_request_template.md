@@ -1,3 +1,5 @@
+_Read [CONTRIBUTING.md](../CONTRIBUTING.md) and [AI_POLICY.md](../AI_POLICY.md) first. Every PR must be read and submitted by a person. For a new feature or a big change, link the discussion where it was agreed._
+
 ## What
 
 <!-- One or two sentences. The PR title is a Conventional Commit: type(scope): description -->
@@ -14,6 +16,7 @@
 
 ## Checklist
 
+- [ ] If AI helped write this, I say so below and I can explain every line
 - [ ] Docs updated if config keys, env vars, scripts, admin screens or deploy changed
 - [ ] No PIN, token or secret logged or returned by an API
 - [ ] A duress PIN is still indistinguishable from a normal one (if touched)
