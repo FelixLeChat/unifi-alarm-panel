@@ -102,4 +102,6 @@ mkdocs serve        # http://127.0.0.1:8000, rebuilds as you save
 mkdocs build --strict   # what CI runs: a broken link fails
 ```
 
+Publishing needs two one-time steps: enable Pages (Settings > Pages > Source: GitHub Actions) and add the repository variable `PAGES_ENABLED=true`. Until the variable is set, CI only builds the site.
+
 A new page goes in the `nav` list in `mkdocs.yml`. Link to files outside `docs/` (source, scripts) with a full `github.com/.../blob/main/` URL, because the site can't resolve them.

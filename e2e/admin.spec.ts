@@ -656,7 +656,12 @@ test.describe("admin portal", () => {
 
   test("Refresh picks up a sensor that self-registered while the screen was already open", async ({ page, request }) => {
     await signIn(page);
+    // Opening Sensors reloads the whole admin snapshot a few milliseconds after the click. Wait for it:
+    // a webhook posted inside that window is already in the reloaded list, and the "not there yet"
+    // check below would fail.
+    const snapshotReloaded = page.waitForResponse((r) => r.url().endsWith("/api/admin/config") && r.request().method() === "GET");
     await page.getByText("Sensors", { exact: true }).click();
+    await snapshotReloaded;
 
     // Trip a brand-new sensor's first webhook event only *after* the Sensors
     // screen is already open — it won't appear until a refresh, since the
