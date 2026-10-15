@@ -88,9 +88,8 @@ A GitHub token is only needed to download releases from a private fork: put a fi
 
 ## First run
 
-The setup wizard tests the console connection before you move on, and every step can be skipped.
+The setup wizard walks through the encryption key, the console connection (with a test that says why it failed), notifications and the kiosk. Every step can be skipped.
 
-![Setup wizard, UniFi console step with the connection test results](screenshots/admin-setup-wizard.png)
 
 ## Point UniFi at the app
 

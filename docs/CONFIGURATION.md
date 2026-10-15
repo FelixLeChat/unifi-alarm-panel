@@ -22,6 +22,8 @@ Credentials (API key, SuperAdmin password, Slack webhook and token, Telegram bot
 
 A save applies without a restart: the Protect client, the notifier and the realtime stream rebuild on their next use.
 
+![Settings > Notifications: the ntfy card with its enabled switch, fields, alert types and test button](screenshots/admin-notifications.png)
+
 **Channels and routing:** each channel receives the alert types ticked on its card. An untouched channel receives all three, so the defaults match v1.1.0. Send Duress only where someone should act on it: it goes to no other channel, and nothing shows on the kiosk. A channel that is switched off, or has no alert type ticked, sends nothing, and "Send test alert" still works on it. Telegram and Signal send the snapshot with the alert; if the image fails, the text goes out alone. Signal runs through your own `signal-cli-rest-api` container, see [docs/SIGNAL.md](SIGNAL.md).
 
 **Outbound calls:** LAN-only by design, no telemetry. The app calls Slack and ntfy if you set them up, the UniFi console, GitHub for the update check, Open-Meteo for the kiosk weather (through the server, with a cache), and `api.telegram.org` only if you set up Telegram. The app talks to Signal only through the container on your network (the container itself reaches Signal's servers), so no Signal host is added to the app's outbound list.
@@ -43,6 +45,8 @@ The admin Settings screen has a typed "Security" section for the PIN, admin-toke
 
 ## Door check on arming
 
+![Exit delay with the front door left open: the door shows as open under the countdown](screenshots/panel-arming.png)
+
 Arming (from the panel or admin) is blocked while any sensor with `sensorType: "door"` and a mode other than `ignore` is open, per its `current_state`. The response names the open sensors. Submitting again sends `force: true`, which arms anyway and logs `arm_forced_with_sensors_open` (a normal block logs `arm_rejected_sensors_open`).
 
 A door sensor tripping during the exit delay plays a distinct chime on the panel. Motion sensors don't. The console sync is not gated by this check.
@@ -58,9 +62,13 @@ The kiosk plays short WAVs from `public/sounds/`. They are rendered by `python3 
 
 ## PIN lockout
 
+![The PINs screen: standard PINs and a duress PIN](screenshots/admin-pins.png)
+
 Wrong PINs show the remaining attempts. The count is shared by every device that enters PINs (the kiosk, the admin's disarm dialog, the API), not kept per caller: the caller's address comes from `X-Forwarded-For`, which a client can forge, so a per-caller count could be dodged by changing that header on every try. A correct PIN doesn't reset the count either; wrong PINs only stop counting after `rateLimitWindowSec`. The attempt that tips into lockout also raises a real `ALARM`, whatever the arm state. Repeated wrong PINs at the physical keypad are the one signal here that is alarming on their own. PIN entry auto-submits on the 4th digit.
 
 ## Kiosk behavior
+
+![The armed panel: the door list, who armed and a PIN keypad](screenshots/panel-armed.png)
 
 - Door-open check before arming, exit-delay door chime, event sounds, PIN lockout raises `ALARM`.
   - Every non-ignored door is listed under the banner in every state (open ones first, up to 8), plus "Armed by X at HH:MM" while armed (in memory, so blank after a restart).
