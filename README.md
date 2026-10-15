@@ -95,11 +95,15 @@ flowchart LR
 
 ## Tested with
 
-- UniFi Dream Machine Pro, Protect 7.x
-- UP-Sense sensors (door and motion mode) over Bluetooth through an access point
-- G5 cameras for snapshots and live view
-- An Amazon Fire HD 10 tablet running `/panel` fullscreen in Fully Kiosk Browser
+- [UniFi Dream Machine Pro](https://ca.store.ui.com/ca/en/products/udm-pro), Protect 7.x
+- [UP-Sense](https://ca.store.ui.com/ca/en/products/up-sense) sensors (door and motion mode) over Bluetooth through an access point
+- [G5 Turret Ultra](https://ca.store.ui.com/ca/en/category/physical-security-dome-turret/products/uvc-g5-turret-ultra?variant=uvc-g5-turret-ultra) cameras for snapshots and live view
+- An [Amazon Fire HD 10 tablet](https://www.amazon.ca/Amazon_Fire_HD_10_tablet/dp/B0BT752BRT) (amazon.ca) running `/panel` fullscreen in [Fully Kiosk Browser](https://www.fully-kiosk.com/)
 - The server: any Linux box or container host on the same LAN as the console
+
+## Possible improvements
+
+- Tie arm and disarm to UniFi Access, for example a [G3 Fingerprint reader](https://ca.store.ui.com/ca/en/category/door-access-readers/collections/access-reader-fingerprint/products/ua-g3-fingerprint) at the door, so a fingerprint can disarm without typing a PIN on the panel.
 
 ## Documentation
 
