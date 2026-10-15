@@ -49,6 +49,11 @@ export default defineConfig({
       DEFAULT_EXIT_DELAY_SEC: "2",
       DEFAULT_ENTRY_DELAY_SEC: "2",
       PANEL_AUDIO_ENABLED: "false",
+      // Never the live GitHub API. The hourly update check would find this repo's real releases (the
+      // app reports itself as "dev"), show the header's "update available" button next to the Tasks
+      // one, and make tests that look for "Update requested" depend on when that check finishes.
+      // A repo that doesn't exist gives the same answer the check got while this repo was private.
+      UPDATE_CHECK_REPO: "e2e/no-such-repo",
       // No UniFi console in this environment: blanked explicitly so the
       // repo's own .env (a real host) can't leak in and make the device
       // health poll sit on an unreachable address during the run.
