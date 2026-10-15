@@ -2,7 +2,9 @@ name: Docs
 
 # Builds the MkDocs site from docs/ on every change (strict, so a broken link fails the PR)
 # and, on main, publishes it to GitHub Pages: https://felixlechat.github.io/unifi-alarm-panel/
-# Pages must be enabled once under Settings > Pages > Source: GitHub Actions.
+# To publish: enable Pages once (Settings > Pages > Source: GitHub Actions; a private repo needs a paid
+# plan), then add the repository variable PAGES_ENABLED=true (Settings > Secrets and variables > Actions >
+# Variables). Until then only the build runs, so main isn't red for a Pages deploy that can't succeed.
 on:
   pull_request:
     paths: ["docs/**", "mkdocs.yml", "requirements-docs.txt", ".github/workflows/docs.yml"]
@@ -30,12 +32,12 @@ jobs:
       - run: mkdocs build --strict
 
       - uses: actions/upload-pages-artifact@v5
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && vars.PAGES_ENABLED == 'true'
         with:
           path: site
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.PAGES_ENABLED == 'true'
     needs: build
     runs-on: ubuntu-latest
     permissions:
