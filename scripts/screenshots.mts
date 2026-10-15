@@ -108,12 +108,6 @@ await sleep(500);
 await post("/api/disarm", { pin: "1234" });
 await shot(panel, "panel-disarmed");
 
-// Exit delay with a door left open (the door check shows it under the countdown).
-await post("/api/panel/arm");
-await sleep(500);
-await hook("front", "open");
-await shot(panel, "panel-door-open");
-
 // Armed: shorten the exit delay so it settles, then show the armed panel.
 await post("/api/disarm", { pin: "1234" });
 await hook("front", "close");
@@ -123,7 +117,7 @@ await sleep(4500);
 await shot(panel, "panel-armed");
 await post("/api/disarm", { pin: "1234" });
 
-// Short GIFs of the three moments a still can't show: arming, an entry delay and an alarm.
+// Short GIFs of the moments a still can't show: arming, the door check, an entry delay and an alarm.
 // Needs ffmpeg. Delays are 8s so each countdown reads on screen.
 await admin("PUT", "/api/admin/config", { config: { exitDelaySec: 8, entryDelaySec: 8 } });
 const record = async (name: string, run: (page: typeof panel) => Promise<void>) => {
@@ -164,6 +158,18 @@ await record("panel-entry-delay", async (page) => {
   await tapPin(page, "5678");
   await sleep(2500);
 });
+// Door check: a door is open when someone taps Arm, so the panel asks before arming anyway.
+await hook("front", "open");
+await record("panel-door-open", async (page) => {
+  await page.locator("#action-btn").click();
+  await sleep(700);
+  await page.locator("#arm-confirm-yes").click();
+  await sleep(2500);
+  await page.locator("#arm-confirm-yes").click();
+  await sleep(4000);
+});
+await post("/api/disarm", { pin: "5678" });
+await hook("front", "close");
 await post("/api/panel/arm");
 await sleep(9500);
 await record("panel-alarm", async (page) => {

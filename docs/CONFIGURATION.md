@@ -45,7 +45,7 @@ The admin Settings screen has a typed "Security" section for the PIN, admin-toke
 
 ## Door check on arming
 
-![Exit delay with the front door left open: the door shows as open under the countdown](screenshots/panel-door-open.png)
+![A door is open when someone taps Arm: the panel asks "Arm anyway?", names the door, and arms with it still shown open](screenshots/panel-door-open.gif)
 
 Arming (from the panel or admin) is blocked while any sensor with `sensorType: "door"` and a mode other than `ignore` is open, per its `current_state`. The response names the open sensors. Submitting again sends `force: true`, which arms anyway and logs `arm_forced_with_sensors_open` (a normal block logs `arm_rejected_sensors_open`).
 
