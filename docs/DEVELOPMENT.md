@@ -32,7 +32,7 @@ docs/               see the table below
 | [UNIFI.md](UNIFI.md) | Sensor-event sources, arm-state sync, camera streaming |
 | [RUNBOOK.md](RUNBOOK.md) | One page for whoever is on call |
 | [design.md](design.md) | Design system and per-surface rules |
-| [architecture/](https://github.com/FelixLeChat/unifi-alarm-panel/tree/main/docs/architecture) | Architecture diagram (mermaid) |
+| [architecture/](https://github.com/FelixLeChat/unifi-alarm-panel/tree/main/docs/architecture) | Source JSON and interactive HTML for the README "How it works" diagram; regenerate with the Archify skill |
 | [sounds/index.html](sounds/index.html) | Listening page for the panel sounds |
 
 One **Next.js + TypeScript** app: API routes, kiosk UI and admin UI. It runs as a single long-lived Node process (`output: "standalone"`, no horizontal scaling) so the server-side timers and in-memory state work. State persists to SQLite for restart recovery.

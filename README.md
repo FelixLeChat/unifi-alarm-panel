@@ -65,26 +65,9 @@ UniFi's own arm state is mirrored into this app when someone arms from the conso
 
 One Next.js and TypeScript app serves the kiosk (`/panel`), the admin UI (`/admin`) and the API as a single long-lived Node process, with SQLite for state. A restart partway through a countdown still escalates to `ALARM` on the original schedule.
 
-```mermaid
-flowchart LR
-  subgraph unifi["UniFi console (Protect)"]
-    S["Door and motion sensors"] --> AM["Alarm Manager"]
-    CAM["Cameras"]
-  end
-  subgraph app["UniFi Alarm Panel (one process on your LAN)"]
-    ENG["Alarm state machine<br/>timers, PINs, audit log"]
-    DB[("SQLite")]
-    ENG --- DB
-  end
-  KIOSK["Wall tablet<br/>PIN keypad"]
-  ADMIN["Admin browser"]
-  CH["Slack, ntfy,<br/>Telegram, Signal"]
-  AM -->|"webhook: sensor tripped"| ENG
-  KIOSK -->|"arm / disarm with a PIN"| ENG
-  ADMIN -->|"settings, PINs, audit log"| ENG
-  ENG -->|"fetch a snapshot"| CAM
-  ENG -->|"alert with the snapshot"| CH
-```
+<img src="docs/assets/how-it-works.svg" alt="UniFi sensors trip Alarm Manager, which sends a webhook to the alarm engine. The engine keeps state in SQLite, takes arm and disarm from the tablet, fetches snapshots from the cameras and sends alerts to Slack, ntfy, Telegram and Signal." width="100%">
+
+Open [docs/architecture/how-it-works.html](docs/architecture/how-it-works.html) in a browser for an interactive version that traces routes and exports the diagram.
 
 ## Features
 

@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "UniFi Alarm Panel",
+    "subtitle": "UniFi reports. This app decides.",
+    "output": "how-it-works.html",
+    "quality_profile": "standard"
+  },
+  "components": [
+    {
+      "id": "sensors",
+      "type": "external",
+      "label": "Sensors",
+      "sublabel": "UP-Sense, door + motion",
+      "pos": [
+        40,
+        110
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "am",
+      "type": "cloud",
+      "label": "Alarm Manager",
+      "sublabel": "event source",
+      "pos": [
+        40,
+        270
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "cam",
+      "type": "cloud",
+      "label": "Cameras",
+      "sublabel": "Protect snapshots",
+      "pos": [
+        40,
+        430
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "kiosk",
+      "type": "frontend",
+      "label": "Tablet and browser",
+      "sublabel": "PIN keypad, admin UI",
+      "pos": [
+        420,
+        90
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "engine",
+      "type": "backend",
+      "label": "Alarm engine",
+      "sublabel": "state machine, timers",
+      "pos": [
+        420,
+        265
+      ],
+      "size": [
+        190,
+        70
+      ],
+      "tag": "owns armed state"
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "SQLite",
+      "sublabel": "PINs, audit, deadlines",
+      "pos": [
+        440,
+        430
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "chan",
+      "type": "messagebus",
+      "label": "Alert channels",
+      "sublabel": "Slack, ntfy, Telegram, Signal",
+      "pos": [
+        830,
+        265
+      ],
+      "size": [
+        170,
+        70
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "UniFi console (Protect)",
+      "wraps": [
+        "sensors",
+        "am",
+        "cam"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Alarm Panel",
+      "wraps": [
+        "engine",
+        "db"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "sensor-trip",
+      "from": "sensors",
+      "to": "am",
+      "label": "Bluetooth",
+      "labelAt": [
+        115,
+        220
+      ],
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "webhook",
+      "from": "am",
+      "to": "engine",
+      "label": "webhook",
+      "variant": "emphasis"
+    },
+    {
+      "id": "snapshot",
+      "from": "engine",
+      "to": "cam",
+      "label": "fetch snapshot",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "orthogonal-v"
+    },
+    {
+      "id": "arm-disarm",
+      "from": "kiosk",
+      "to": "engine",
+      "label": "arm, disarm, configure",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        515,
+        205
+      ]
+    },
+    {
+      "id": "persist",
+      "from": "engine",
+      "to": "db",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "alert",
+      "from": "engine",
+      "to": "chan",
+      "label": "alert + snapshot",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": []
+}
