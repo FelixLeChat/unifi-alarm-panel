@@ -45,7 +45,7 @@ The admin Settings screen has a typed "Security" section for the PIN, admin-toke
 
 ## Door check on arming
 
-![Exit delay with the front door left open: the door shows as open under the countdown](screenshots/panel-arming.png)
+![Exit delay with the front door left open: the door shows as open under the countdown](screenshots/panel-door-open.png)
 
 Arming (from the panel or admin) is blocked while any sensor with `sensorType: "door"` and a mode other than `ignore` is open, per its `current_state`. The response names the open sensors. Submitting again sends `force: true`, which arms anyway and logs `arm_forced_with_sensors_open` (a normal block logs `arm_rejected_sensors_open`).
 
@@ -67,6 +67,8 @@ The kiosk plays short WAVs from `public/sounds/`. They are rendered by `python3 
 Wrong PINs show the remaining attempts. The count is shared by every device that enters PINs (the kiosk, the admin's disarm dialog, the API), not kept per caller: the caller's address comes from `X-Forwarded-For`, which a client can forge, so a per-caller count could be dodged by changing that header on every try. A correct PIN doesn't reset the count either; wrong PINs only stop counting after `rateLimitWindowSec`. The attempt that tips into lockout also raises a real `ALARM`, whatever the arm state. Repeated wrong PINs at the physical keypad are the one signal here that is alarming on their own. PIN entry auto-submits on the 4th digit.
 
 ## Kiosk behavior
+
+![The disarmed panel: welcome message, weather and the Arm button](screenshots/panel-disarmed.png)
 
 ![The armed panel: the door list, who armed and a PIN keypad](screenshots/panel-armed.png)
 

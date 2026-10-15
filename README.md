@@ -15,9 +15,9 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
 </p>
 
-| Disarmed | Entry delay | Alarm |
+| Arming | Entry delay | Alarm |
 | --- | --- | --- |
-| ![Disarmed panel with the weather and the door list](docs/screenshots/panel-disarmed.png) | ![Entry delay countdown naming the door that opened](docs/screenshots/panel-entry-delay.png) | ![Alarm state asking for a PIN to silence and disarm](docs/screenshots/panel-alarm.png) |
+| ![Tap Arm, the exit delay counts down, the panel arms](docs/screenshots/panel-arming.gif) | ![A door opens while armed, the entry delay counts down, a PIN disarms](docs/screenshots/panel-entry-delay.gif) | ![A sensor trips, the alarm sounds, a PIN silences and disarms](docs/screenshots/panel-alarm.gif) |
 
 | Overview | Audit log | Sensors |
 | --- | --- | --- |

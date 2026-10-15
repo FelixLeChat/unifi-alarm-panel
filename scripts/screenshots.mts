@@ -2,7 +2,7 @@
  * Regenerates the README screenshots in docs/screenshots/ against a throwaway
  * instance with demo data (fake names, fake PINs, the fake console from
  * scripts/mock-protect-server.ts). Needs internet for the kiosk weather strip
- * (Open-Meteo).
+ * (Open-Meteo), and ffmpeg for the GIFs.
  *
  *   rm -f data/shot.db*
  *   pnpm protect:mock &     # the setup wizard's "Test connection" runs against it
@@ -15,6 +15,10 @@
  */
 import { chromium } from "@playwright/test";
 import Database from "better-sqlite3";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const BASE = process.env.SHOT_BASE ?? "http://localhost:3188";
 const TOKEN = process.env.SHOT_ADMIN_TOKEN ?? "t";
@@ -104,11 +108,11 @@ await sleep(500);
 await post("/api/disarm", { pin: "1234" });
 await shot(panel, "panel-disarmed");
 
-// Exit delay with a door left open.
+// Exit delay with a door left open (the door check shows it under the countdown).
 await post("/api/panel/arm");
 await sleep(500);
 await hook("front", "open");
-await shot(panel, "panel-arming");
+await shot(panel, "panel-door-open");
 
 // Armed: shorten the exit delay so it settles, then show the armed panel.
 await post("/api/disarm", { pin: "1234" });
@@ -117,23 +121,58 @@ await admin("PUT", "/api/admin/config", { config: { exitDelaySec: 3 } });
 await post("/api/panel/arm");
 await sleep(4500);
 await shot(panel, "panel-armed");
-
-// Entry delay: a delayed door opens while armed.
-await hook("back", "open");
-await shot(panel, "panel-entry-delay");
-await post("/api/disarm", { pin: "5678" });
-await hook("back", "close");
-
-// Alarm: an instant sensor trips while armed.
-await post("/api/panel/arm");
-await sleep(4500);
-await hook("lab", "motion");
-await shot(panel, "panel-alarm");
 await post("/api/disarm", { pin: "1234" });
-await sleep(1000);
+
+// Short GIFs of the three moments a still can't show: arming, an entry delay and an alarm.
+// Needs ffmpeg. Delays are 8s so each countdown reads on screen.
+await admin("PUT", "/api/admin/config", { config: { exitDelaySec: 8, entryDelaySec: 8 } });
+const record = async (name: string, run: (page: typeof panel) => Promise<void>) => {
+  const dir = mkdtempSync(join(tmpdir(), "uap-rec-"));
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, recordVideo: { dir, size: { width: 1280, height: 800 } } });
+  const page = await context.newPage();
+  await page.goto(`${BASE}/panel`);
+  await sleep(1500);
+  await run(page);
+  const video = page.video()!;
+  await context.close();
+  execFileSync("ffmpeg", [
+    "-y", "-loglevel", "error", "-ss", "0.6", "-i", await video.path(),
+    "-vf", "fps=10,scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=bayer:bayer_scale=4",
+    `${OUT}/${name}.gif`,
+  ]);
+  rmSync(dir, { recursive: true, force: true });
+};
+const tapPin = async (page: typeof panel, pin: string) => {
+  for (const digit of pin) {
+    await page.locator(`[data-digit="${digit}"]`).click();
+    await sleep(300);
+  }
+};
+
+await record("panel-arming", async (page) => {
+  await page.locator("#action-btn").click();
+  await sleep(700);
+  await page.locator("#arm-confirm-yes").click({ timeout: 3000 }).catch(() => {});
+  await sleep(12_500);
+});
+await record("panel-entry-delay", async (page) => {
+  await sleep(300);
+  await hook("back", "open");
+  await sleep(3500);
+  await hook("back", "close");
+  await sleep(500);
+  await tapPin(page, "5678");
+  await sleep(2500);
+});
 await post("/api/panel/arm");
-await sleep(4500);
-await post("/api/disarm", { pin: "5678" });
+await sleep(9500);
+await record("panel-alarm", async (page) => {
+  await sleep(300);
+  await hook("lab", "motion");
+  await sleep(5000);
+  await tapPin(page, "1234");
+  await sleep(2500);
+});
 
 // Admin screens.
 const adminPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
