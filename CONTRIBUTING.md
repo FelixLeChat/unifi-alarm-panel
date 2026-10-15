@@ -16,6 +16,8 @@ Be kind: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). If AI helped, read [AI_POLICY
 
 ## Setup
 
+Easiest: open the repo in a dev container or GitHub Codespaces ([docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)). Or by hand:
+
 ```bash
 pnpm install
 cp .env.example .env

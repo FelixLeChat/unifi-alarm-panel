@@ -37,3 +37,8 @@ coverage/
 # visual baseline (pnpm shots:baseline)
 /visual-baseline
 /test-results-visual
+
+# docs site build
+/site/
+/.venv/
+.pnpm-store/
