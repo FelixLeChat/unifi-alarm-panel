@@ -1,6 +1,6 @@
 # UniFi integration
 
-How this app talks to UniFi, what was tried, and what is confirmed. See [README.md](../README.md) for setup.
+How this app talks to UniFi, what was tried, and what is confirmed. See [INSTALL.md](INSTALL.md) for setup.
 
 ## Two sensor-event sources, on purpose
 

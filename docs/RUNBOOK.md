@@ -1,6 +1,6 @@
 # Runbook
 
-One page for whoever is on call, not necessarily whoever built this. See [README.md](../README.md) for setup and dev, and [UNIFI.md](UNIFI.md) for the UniFi side.
+One page for whoever is on call, not necessarily whoever built this. See [INSTALL.md](INSTALL.md) for setup, [DEVELOPMENT.md](DEVELOPMENT.md) for dev, and [UNIFI.md](UNIFI.md) for the UniFi side.
 
 ## Add or remove a PIN
 
@@ -61,7 +61,7 @@ Everything between that backup and now (PIN changes, audit events) is lost. This
 systemctl status unifi-alarm-panel-updater.timer
 ```
 
-If it's inactive or not found, install it (README, Deployment) or apply the update by hand:
+If it's inactive or not found, install it ([INSTALL.md](INSTALL.md)) or apply the update by hand:
 
 ```bash
 cd /opt/unifi-alarm-panel

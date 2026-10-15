@@ -2,7 +2,7 @@
 
 # unifi-alarm-panel
 
-Self-hosted UniFi-centric alarm system: a Next.js app that is the kiosk PIN panel (`/panel`), the admin UI (`/admin`) and the backend, in one process. Read [README.md](README.md) first for repo layout, dev commands and deploy steps. [docs/UNIFI.md](docs/UNIFI.md) covers the UniFi integration and [docs/RUNBOOK.md](docs/RUNBOOK.md) the on-call steps.
+Self-hosted UniFi-centric alarm system: a Next.js app that is the kiosk PIN panel (`/panel`), the admin UI (`/admin`) and the backend, in one process. Read [README.md](README.md) first, then [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for repo layout and dev commands and [docs/INSTALL.md](docs/INSTALL.md) for deploy steps. [docs/UNIFI.md](docs/UNIFI.md) covers the UniFi integration and [docs/RUNBOOK.md](docs/RUNBOOK.md) the on-call steps.
 
 **The one thing to understand:** armed/disarmed state, PINs and the audit log live on this server, not in UniFi. UniFi (Alarm Manager) is an event source and camera layer that webhooks every sensor trip here. The console's arm state is mirrored in only on an edge (someone armed from the UniFi app), never re-applied as a level. Don't design anything that treats UniFi's arm state as authoritative.
 
@@ -37,7 +37,7 @@ To add a channel:
 2. Add the id to `ChannelId` in `types.ts`, the def to `CHANNELS` in `index.ts`, and `...<id>Fields` to `SETTINGS` in `settings.ts`. A channel module must not import `settings.ts` (it imports the fields), or the module cycle breaks `SETTINGS`.
 3. Add a section with `channel: "<id>"` to the notifications group in `GROUP_SECTIONS` (`app/admin/SettingsGroupForm.tsx`). The card gets the switch, the alert-type checkboxes and the test button from that.
 4. Secrets: flag `secret: true`, and never put one in a log line or error message. Telegram's token is in its URL path, so `telegram.ts` never includes the URL in an error.
-5. Tests with a mocked `fetch`, README Configuration and `.env.example` seed list, and the outbound list above if the channel calls a host that isn't on the LAN.
+5. Tests with a mocked `fetch`, docs/CONFIGURATION.md and the `.env.example` seed list, and the outbound list above if the channel calls a host that isn't on the LAN.
 
 DURESS goes only to the channels the admin routed it to. Never add a channel that shows or sounds on site.
 
@@ -70,7 +70,7 @@ shadcn/ui, base-luma style, neutral theme. [docs/design.md](docs/design.md) hold
 
 ## Docs
 
-Keep the docs in step with the code. A change to config keys, env vars, scripts, admin screens or the deploy path updates [README.md](README.md) in the same PR. Write the way the existing docs do: short, concrete (ids, values, dates), no em dashes.
+Keep the docs in step with the code. A change to config keys, env vars, scripts, admin screens or the deploy path updates the docs in the same PR ([docs/CONFIGURATION.md](docs/CONFIGURATION.md), [docs/INSTALL.md](docs/INSTALL.md), and [README.md](README.md) if the quick start changes). Write the way the existing docs do: short, concrete (ids, values, dates), no em dashes.
 
 ## Verify before claiming done
 
