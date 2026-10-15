@@ -15,9 +15,13 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
 </p>
 
-| Disarmed | Exit delay, door left open | Entry delay |
+| Arming | Entry delay | Alarm |
 | --- | --- | --- |
-| ![Disarmed panel with the weather and door list](docs/screenshots/panel-disarmed.png) | ![Exit delay countdown with the front door open](docs/screenshots/panel-arming.png) | ![Entry delay countdown naming the door that opened](docs/screenshots/panel-entry-delay.png) |
+| ![Tap Arm, the exit delay counts down, the panel arms](docs/screenshots/panel-arming.gif) | ![A door opens while armed, the entry delay counts down, a PIN disarms](docs/screenshots/panel-entry-delay.gif) | ![A sensor trips, the alarm sounds, a PIN silences and disarms](docs/screenshots/panel-alarm.gif) |
+
+| Overview | Audit log | Sensors |
+| --- | --- | --- |
+| ![Admin overview with the arm and disarm activity heatmap](docs/screenshots/admin-overview.png) | ![Audit log showing who armed, who disarmed and what tripped](docs/screenshots/admin-audit-log.png) | ![Admin sensors screen with a sensor's mode and recent events](docs/screenshots/admin-sensors.png) |
 
 Not affiliated with Ubiquiti. UniFi is a trademark of Ubiquiti Inc.
 
@@ -60,7 +64,26 @@ UniFi's own arm state is mirrored into this app when someone arms from the conso
 
 One Next.js and TypeScript app serves the kiosk (`/panel`), the admin UI (`/admin`) and the API as a single long-lived Node process, with SQLite for state. A restart partway through a countdown still escalates to `ALARM` on the original schedule.
 
-![Admin settings, notification channels with per-channel alert types](docs/screenshots/admin-notifications.png)
+```mermaid
+flowchart LR
+  subgraph unifi["UniFi console (Protect)"]
+    S["Door and motion sensors"] --> AM["Alarm Manager"]
+    CAM["Cameras"]
+  end
+  subgraph app["UniFi Alarm Panel (one process on your LAN)"]
+    ENG["Alarm state machine<br/>timers, PINs, audit log"]
+    DB[("SQLite")]
+    ENG --- DB
+  end
+  KIOSK["Wall tablet<br/>PIN keypad"]
+  ADMIN["Admin browser"]
+  CH["Slack, ntfy,<br/>Telegram, Signal"]
+  AM -->|"webhook: sensor tripped"| ENG
+  KIOSK -->|"arm / disarm with a PIN"| ENG
+  ADMIN -->|"settings, PINs, audit log"| ENG
+  ENG -->|"fetch a snapshot"| CAM
+  ENG -->|"alert with the snapshot"| CH
+```
 
 ## Features
 
