@@ -1,0 +1,24 @@
+{
+  "name": "UniFi Alarm Panel",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "features": {
+    // Node 26 is what CI and the Docker image build against.
+    "ghcr.io/devcontainers/features/node:1": { "version": "26" }
+  },
+  // Volumes keep a host's macOS or Windows node_modules and .next (native modules!) out of the container.
+  "mounts": [
+    "source=uap-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=uap-next,target=${containerWorkspaceFolder}/.next,type=volume"
+  ],
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "forwardPorts": [3000, 8089],
+  "portsAttributes": {
+    "3000": { "label": "App: /panel, /admin", "onAutoForward": "notify" },
+    "8089": { "label": "Fake UniFi Protect (pnpm protect:mock)", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "bradlc.vscode-tailwindcss", "vitest.explorer", "ms-playwright.playwright"]
+    }
+  }
+}

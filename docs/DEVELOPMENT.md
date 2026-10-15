@@ -1,6 +1,6 @@
 # Development
 
-How the code is laid out and how to run it locally. The rules for changes (commit format, checks, what to be careful with) are in [CONTRIBUTING.md](../CONTRIBUTING.md).
+How the code is laid out and how to run it locally. The rules for changes (commit format, checks, what to be careful with) are in [CONTRIBUTING.md](https://github.com/FelixLeChat/unifi-alarm-panel/blob/main/CONTRIBUTING.md).
 
 ## Repo layout
 
@@ -32,12 +32,23 @@ docs/               see the table below
 | [UNIFI.md](UNIFI.md) | Sensor-event sources, arm-state sync, camera streaming |
 | [RUNBOOK.md](RUNBOOK.md) | One page for whoever is on call |
 | [design.md](design.md) | Design system and per-surface rules |
-| [architecture/](architecture/) | Architecture diagram (mermaid) |
+| [architecture/](https://github.com/FelixLeChat/unifi-alarm-panel/tree/main/docs/architecture) | Architecture diagram (mermaid) |
 | [sounds/index.html](sounds/index.html) | Listening page for the panel sounds |
 
 One **Next.js + TypeScript** app: API routes, kiosk UI and admin UI. It runs as a single long-lived Node process (`output: "standalone"`, no horizontal scaling) so the server-side timers and in-memory state work. State persists to SQLite for restart recovery.
 
 **Restart recovery covers an in-flight countdown.** `alarm_state` stores the exit/entry deadline next to the state, and the engine re-arms its timer from it on boot. A reboot or an update partway through an entry delay still escalates to `ALARM` on the original schedule (immediately if the deadline passed while the process was down). Look for `resumed an in-flight alarm countdown after a restart` in the log.
+
+## Dev container or Codespaces
+
+The fastest start: open the repo in a dev container (VS Code, "Reopen in Container") or [GitHub Codespaces](https://codespaces.new/FelixLeChat/unifi-alarm-panel). `.devcontainer/` gives you Node 26, pnpm, the build toolchain for the native modules, the dependencies and a `.env` with fresh secrets and `ADMIN_TOKEN=dev`. Then:
+
+```bash
+pnpm dev            # http://localhost:3000/admin, sign in with "dev"
+pnpm protect:mock   # fake UniFi Protect on :8089, no hardware needed
+```
+
+`node_modules` and `.next` live in container volumes, so a checkout that already ran `pnpm install` on the host is fine. The first start compiles a native module on arm64, which takes a minute.
 
 ## Run it locally
 
@@ -79,3 +90,16 @@ In the setup wizard (or Settings > UniFi console), set the console URL to `http:
 A sensor row is created the first time UniFi posts an event naming it. There is no "add sensor" step, and the Sensors screen shows "No sensors found" until one arrives. Then map it to a camera on that screen.
 
 `GET /api/health` reports engine and DB status, the sensor-feed heartbeat age, the running version, and the connectivity watchdog's view (default camera reachability, realtime-stream status and last error, which source delivered the last event).
+
+## Preview the docs site
+
+The docs in this folder are also published as a site (MkDocs Material, built by `.github/workflows/docs.yml` and hosted on GitHub Pages). To preview it:
+
+```bash
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements-docs.txt
+mkdocs serve        # http://127.0.0.1:8000, rebuilds as you save
+mkdocs build --strict   # what CI runs: a broken link fails
+```
+
+A new page goes in the `nav` list in `mkdocs.yml`. Link to files outside `docs/` (source, scripts) with a full `github.com/.../blob/main/` URL, because the site can't resolve them.

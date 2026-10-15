@@ -2,6 +2,8 @@
 
 Pick one. All of them run the same single Node process with one SQLite file: never run two copies, the alarm's timers live in that process.
 
+On ARM hardware (a Raspberry Pi, for example), use Docker: the image is built for amd64 and arm64. The release tarball behind the systemd and Proxmox installs is amd64 only.
+
 ## Docker Compose
 
 ```bash
@@ -29,7 +31,7 @@ On a Proxmox VE host, run this in the host shell as root:
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/FelixLeChat/unifi-alarm-panel/main/deploy/proxmox/install.sh)"
 ```
 
-Read [the script](../deploy/proxmox/install.sh) first if you like: it is short, and it fetches [one more](../deploy/proxmox/container-setup.sh) that runs inside the new container. Pin both to a ref with `UAP_REF=<tag or commit>`.
+Read [the script](https://github.com/FelixLeChat/unifi-alarm-panel/blob/main/deploy/proxmox/install.sh) first if you like: it is short, and it fetches [one more](https://github.com/FelixLeChat/unifi-alarm-panel/blob/main/deploy/proxmox/container-setup.sh) that runs inside the new container. Pin both to a ref with `UAP_REF=<tag or commit>`.
 
 It asks for Default or Advanced, then:
 

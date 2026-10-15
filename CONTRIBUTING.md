@@ -16,6 +16,8 @@ Be kind: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). If AI helped, read [AI_POLICY
 
 ## Setup
 
+Easiest: open the repo in a dev container or GitHub Codespaces ([docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)). Or by hand:
+
 ```bash
 pnpm install
 cp .env.example .env
@@ -76,6 +78,8 @@ A change to config keys, env vars, scripts, admin screens or the deploy path upd
 ## Releases
 
 Push a `v*` tag. `.github/workflows/release.yml` builds the standalone tarball, attaches it to the GitHub Release, and pushes `ghcr.io/felixlechat/unifi-alarm-panel:<tag>` and `:latest`. A systemd box picks it up through `deploy/update.sh` or the admin UI's "Update available" banner; a Docker host with `docker compose pull`.
+
+Before tagging, retake the README and docs screenshots, because the kiosk footer shows the version: follow the header of `scripts/screenshots.mts` (it needs ffmpeg, a go2rtc container and internet for the weather), then commit the new files in `docs/screenshots/`.
 
 ## Reporting a security issue
 
