@@ -10,7 +10,7 @@ Three things stay in the environment, because they protect everything else:
 | `WEBHOOK_SHARED_SECRET` | What UniFi Alarm Manager sends with each sensor event |
 | `SECRETS_KEY` | 32 bytes, base64 (`openssl rand -base64 32`). Encrypts the credentials stored in the database |
 
-Plus the runtime basics: `PORT`, `DATABASE_PATH`, `LOG_LEVEL` and `UPDATE_CHECK_REPO`. See [.env.example](../.env.example).
+Plus the runtime basics: `PORT`, `DATABASE_PATH`, `LOG_LEVEL` and `UPDATE_CHECK_REPO`. See [.env.example](https://github.com/FelixLeChat/unifi-alarm-panel/blob/main/.env.example).
 
 **Everything else is set in the admin UI** (Settings, or the first-run wizard) and stored in the database:
 
