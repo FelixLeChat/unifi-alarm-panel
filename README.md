@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://github.com/FelixLeChat/unifi-alarm-panel/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/FelixLeChat/unifi-alarm-panel/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/FelixLeChat/unifi-alarm-panel/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/FelixLeChat/unifi-alarm-panel"></a>
+  <a href="https://felixlechat.github.io/unifi-alarm-panel/"><img alt="Documentation" src="https://img.shields.io/badge/docs-site-blue"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
 </p>
 
@@ -106,6 +107,8 @@ flowchart LR
 - Tie arm and disarm to UniFi Access, for example a [G3 Fingerprint reader](https://ca.store.ui.com/ca/en/category/door-access-readers/collections/access-reader-fingerprint/products/ua-g3-fingerprint) at the door, so a fingerprint can disarm without typing a PIN on the panel.
 
 ## Documentation
+
+Read it as a site: **[felixlechat.github.io/unifi-alarm-panel](https://felixlechat.github.io/unifi-alarm-panel/)**. The same pages live in [docs/](docs/).
 
 | Doc | What it covers |
 |---|---|
