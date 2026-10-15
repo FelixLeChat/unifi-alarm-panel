@@ -6,6 +6,10 @@ Please don't open a public issue. Report it privately through GitHub: **Security
 
 Include what you found, how to reproduce it, and what an attacker could do with it.
 
+## Supported versions
+
+Security fixes go into the latest release. Upgrade to it before reporting something that an older version has.
+
 ## What this app protects
 
 - **PINs** are hashed with argon2, never logged and never returned by any API.

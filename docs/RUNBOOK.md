@@ -12,13 +12,13 @@ One page for whoever is on call, not necessarily whoever built this. See [INSTAL
 pnpm pin:add "Alex" 1234
 ```
 
-**Remote**, if you can reach the box over HTTP but have no shell on it: `SEED_URL=http://<box>:3000 SEED_ADMIN_TOKEN=<that box's ADMIN_TOKEN> pnpm seed:users:remote`. It bulk-migrates a `users.json` / `deviceAccess.json` export (README, "Migrating PINs from the old panel").
+**Remote**, if you can reach the box over HTTP but have no shell on it: `curl -X POST http://<box>:3000/api/admin/pins -H "X-Admin-Token: <that box's ADMIN_TOKEN>" -H 'content-type: application/json' -d '{"label":"Alex","pin":"1234","isDuress":false}'`.
 
 PINs are hashed on write and never returned by any API or shown in any UI. To replace one, revoke it and issue a new one.
 
 ## What an alert means
 
-- **ALARM:** a sensor tripped while armed (instantly for an "instant" sensor, or after the entry delay ran out with nobody disarming). The Slack/ntfy alert carries a camera snapshot and a live-view link when one is mapped. The admin header pill shows `ALARM - <sensor name>`.
+- **ALARM:** a sensor tripped while armed (instantly for an "instant" sensor, or after the entry delay ran out with nobody disarming). The alert (Slack, ntfy, Telegram or Signal) carries a camera snapshot and a live-view link when one is mapped. The admin header pill shows `ALARM - <sensor name>`.
 - **ALARM from a PIN lockout:** too many wrong PINs at the panel. It fires whatever the arm state, and the audit log shows `alarm_pin_lockout`. Check the panel and the camera by the door.
 - **DURESS:** someone disarmed with a duress PIN. **It looks and behaves like a normal disarm at the panel, on purpose.** The only places it shows are the separate "DURESS" Slack/ntfy message and the raw event type in the audit log. Treat it as someone possibly under coercion, not a false alarm.
 - **HEALTH:** no sensor event for 2h and the realtime stream isn't connected, so the feed may be dead. See "Sensor events stopped" below.

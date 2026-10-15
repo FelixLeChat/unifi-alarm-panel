@@ -51,6 +51,7 @@ echo "Switching to $TAG"
 ln -sfn "$RELEASE_DIR" current
 
 # Prune old releases — keep the newest KEEP_RELEASES around for instant rollback.
+# shellcheck disable=SC2012 # ls -t orders by age; the dir names are release tags, so no odd characters
 ls -1dt releases/*/ 2>/dev/null | tail -n "+$((KEEP_RELEASES + 1))" | xargs -r rm -rf
 
 sudo systemctl restart unifi-alarm-panel

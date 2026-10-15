@@ -2,6 +2,8 @@
 
 Pick one. All of them run the same single Node process with one SQLite file: never run two copies, the alarm's timers live in that process.
 
+On ARM hardware (a Raspberry Pi, for example), use Docker: the image is built for amd64 and arm64. The release tarball behind the systemd and Proxmox installs is amd64 only.
+
 ## Docker Compose
 
 ```bash
