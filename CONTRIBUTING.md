@@ -2,6 +2,18 @@
 
 How to get a change into `main`. See [docs/INSTALL.md](docs/INSTALL.md) and [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for setup and [CLAUDE.md](CLAUDE.md) for the runtime model and the security rules.
 
+## Where to go
+
+| I want to... | Go to |
+| --- | --- |
+| Ask for help installing or configuring | [Discussions, Q&A](https://github.com/FelixLeChat/unifi-alarm-panel/discussions/new?category=q-a) |
+| Report a bug | [Issues](https://github.com/FelixLeChat/unifi-alarm-panel/issues/new/choose) |
+| Suggest a feature or a bigger change | [Discussions, Ideas](https://github.com/FelixLeChat/unifi-alarm-panel/discussions/new?category=ideas), before you write code |
+| Fix a bug or improve the docs | A pull request: small ones need no discussion first |
+| Report a security vulnerability | [SECURITY.md](SECURITY.md), never a public issue |
+
+Be kind: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). If AI helped, read [AI_POLICY.md](AI_POLICY.md): a person reads and sends everything.
+
 ## Setup
 
 ```bash
@@ -41,7 +53,7 @@ pnpm test                   # vitest
 pnpm test:e2e               # playwright, builds and starts its own server on a fresh DB
 ```
 
-For a UI-only change, run `pnpm shots:baseline` on `main` first, then `pnpm shots` on your branch. It walks 32 shots: the admin screens and dialogs (login to Settings, the PIN, sensor and disarm dialogs) at 1440 and 390 pixels wide, and the panel's disarmed, confirm, open-door, test-mode, armed, alarm and portrait states plus one 390 pixel overflow check, in the one theme users can reach. The compare is strict on colour (`threshold: 0`) and tolerates 200 stray pixels for font anti-aliasing. A diff you didn't mean to make shows up under `test-results-visual/`. Baselines depend on the OS and fonts, so they are not committed.
+For a UI-only change, run `pnpm shots:baseline` on `main` first, then `pnpm shots` on your branch. It walks the admin screens and dialogs (login to Settings, the PIN, sensor and disarm dialogs) at 1440 and 390 pixels wide, and the panel's disarmed, confirm, open-door, test-mode, armed, alarm and portrait states plus one 390 pixel overflow check, in the one theme users can reach. The compare is strict on colour (`threshold: 0`) and tolerates 200 stray pixels for font anti-aliasing. A diff you didn't mean to make shows up under `test-results-visual/`. Baselines depend on the OS and fonts, so they are not committed.
 
 CI also runs `pnpm audit --audit-level=high` and `pnpm build`. A vulnerable transitive dependency fails the build.
 
