@@ -6,10 +6,11 @@ import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { getSetting } from "@/lib/services/settings";
 
+import type { ConditionIcon } from "@/app/panel/weather-icons";
+
 // WMO weather codes (Open-Meteo's `weather_code`) collapsed to a short
-// display string + one of panel.js's 7 weather icon keys —
+// display string + one of the weather icon keys in app/panel/weather-icons.ts:
 // https://open-meteo.com/en/docs#weather_variable_documentation
-export type ConditionIcon = "clear-day" | "partly-cloudy" | "cloudy" | "fog" | "rain" | "snow" | "storm";
 
 const CONDITIONS: Record<number, { text: string; icon: ConditionIcon }> = {
   0: { text: "Clear", icon: "clear-day" },

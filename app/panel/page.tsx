@@ -7,6 +7,7 @@ import { getEngine } from "@/lib/engine";
 import { getSetting } from "@/lib/services/settings";
 import type { AlarmStateName } from "@/lib/state/machine";
 import { getAppVersion } from "@/lib/version";
+import { WEATHER_ICON_PATHS } from "./weather-icons";
 
 const STATE_CONFIG: Record<AlarmStateName, { label: string; eyebrow: string; cssClass: string; message: string }> = {
   DISARMED: { label: "Disarmed", eyebrow: "System state", cssClass: "state-disarmed", message: "" },
@@ -162,10 +163,22 @@ export default function PanelPage() {
             </div>
           </div>
 
+          {/* Weather icon sheet: panel.js points the <use> elements below at "#wi-<key>". The
+              symbols carry the Material viewBox (y from -960); the referencing svgs below must
+              start at 0,0 or the instantiated symbol lands outside their visible area. */}
+          <svg width="0" height="0" aria-hidden="true">
+            <defs>
+              {Object.entries(WEATHER_ICON_PATHS).map(([key, d]) => (
+                <symbol key={key} id={`wi-${key}`} viewBox="0 -960 960 960">
+                  <path d={d} />
+                </symbol>
+              ))}
+            </defs>
+          </svg>
           <div id="forecast" className="forecast" hidden>
             <div className="forecast-now">
-              <svg className="forecast-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
-                <path id="forecast-icon-path" d="" />
+              <svg className="forecast-icon" viewBox="0 0 960 960" fill="currentColor" aria-hidden="true">
+                <use id="forecast-icon-use" href="" />
               </svg>
               <span id="forecast-temp" className="forecast-temp" />
             </div>
@@ -178,8 +191,8 @@ export default function PanelPage() {
               {Array.from({ length: 4 }, (_, i) => (
                 <div key={i} id={`forecast-hour-${i}`} className="forecast-hour" hidden>
                   <span id={`forecast-hour-${i}-label`} className="forecast-hour-label" />
-                  <svg className="forecast-hour-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
-                    <path id={`forecast-hour-${i}-icon-path`} d="" />
+                  <svg className="forecast-hour-icon" viewBox="0 0 960 960" fill="currentColor" aria-hidden="true">
+                    <use id={`forecast-hour-${i}-icon-use`} href="" />
                   </svg>
                   <span id={`forecast-hour-${i}-temp`} className="forecast-hour-temp" />
                 </div>

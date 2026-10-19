@@ -75,7 +75,7 @@ Open [docs/architecture/how-it-works.html](docs/architecture/how-it-works.html) 
 - **Alerts:** Slack, ntfy, Telegram and Signal, each with its own routing for Alarm, Duress and Health, snapshots from Protect, and a per-channel test button.
 - **Admin:** Overview, Sensors, PINs, Delays, Audit log, Events, Tasks and Settings, plus a first-run setup wizard. Live camera view through go2rtc.
 - **UniFi:** webhook and realtime-stream intake, console arm-state sync, device health, a watchdog for a silent sensor feed.
-- **Hardening:** credentials encrypted at rest, throttled admin and webhook guards, CSP, `pnpm audit` in CI.
+- **Hardening:** credentials encrypted at rest, throttled admin and webhook guards, CSP, `pnpm audit` and CodeQL in CI.
 
 ## Tested with
 
@@ -84,6 +84,12 @@ Open [docs/architecture/how-it-works.html](docs/architecture/how-it-works.html) 
 - [G5 Turret Ultra](https://ca.store.ui.com/ca/en/category/physical-security-dome-turret/products/uvc-g5-turret-ultra?variant=uvc-g5-turret-ultra) cameras for snapshots and live view
 - An [Amazon Fire HD 10 tablet](https://www.amazon.ca/Amazon_Fire_HD_10_tablet/dp/B0BT752BRT) (amazon.ca) running `/panel` fullscreen in [Fully Kiosk Browser](https://www.fully-kiosk.com/)
 - The server: any Linux box or container host on the same LAN as the console
+
+## How it was built
+
+Most of this code was written with [Claude Code](https://claude.com/claude-code), directed and reviewed by one person. The design (arming lives on this server, per-person PINs, the duress path, the shared PIN lockout) is the author's, and every change goes through the same gate as a contributor's: `pnpm lint`, `pnpm typecheck`, the Vitest unit suite, a Playwright suite that drives the real panel and admin UI in a browser, `pnpm audit` and CodeQL in CI, then a run on the author's own hardware. It has been the alarm at the author's house and office since September 2026.
+
+If you review it, read it as you would any other codebase. If you contribute, [AI_POLICY.md](AI_POLICY.md) says what is expected of a pull request.
 
 ## Possible improvements
 

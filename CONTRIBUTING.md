@@ -57,7 +57,7 @@ pnpm test:e2e               # playwright, builds and starts its own server on a 
 
 For a UI-only change, run `pnpm shots:baseline` on `main` first, then `pnpm shots` on your branch. It walks the admin screens and dialogs (login to Settings, the PIN, sensor and disarm dialogs) at 1440 and 390 pixels wide, and the panel's disarmed, confirm, open-door, test-mode, armed, alarm and portrait states plus one 390 pixel overflow check, in the one theme users can reach. The compare is strict on colour (`threshold: 0`) and tolerates 200 stray pixels for font anti-aliasing. A diff you didn't mean to make shows up under `test-results-visual/`. Baselines depend on the OS and fonts, so they are not committed.
 
-CI also runs `pnpm audit --audit-level=high` and `pnpm build`. A vulnerable transitive dependency fails the build.
+CI also runs `pnpm audit --audit-level=high`, `pnpm build` and CodeQL. A vulnerable transitive dependency fails the build; a CodeQL finding shows up under Security > Code scanning.
 
 Tests prove the logic is consistent. They don't prove an integration works. If you touched the admin UI, the panel, go2rtc, ffmpeg or UniFi Protect, run it for real and say in the PR what you saw.
 
