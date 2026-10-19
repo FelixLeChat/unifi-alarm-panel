@@ -1,0 +1,17 @@
+# Generated, vendored or binary
+.next/
+node_modules/
+pnpm-lock.yaml
+public/sounds/
+docs/architecture/
+docs/assets/
+site/
+data/
+test-results/
+test-results-visual/
+visual-baseline/
+playwright-report/
+# Prose: paragraphs stay on one line (CONTRIBUTING.md), so the formatter stays out of Markdown
+*.md
+# Compiled design reference, refreshed by curl
+DESIGN.md

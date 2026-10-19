@@ -50,6 +50,8 @@ UI components come from upstream shadcn/ui: `pnpm dlx shadcn@latest add <name>`.
 
 ```bash
 pnpm lint
+pnpm format:check           # prettier; `pnpm format` rewrites
+pnpm knip                   # unused files, exports and dependencies
 pnpm typecheck
 pnpm test                   # vitest
 pnpm test:e2e               # playwright, builds and starts its own server on a fresh DB
