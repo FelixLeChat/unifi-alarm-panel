@@ -47,6 +47,7 @@ export class SlackChannel implements Channel {
     const message = formatMessage(alert, this.ctx.timeZone, this.ctx.consoleCamerasUrl);
     await sendWithRetry("Slack notification failed after retry", async () => {
       const res = await fetch(this.config.webhookUrl!, {
+        signal: AbortSignal.timeout(10_000),
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ text: message }),
@@ -74,6 +75,7 @@ export class SlackChannel implements Channel {
     const filename = snapshot.contentType.includes("png") ? "snapshot.png" : "snapshot.jpg";
 
     const urlRes = await fetch("https://slack.com/api/files.getUploadURLExternal", {
+      signal: AbortSignal.timeout(10_000),
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.config.botToken}`,
@@ -87,12 +89,14 @@ export class SlackChannel implements Channel {
     }
 
     const uploadRes = await fetch(urlBody.upload_url, {
+      signal: AbortSignal.timeout(10_000),
       method: "POST",
       body: new Uint8Array(snapshot.buffer),
     });
     if (!uploadRes.ok) throw new Error(`upload_url POST failed: ${uploadRes.status}`);
 
     const completeRes = await fetch("https://slack.com/api/files.completeUploadExternal", {
+      signal: AbortSignal.timeout(10_000),
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.config.botToken}`,

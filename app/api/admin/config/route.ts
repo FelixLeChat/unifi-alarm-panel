@@ -62,6 +62,7 @@ const configPutSchema = z.object({
           .trim()
           .min(1)
           .regex(/^rtsps?:\/\//, "must start with rtsp:// or rtsps://")
+          .refine((v) => URL.canParse(v), "must be a valid URL")
           .nullable()
           .optional(),
         sensorType: z.enum(["motion", "door"]).nullable().optional(),

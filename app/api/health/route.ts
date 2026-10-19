@@ -16,7 +16,8 @@ export async function GET() {
       state: status.state,
       lastWebhookAgeSec: getLastWebhookAgeSec(),
       version: getAppVersion(),
-      connectivity: getConnectivityStatus(),
+      // Device names, MACs and battery levels stay behind /api/admin/connectivity; this endpoint is unauthenticated.
+      connectivity: { ...getConnectivityStatus(), devices: undefined },
     });
   } catch {
     return NextResponse.json({ ok: false, engine: "error" }, { status: 503 });

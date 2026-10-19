@@ -145,6 +145,7 @@ describe("ENTRY_DELAY", () => {
       config,
     );
     expect(result.state.name).toBe("ALARM");
+    expect(result.effects).toContainEqual({ type: "CANCEL_TIMERS" });
     expect(result.effects).toContainEqual({ type: "ALERT_ALARM", sensorId: "motion-1" });
   });
 });
@@ -181,6 +182,12 @@ describe("PIN_LOCKOUT", () => {
     expect(result.state).toEqual({ name: "ALARM", since: 100 });
   });
 
+  it.each([arming(), entryDelay("front-door")])("cancels the running countdown when it fires from %s", (state) => {
+    const result = transition(state, { type: "PIN_LOCKOUT", now: 100, source: "kiosk" }, config);
+    expect(result.state.name).toBe("ALARM");
+    expect(result.effects).toContainEqual({ type: "CANCEL_TIMERS" });
+  });
+
   it("doesn't spam a second alert if already in ALARM", () => {
     const result = transition(alarm("front-door"), { type: "PIN_LOCKOUT", now: 100, source: "kiosk" }, config);
     expect(result.state).toEqual(alarm("front-door"));
@@ -208,5 +215,31 @@ describe("duress", () => {
     const normal = transition(armed(), { type: "DISARM", now: 10, duress: false }, config);
     const duress = transition(armed(), { type: "DISARM", now: 10, duress: true }, config);
     expect(duress.state).toEqual(normal.state);
+  });
+});
+
+describe("timer invariant", () => {
+  const states = [disarmed(), arming(), armed(), entryDelay("front-door"), alarm("front-door")];
+  const events = [
+    { type: "ARM" as const, now: 1 },
+    { type: "DISARM" as const, now: 1, duress: false },
+    { type: "PIN_LOCKOUT" as const, now: 1, source: "kiosk" },
+    { type: "SENSOR_TRIP" as const, now: 1, sensorId: "s", mode: "instant" as const },
+    { type: "SENSOR_TRIP" as const, now: 1, sensorId: "s", mode: "delayed" as const },
+    { type: "EXIT_DELAY_ELAPSED" as const, now: 1 },
+    { type: "ENTRY_DELAY_ELAPSED" as const, now: 1 },
+  ];
+
+  it("a transition that leaves ARMING or ENTRY_DELAY always cancels or replaces the countdown", () => {
+    for (const state of states) {
+      for (const event of events) {
+        const result = transition(state, event, config);
+        const timed = state.name === "ARMING" || state.name === "ENTRY_DELAY";
+        // An ELAPSED event is the timer itself firing, so the engine has already dropped it.
+        const leaves = timed && result.state.name !== state.name && !event.type.endsWith("_ELAPSED");
+        const handled = result.effects.some((e) => ["CANCEL_TIMERS", "START_EXIT_TIMER", "START_ENTRY_TIMER"].includes(e.type));
+        if (leaves) expect(handled, `${state.name} + ${event.type}`).toBe(true);
+      }
+    }
   });
 });

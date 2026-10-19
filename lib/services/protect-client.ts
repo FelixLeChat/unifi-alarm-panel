@@ -36,6 +36,8 @@ export class UnifiProtectClient implements ProtectClient {
     const dispatcher = getProtectDispatcher();
     return fetch(`${this.baseUrl}${path}`, {
       ...init,
+      // The ALARM path awaits the snapshot before the alert goes out, so a hung console must not hold it for undici's 300s default.
+      signal: init.signal ?? AbortSignal.timeout(10_000),
       headers: { "X-API-KEY": this.apiKey, ...init.headers },
       ...(dispatcher ? { dispatcher } : {}),
     } as RequestInit);

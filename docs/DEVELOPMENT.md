@@ -89,7 +89,7 @@ In the setup wizard (or Settings > UniFi console), set the console URL to `http:
 
 A sensor row is created the first time UniFi posts an event naming it. There is no "add sensor" step, and the Sensors screen shows "No sensors found" until one arrives. Then map it to a camera on that screen.
 
-`GET /api/health` reports engine and DB status, the sensor-feed heartbeat age, the running version, and the connectivity watchdog's view (default camera reachability, realtime-stream status and last error, which source delivered the last event).
+`GET /api/health` reports engine and DB status, the sensor-feed heartbeat age, the running version, and the connectivity watchdog's view (default camera reachability, realtime-stream status and last error, which source delivered the last event). The per-device list is admin-only, on `GET /api/admin/connectivity`.
 
 ## Preview the docs site
 

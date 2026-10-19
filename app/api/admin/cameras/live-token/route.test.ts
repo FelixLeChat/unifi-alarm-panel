@@ -27,6 +27,12 @@ describe("admin camera live-token route", () => {
     expect(res.status).toBe(400);
   });
 
+  it("rejects a cameraId that is not a safe go2rtc stream name", async () => {
+    const { GET } = await import("./route");
+    const res = await GET(adminReq("/api/admin/cameras/live-token?cameraId=" + encodeURIComponent("cam#raw=-i x")));
+    expect(res.status).toBe(400);
+  });
+
   it("issues a token that the live route accepts for the same cameraId", async () => {
     const { GET } = await import("./route");
     const res = await GET(adminReq("/api/admin/cameras/live-token?cameraId=cam-1"));

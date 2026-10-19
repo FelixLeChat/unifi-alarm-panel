@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { readSmallJsonBody } from "@/lib/validation";
 import { getEngine } from "@/lib/engine";
 
 /**
@@ -11,7 +12,7 @@ import { getEngine } from "@/lib/engine";
  * Body is optional — an empty POST (existing behavior) means force=false.
  */
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => null);
+  const body = await readSmallJsonBody(req);
   const force = (body as { force?: unknown } | null)?.force === true;
 
   const result = getEngine().armWithoutPin("Panel", force);

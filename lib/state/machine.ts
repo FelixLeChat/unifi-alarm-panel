@@ -103,6 +103,8 @@ function handlePinLockout(
   return {
     state: { name: "ALARM", since: event.now },
     effects: [
+      // ARMING or ENTRY_DELAY may have a countdown running: drop it, or it fires into ALARM as a stale timer and the panel keeps showing it.
+      { type: "CANCEL_TIMERS" },
       { type: "ALERT_ALARM" },
       { type: "AUDIT", event: "alarm_pin_lockout", detail: { source: event.source, from: state.name } },
     ],
@@ -237,6 +239,7 @@ function handleEntryDelay(state: AlarmState, event: AlarmEvent): TransitionResul
         return {
           state: { name: "ALARM", since: event.now, triggeredBy: { sensorId: event.sensorId } },
           effects: [
+            { type: "CANCEL_TIMERS" },
             { type: "ALERT_ALARM", sensorId: event.sensorId },
             {
               type: "AUDIT",

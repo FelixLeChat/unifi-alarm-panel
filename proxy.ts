@@ -36,6 +36,8 @@ export function proxy(req: NextRequest): NextResponse {
   response.headers.set("x-frame-options", "DENY");
   response.headers.set("referrer-policy", "no-referrer");
   response.headers.set("permissions-policy", "camera=(), microphone=(), geolocation=()");
+  // API responses carry state, PIN labels and settings; nothing in between should keep a copy.
+  if (req.nextUrl.pathname.startsWith("/api/")) response.headers.set("cache-control", "no-store");
   // Deliberately no Strict-Transport-Security: deploy/Caddyfile's optional
   // TLS layer uses `tls internal` (self-signed, untrusted by client devices
   // unless someone manually installs that CA). HSTS makes cert errors on a

@@ -9,7 +9,7 @@
  *   docker run --rm -d --name shot-go2rtc -p 127.0.0.1:1984:1984 alexxit/go2rtc   # so the go2rtc check passes too
  *   pnpm build
  *   echo v1.2.0 > VERSION   # the panel footer shows it; "dev" otherwise (delete the file after)
- *   PORT=3188 DATABASE_PATH=./data/shot.db ADMIN_TOKEN=t WEBHOOK_SHARED_SECRET=s \
+ *   PORT=3188 DATABASE_PATH=./data/shot.db ADMIN_TOKEN=screenshot-token WEBHOOK_SHARED_SECRET=screenshot-secret \
  *     SECRETS_KEY=$(openssl rand -base64 32) DEFAULT_EXIT_DELAY_SEC=60 pnpm start &
  *   pnpm exec tsx scripts/screenshots.mts
  */
@@ -21,7 +21,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const BASE = process.env.SHOT_BASE ?? "http://localhost:3188";
-const TOKEN = process.env.SHOT_ADMIN_TOKEN ?? "t";
+const TOKEN = process.env.SHOT_ADMIN_TOKEN ?? "screenshot-token";
 const SECRET = process.env.SHOT_WEBHOOK_SECRET ?? "s";
 const OUT = "docs/screenshots";
 const DB_PATH = process.env.SHOT_DB ?? "./data/shot.db";

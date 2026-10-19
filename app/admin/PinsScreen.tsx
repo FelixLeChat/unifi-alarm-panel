@@ -161,7 +161,11 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
 
   async function handleConfirmRevoke() {
     if (!revokeTarget) return;
-    await revokePin(token, revokeTarget.id);
+    const ok = await revokePin(token, revokeTarget.id).catch(() => false);
+    if (!ok) {
+      toast.error("Could not revoke the PIN. It still disarms. Try again.");
+      return;
+    }
     setRevokeTarget(null);
     onSaved();
   }

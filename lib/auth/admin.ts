@@ -1,12 +1,12 @@
-import { safeEqual } from "./safe-equal";
+import { isUsableSecret, safeEqual } from "./safe-equal";
 import { clientKey } from "./client-key";
 import { isLockedOut, recordFailure, recordSuccess } from "@/lib/services/rate-limit";
 import { logger } from "@/lib/logger";
 
 export function verifyAdminToken(req: Request): boolean {
   const expected = process.env.ADMIN_TOKEN;
-  if (!expected) {
-    logger.warn("admin request rejected: ADMIN_TOKEN is not configured on this server");
+  if (!isUsableSecret(expected)) {
+    logger.warn("admin request rejected: ADMIN_TOKEN is not configured on this server, or is the placeholder or shorter than 12 characters");
     return false;
   }
 

@@ -30,6 +30,11 @@
 
   var messageTimer = null;
 
+  // A request that never settles must not wedge the keypad or the poll. Older WebViews lack AbortSignal.timeout; they fall back to no timeout.
+  function timeoutSignal(ms) {
+    return typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(ms) : undefined;
+  }
+
   // Version this page was rendered with (server-side, from VERSION) — a
   // different one in /api/status means the server was redeployed under us.
   var pageVersion = (document.querySelector(".panel") || {}).dataset
@@ -235,6 +240,7 @@
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ pin: pin }),
+      signal: timeoutSignal(8000),
     })
       .then(function (res) {
         if (res.status === 429) {
@@ -549,14 +555,22 @@
     banner.classList.add("stale");
   }
 
+  // Single-flight: a slow poll must not pile up behind the 2s interval, and an old response landing after a disarm must not put the panel back into ALARM.
+  var pollInFlight = false;
+
   function pollStatus() {
-    fetch("/api/status", { cache: "no-store" })
+    if (pollInFlight) return;
+    pollInFlight = true;
+    fetch("/api/status", { cache: "no-store", signal: timeoutSignal(5000) })
       .then(function (res) {
         if (!res.ok) throw new Error("bad status");
         return res.json();
       })
       .then(applyStatus)
-      .catch(markOffline);
+      .catch(markOffline)
+      .then(function () {
+        pollInFlight = false;
+      });
   }
 
   // ---------- Clock ------------------------------------------------------------
@@ -630,6 +644,9 @@
       .then(applyContext)
       .catch(function () {
         forecastSkeleton.hidden = true;
+        // Same retry as a server-side weather miss (see applyContext), instead of waiting the full 15 minutes.
+        clearTimeout(contextRetryTimer);
+        contextRetryTimer = setTimeout(pollContext, 60 * 1000);
       });
   }
 
@@ -681,6 +698,7 @@
     SOUND_NAMES.forEach(function (name) {
       fetch("/sounds/" + name + ".wav")
         .then(function (res) {
+          if (!res.ok) throw new Error("sound " + name + " " + res.status);
           return res.arrayBuffer();
         })
         .then(function (data) {

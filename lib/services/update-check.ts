@@ -81,6 +81,7 @@ export async function checkForUpdate(): Promise<void> {
 
   try {
     const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=${RELEASES_PAGE_SIZE}`, {
+      signal: AbortSignal.timeout(10_000),
       // Public releases need no token. One only raises the rate limit, or reaches a private fork.
       headers: { ...(token ? { Authorization: `token ${token}` } : {}), Accept: "application/vnd.github+json" },
     });

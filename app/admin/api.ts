@@ -84,7 +84,7 @@ export interface AdminSnapshot {
   sensorFeed: SensorFeedStatus;
 }
 
-export async function fetchAdminSnapshot(token: string): Promise<AdminSnapshot | "unauthorized"> {
+export async function fetchAdminSnapshot(token: string): Promise<AdminSnapshot | "unauthorized" | "error"> {
   const [pinsRes, auditRes, configRes] = await Promise.all([
     fetch("/api/admin/pins", { headers: authedHeaders(token) }),
     fetch("/api/admin/audit?limit=50", { headers: authedHeaders(token) }),
@@ -92,6 +92,10 @@ export async function fetchAdminSnapshot(token: string): Promise<AdminSnapshot |
   ]);
   if (pinsRes.status === 401 || auditRes.status === 401 || configRes.status === 401) {
     return "unauthorized";
+  }
+  // A 429 or 5xx has a JSON error body with no pins/audit; passing that on would unmount the admin tree.
+  if (!pinsRes.ok || !auditRes.ok || !configRes.ok) {
+    return "error";
   }
   const pinsBody = (await pinsRes.json()) as { pins: PinSummary[] };
   const auditBody = (await auditRes.json()) as { audit: AuditRow[] };

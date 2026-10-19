@@ -1,4 +1,4 @@
-import { mkdirSync, readdirSync, unlinkSync } from "node:fs";
+import { mkdirSync, readdirSync, renameSync, unlinkSync } from "node:fs";
 import path from "node:path";
 import type Database from "better-sqlite3";
 import { getDb } from "@/lib/db";
@@ -36,7 +36,17 @@ export async function runDbBackup(db: Database.Database): Promise<string | null>
   const fileName = backupFileName(new Date());
   const destPath = path.join(BACKUP_DIR, fileName);
 
-  await db.backup(destPath);
+  // Write to a temp name and rename: a backup that fails midway must not leave a partial .db that the prune below counts as a good one.
+  const tmpPath = `${destPath}.tmp`;
+  try {
+    await db.backup(tmpPath);
+    renameSync(tmpPath, destPath);
+  } catch (err) {
+    try {
+      unlinkSync(tmpPath);
+    } catch {}
+    throw err;
+  }
   logger.info({ destPath }, "database backed up");
 
   pruneOldBackups();

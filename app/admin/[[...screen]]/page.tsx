@@ -94,12 +94,20 @@ export default function AdminPage() {
 
   const reload = useCallback(async () => {
     if (!token) return;
-    const result = await fetchAdminSnapshot(token);
+    const result = await fetchAdminSnapshot(token).catch(() => "error" as const);
     if (result === "unauthorized") {
       sessionStorage.removeItem(TOKEN_KEY);
       setToken(null);
       setLoggedIn(false);
       setTokenError("Token rejected.");
+      return;
+    }
+    if (result === "error") {
+      // Keep what is on screen on a poll failure; before the first load, fall back to the login screen with a message rather than a blank page.
+      setLoggedIn((was) => {
+        if (!was) setTokenError("Could not reach the server. Try again.");
+        return was;
+      });
       return;
     }
     setSnapshot(result);

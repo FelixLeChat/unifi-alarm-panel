@@ -11,16 +11,24 @@ export interface ScheduledJob {
  * checks, connectivity watchdog) — separate from AlarmEngine's timer, which
  * is single-purpose (the alarm state machine's own exit/entry delay).
  */
-export function startScheduler(jobs: ScheduledJob[]): void {
+export function startScheduler(jobs: ScheduledJob[]): () => void {
+  const timers: NodeJS.Timeout[] = [];
   for (const job of jobs) {
+    // One run at a time per job: a slow run (network timeouts) must not overlap the next tick, or an older poll can finish after a newer one and apply a stale reading.
+    let running = false;
     const tick = async () => {
+      if (running) return;
+      running = true;
       try {
         await job.run();
       } catch (err) {
         logger.error({ err, job: job.name }, "scheduled job threw");
+      } finally {
+        running = false;
       }
     };
     void tick();
-    setInterval(tick, job.intervalMs);
+    timers.push(setInterval(tick, job.intervalMs));
   }
+  return () => timers.forEach(clearInterval);
 }

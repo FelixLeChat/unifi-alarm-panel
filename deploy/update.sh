@@ -49,6 +49,8 @@ fi
 
 echo "Switching to $TAG"
 ln -sfn "$RELEASE_DIR" current
+# A rollback reuses an old directory: refresh its mtime so the age-based prune below never removes the one `current` points at.
+touch "$RELEASE_DIR"
 
 # Prune old releases — keep the newest KEEP_RELEASES around for instant rollback.
 # shellcheck disable=SC2012 # ls -t orders by age; the dir names are release tags, so no odd characters

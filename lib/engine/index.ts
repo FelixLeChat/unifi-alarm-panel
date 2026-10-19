@@ -161,7 +161,9 @@ export class AlarmEngine {
         .prepare("SELECT name, since, triggered_by_sensor_id, timer_ends_at FROM alarm_state WHERE id = 1")
         .get() as AlarmStateRow | undefined;
     } catch (err) {
+      // Not recoverable here: falling through would persist DISARMED over whatever is really stored, so a transient read error at boot would silently disarm an armed system. Failing the boot is loud; the next start retries.
       logger.error({ err }, "failed to read alarm_state");
+      throw err;
     }
 
     if (row && isValidStateName(row.name)) {
@@ -406,6 +408,11 @@ export class AlarmEngine {
     if (!verified.ok) {
       recordFailure(bucket);
       recordAudit(this.db, "arm_failed_invalid_pin", { detail: { source: rateLimitKey } });
+      // Same bucket and same meaning as on the disarm path (see disarmAttempt): the 5th wrong PIN is an intrusion signal, not only a throttle.
+      if (isLockedOut(bucket)) {
+        this.dispatch({ type: "PIN_LOCKOUT", now: Date.now(), source: rateLimitKey });
+        return { ok: false, lockedOut: true };
+      }
       return { ok: false };
     }
 
@@ -419,7 +426,7 @@ export class AlarmEngine {
     }
 
     this.dispatch({ type: "ARM", now: Date.now() }, verified.label);
-    return { ok: true };
+    return { ok: this.state.name === "ARMING" };
   }
 
   /**
@@ -439,8 +446,9 @@ export class AlarmEngine {
       recordAudit(this.db, "arm_forced_with_sensors_open", { actorLabel, detail: { sensors: openSensors } });
     }
 
+    // The machine ignores ARM in ENTRY_DELAY and ALARM (a trip can land between the door check and here), so report what it did, not what was asked.
     this.dispatch({ type: "ARM", now: Date.now() }, actorLabel);
-    return { ok: true };
+    return { ok: this.state.name === "ARMING" };
   }
 
   /**

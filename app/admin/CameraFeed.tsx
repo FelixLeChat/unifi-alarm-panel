@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { fetchCameraSnapshotUrl, fetchLiveStreamUrl } from "./api";
 import { FullscreenIcon } from "@/components/ui/icons/fullscreen";
 import { ProgressActivityIcon } from "@/components/ui/icons/progress-activity";
@@ -175,6 +175,7 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
           style={{ width: "92vw", height: "92vh", maxWidth: "92vw" }}
           className="flex items-center justify-center bg-primary p-0 ring-0"
         >
+          <DialogTitle className="sr-only">{name} camera</DialogTitle>
           {expandedUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a live/snapshot camera feed, not a static asset Next's image pipeline should optimize
             <img

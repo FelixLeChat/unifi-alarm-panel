@@ -60,6 +60,7 @@ export class NtfyChannel implements Channel {
 
     await sendWithRetry("ntfy notification failed after retry", async () => {
       const res = await fetch(url, {
+        signal: AbortSignal.timeout(10_000),
         method: "POST",
         headers,
         body: alert.snapshot
