@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,11 +33,17 @@ export function AuditLogScreen({ token }: AuditLogScreenProps) {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    fetchAuditPage(token, PAGE_SIZE, pageCursors[pageCursors.length - 1]).then((rows) => {
-      if (cancelled) return;
-      setAudit(rows);
-      setLoading(false);
-    });
+    fetchAuditPage(token, PAGE_SIZE, pageCursors[pageCursors.length - 1])
+      .then((rows) => {
+        if (cancelled) return;
+        setAudit(rows);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Could not load the audit log.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };

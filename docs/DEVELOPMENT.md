@@ -39,6 +39,17 @@ One **Next.js + TypeScript** app: API routes, kiosk UI and admin UI. It runs as 
 
 **Restart recovery covers an in-flight countdown.** `alarm_state` stores the exit/entry deadline next to the state, and the engine re-arms its timer from it on boot. A reboot or an update partway through an entry delay still escalates to `ALARM` on the original schedule (immediately if the deadline passed while the process was down). Look for `resumed an in-flight alarm countdown after a restart` in the log.
 
+
+## Where a sensor trip goes
+
+1. UniFi Alarm Manager posts to `POST /api/hooks/sensor` (or the realtime stream delivers a `devicePatched` event, `lib/services/protect-event-stream.ts`).
+2. `lib/auth/webhook.ts` checks the shared secret, then `lib/services/sensor-webhook.ts` hands the raw body to `lib/services/webhook-intake.ts`, which reads the sensor id and event type from the configured JSON paths.
+3. `lib/services/sensors.ts` registers an unknown sensor with the default mode, resolves the mode (`delayed`, `instant`, `ignore`) and updates the door's open or closed state. A close updates the state and stops there.
+4. `lib/services/sensor-ingest.ts` drops a copy the other source delivered in the last 5 seconds, then calls `AlarmEngine.handleSensorTrip`.
+5. `lib/engine/index.ts` dispatches `SENSOR_TRIP` to the pure state machine in `lib/state/machine.ts` and runs the effects it returns: start or cancel a timer, write the audit row, send the alert with a snapshot, trigger the siren, persist the state.
+
+A new config key goes in `lib/services/settings.ts` (typed, with an env seed and secret handling) when the admin Settings screen should own it, or in the `config` table through `lib/services/config.ts` when it is an advanced key edited as a raw value.
+
 ## Dev container or Codespaces
 
 The fastest start: open the repo in a dev container (VS Code, "Reopen in Container") or [GitHub Codespaces](https://codespaces.new/FelixLeChat/unifi-alarm-panel). `.devcontainer/` gives you Node 26, pnpm, the build toolchain for the native modules, the dependencies and a `.env` with fresh secrets and `ADMIN_TOKEN=dev`. Then:

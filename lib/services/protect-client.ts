@@ -40,7 +40,7 @@ export class UnifiProtectClient implements ProtectClient {
       signal: init.signal ?? AbortSignal.timeout(10_000),
       headers: { "X-API-KEY": this.apiKey, ...init.headers },
       ...(dispatcher ? { dispatcher } : {}),
-    } as RequestInit);
+    });
   }
 
   async getSnapshot(cameraId: string): Promise<Snapshot | null> {

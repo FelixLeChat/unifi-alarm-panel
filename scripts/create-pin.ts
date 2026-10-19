@@ -32,4 +32,7 @@ async function main() {
   console.log(`Created PIN for "${label}"${flag === "--duress" ? " (duress)" : ""}.`);
 }
 
-main();
+main().catch((err: unknown) => {
+  console.error(err instanceof Error ? err.message : err);
+  process.exit(1);
+});

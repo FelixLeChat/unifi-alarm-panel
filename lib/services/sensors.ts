@@ -205,10 +205,11 @@ function resolveOpenState(db: Database.Database, eventType: string | undefined):
  * never guess. Call after the sensor row is known to exist (e.g. after
  * resolveSensorMode).
  */
-export function updateSensorState(db: Database.Database, unifiId: string, eventType?: string): void {
+export function updateSensorState(db: Database.Database, unifiId: string, eventType?: string): SensorState | null {
   const state = resolveOpenState(db, eventType);
-  if (state === null) return;
+  if (state === null) return null;
   setSensorState(db, unifiId, state);
+  return state;
 }
 
 /**
@@ -268,7 +269,13 @@ function registerIfUnknown(
   name?: string,
 ): SensorMode {
   const existing = getSensor(db, unifiId);
-  if (existing) return existing.mode;
+  if (existing) {
+    // The webhook registers a sensor under its raw id; the stream is the first source that knows the device's name.
+    if (name && existing.name === unifiId && name !== unifiId) {
+      db.prepare("UPDATE sensors SET name = ? WHERE unifi_id = ?").run(name, unifiId);
+    }
+    return existing.mode;
+  }
 
   const defaultMode = (getConfigValue(db, "defaultSensorMode") as SensorMode | null) ?? "delayed";
   db.prepare("INSERT INTO sensors (unifi_id, name, mode, camera_id) VALUES (?, ?, ?, ?)").run(

@@ -19,11 +19,11 @@ export async function readSmallJsonBody(req: Request): Promise<unknown> {
   }
 }
 
-// Every PIN in the system is exactly 4 digits (see app/api/admin/pins/route.ts's
-// createPinSchema) — this used to allow 4-10, a stale leftover from before that
-// was tightened, and had no test either way.
+/** Every PIN in the system is exactly 4 digits. The admin create and update routes and the kiosk routes all validate against this one schema. */
+export const pinSchema = z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits");
+
 export const pinBodySchema = z.object({
-  pin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits"),
+  pin: pinSchema,
 });
 
 // Arming (unlike disarming) can be retried with an explicit override once

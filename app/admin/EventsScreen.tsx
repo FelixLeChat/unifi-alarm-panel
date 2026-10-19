@@ -28,9 +28,13 @@ export function EventsScreen({ token }: EventsScreenProps) {
 
   useEffect(() => {
     let cancelled = false;
-    fetchEventIncidents(token).then((rows) => {
-      if (!cancelled) setIncidents(rows);
-    });
+    fetchEventIncidents(token)
+      .then((rows) => {
+        if (!cancelled) setIncidents(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setIncidents([]);
+      });
     return () => {
       cancelled = true;
     };

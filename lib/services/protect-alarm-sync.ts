@@ -65,7 +65,7 @@ export class ProtectAlarmSyncClient {
       // Fail fast instead: this is a LAN call that normally answers in ms.
       signal: init.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       ...(dispatcher ? { dispatcher } : {}),
-    } as RequestInit);
+    });
   }
 
   private async login(): Promise<Session> {

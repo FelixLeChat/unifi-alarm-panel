@@ -42,7 +42,9 @@ export function handleSensorWebhook(
   }
 
   const mode = resolveSensorMode(db, parsed.sensorId, parsed.eventType);
-  updateSensorState(db, parsed.sensorId, parsed.eventType);
+  const openState = updateSensorState(db, parsed.sensorId, parsed.eventType);
+  // A door closing updates the state that gates arming and stops there, the same rule the realtime stream applies (see classifyStreamEvent). Only a deployment that configured sensorClosedEventTypes can tell a close apart.
+  if (openState === "closed") return { status: 200, body: { ok: true } };
   // Via the shared ingest so a trip the realtime stream just delivered for
   // this same sensor isn't counted twice (see sensor-ingest.ts).
   ingestSensorTrip(engine, parsed.sensorId, mode, "webhook");

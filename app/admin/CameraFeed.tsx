@@ -66,17 +66,24 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
     setLoading(true);
     onLoadingChange?.(true);
 
-    fetchFeedUrl(token, cameraId, rtspUrl).then((result) => {
-      if (cancelled) {
-        if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
-        return;
-      }
-      setLiveUrl(result?.kind === "live" ? result.url : null);
-      if (result?.kind === "snapshot") objectUrl = result.url;
-      setSnapshotUrl(result?.kind === "snapshot" ? result.url : null);
-      setLoading(false);
-      onLoadingChange?.(false);
-    });
+    fetchFeedUrl(token, cameraId, rtspUrl)
+      .then((result) => {
+        if (cancelled) {
+          if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
+          return;
+        }
+        setLiveUrl(result?.kind === "live" ? result.url : null);
+        if (result?.kind === "snapshot") objectUrl = result.url;
+        setSnapshotUrl(result?.kind === "snapshot" ? result.url : null);
+      })
+      .catch(() => {
+        // Network failure: fall through to the camera-off state below instead of a spinner that never ends.
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+        onLoadingChange?.(false);
+      });
 
     return () => {
       cancelled = true;
@@ -100,14 +107,18 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
     let cancelled = false;
     let objectUrl: string | null = null;
 
-    fetchFeedUrl(token, cameraId, rtspUrl).then((result) => {
-      if (cancelled) {
-        if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
-        return;
-      }
-      if (result?.kind === "snapshot") objectUrl = result.url;
-      setExpandedUrl(result);
-    });
+    fetchFeedUrl(token, cameraId, rtspUrl)
+      .then((result) => {
+        if (cancelled) {
+          if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
+          return;
+        }
+        if (result?.kind === "snapshot") objectUrl = result.url;
+        setExpandedUrl(result);
+      })
+      .catch(() => {
+        if (!cancelled) setExpandedUrl(null);
+      });
 
     return () => {
       cancelled = true;

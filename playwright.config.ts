@@ -15,7 +15,8 @@ export default defineConfig({
   // each other's arm/disarm transitions. Serial execution mirrors reality.
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
+  // No retries anywhere: every test shares one server and one DB, so a retry is not an independent attempt and a green-on-retry hides a real flake.
+  retries: 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: BASE_URL,
@@ -36,7 +37,8 @@ export default defineConfig({
     // comments) are a separate, lower-churn thing
     // to verify by hand or in a dedicated deploy smoke test if that ever
     // becomes worth automating.
-    command: "rm -f ./data/e2e-test.db* && pnpm build && pnpm start",
+    // The update-* files are written by the admin update tests and would otherwise survive into the next run.
+    command: "rm -f ./data/e2e-test.db* ./data/update-pending ./data/update-status && pnpm build && pnpm start",
     url: `${BASE_URL}/api/health`,
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,

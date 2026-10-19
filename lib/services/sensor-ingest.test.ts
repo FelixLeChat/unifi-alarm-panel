@@ -43,4 +43,13 @@ describe("ingestSensorTrip", () => {
     expect(ingestSensorTrip(engine, "58D61F49A73B", "instant", "stream")).toBe(true);
     expect(handleSensorTrip).toHaveBeenCalledTimes(2);
   });
+
+  it("does not suppress the other source's copy when the engine threw on the first", () => {
+    handleSensorTrip.mockImplementationOnce(() => {
+      throw new Error("engine down");
+    });
+    expect(() => ingestSensorTrip(engine, "58D61F49A73B", "instant", "webhook")).toThrow();
+    expect(ingestSensorTrip(engine, "58D61F49A73B", "instant", "stream")).toBe(true);
+    expect(handleSensorTrip).toHaveBeenCalledTimes(2);
+  });
 });

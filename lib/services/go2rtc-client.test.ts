@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb } from "@/lib/db";
 import { go2rtcMjpegUrl, isSafeStreamName, removeGo2rtcStream, resyncGo2rtcStreams, toGo2rtcSource, upsertGo2rtcStream } from "./go2rtc-client";

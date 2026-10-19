@@ -426,6 +426,7 @@ button {
   height: 11px;
   border-radius: 0;
   background: var(--panel-attention);
+  -webkit-clip-path: polygon(50% 0, 100% 100%, 0 100%);
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 
@@ -913,4 +914,12 @@ button {
 .arm-confirm-yes {
   background: var(--panel-bg);
   color: var(--panel-fg);
+}
+
+/* The kiosk does not load globals.css's reduced-motion block on every host; these two loops need their own guard. */
+@media (prefers-reduced-motion: reduce) {
+  .sk,
+  .pin-dots.checking .pin-dot.filled {
+    animation: none;
+  }
 }

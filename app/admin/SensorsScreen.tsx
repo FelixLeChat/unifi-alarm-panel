@@ -159,12 +159,16 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
     }
     let cancelled = false;
     setTripsLoading(true);
-    fetchSensorTrips(token, selected.unifiId, TRIP_HISTORY_LIMIT).then((rows) => {
-      if (!cancelled) {
-        setTrips(rows);
-        setTripsLoading(false);
-      }
-    });
+    fetchSensorTrips(token, selected.unifiId, TRIP_HISTORY_LIMIT)
+      .then((rows) => {
+        if (!cancelled) setTrips(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setTrips([]);
+      })
+      .finally(() => {
+        if (!cancelled) setTripsLoading(false);
+      });
     return () => {
       cancelled = true;
     };

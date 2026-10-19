@@ -1,6 +1,9 @@
 import { useCallback, useRef, useState } from "react";
 
-export type AlarmStateName = "DISARMED" | "ARMING" | "ARMED" | "ENTRY_DELAY" | "ALARM";
+// Type-only imports: the admin bundle never pulls server code in through these.
+import type { AlarmStateName, SensorMode } from "@/lib/state/machine";
+import type { SensorState, SensorType } from "@/lib/services/sensors";
+export type { AlarmStateName, SensorMode, SensorState, SensorType };
 
 export interface StatusResponse {
   state: AlarmStateName;
@@ -21,9 +24,6 @@ export interface PinSummary {
   updatedAt: string;
 }
 
-export type SensorMode = "delayed" | "instant" | "ignore";
-export type SensorType = "motion" | "door";
-export type SensorState = "open" | "closed";
 
 export interface SensorRecord {
   id: number;

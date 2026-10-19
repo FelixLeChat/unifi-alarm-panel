@@ -4,7 +4,9 @@ import { DELETE, GET, PUT } from "./route";
 
 const upsertGo2rtcStream = vi.fn().mockResolvedValue(true);
 const removeGo2rtcStream = vi.fn().mockResolvedValue(undefined);
-vi.mock("@/lib/services/go2rtc-client", () => ({
+vi.mock("@/lib/services/go2rtc-client", async (importOriginal) => ({
+  // The pure stream-name guard stays real: the schema uses it and the mock must not loosen it.
+  ...(await importOriginal<typeof import("@/lib/services/go2rtc-client")>()),
   upsertGo2rtcStream: (...args: unknown[]) => upsertGo2rtcStream(...args),
   removeGo2rtcStream: (...args: unknown[]) => removeGo2rtcStream(...args),
 }));

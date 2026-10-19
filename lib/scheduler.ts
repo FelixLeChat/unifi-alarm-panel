@@ -28,7 +28,7 @@ export function startScheduler(jobs: ScheduledJob[]): () => void {
       }
     };
     void tick();
-    timers.push(setInterval(tick, job.intervalMs));
+    timers.push(setInterval(() => void tick(), job.intervalMs));
   }
   return () => timers.forEach(clearInterval);
 }

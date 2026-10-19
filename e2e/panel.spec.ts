@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ADMIN_TOKEN, DURESS_PIN, STANDARD_PIN } from "./constants";
+import { ADMIN_TOKEN, DURESS_PIN, STANDARD_PIN, WEBHOOK_SECRET } from "./constants";
 
 async function typePin(page: Page, pin: string): Promise<void> {
   for (const digit of pin) {
@@ -162,7 +162,7 @@ test.describe("panel kiosk", () => {
     await expect(page.locator("#banner-label")).toHaveText("Disarmed");
   });
 
-  test("lists every door under the banner (open ones first)", async ({ page, request }) => {
+  test("lists every door under the banner, and a PIN disarms during the exit delay", async ({ page, request }) => {
     const doorId = `e2e-strip-door-${Date.now()}`;
     await request.put("/api/admin/config", {
       headers: { "x-admin-token": ADMIN_TOKEN },
@@ -278,39 +278,44 @@ test.describe("panel kiosk", () => {
     const sensorId = `e2e-instant-${Date.now()}`;
     // Register the sensor as "instant" mode via the admin API so it trips
     // the alarm immediately rather than starting an entry delay.
-    const adminHeaders = { "content-type": "application/json", "x-admin-token": "e2e-admin-token" };
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
+    const adminHeaders = { "content-type": "application/json", "x-admin-token": ADMIN_TOKEN };
+    await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
     await request.put("/api/admin/config", {
       headers: adminHeaders,
       data: { sensors: [{ unifiId: sensorId, mode: "instant" }] },
     });
 
     await page.goto("/panel");
-    await armViaConfirm(page);
-    await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
+    try {
+      await armViaConfirm(page);
+      await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
 
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
+      await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
 
-    await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
-    await expect(page.locator("#status-banner")).toHaveClass(/state-alarm/);
-    await expect(page.locator("#message")).toHaveText("Enter PIN to silence and disarm");
-    await expect(page.locator("#action-btn")).toHaveText("Disarm");
+      await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
+      await expect(page.locator("#status-banner")).toHaveClass(/state-alarm/);
+      await expect(page.locator("#message")).toHaveText("Enter PIN to silence and disarm");
+      await expect(page.locator("#action-btn")).toHaveText("Disarm");
 
-    await typePin(page, STANDARD_PIN);
-    await expect(page.locator("#banner-label")).toHaveText("Disarmed");
+      await typePin(page, STANDARD_PIN);
+      await expect(page.locator("#banner-label")).toHaveText("Disarmed");
+    } finally {
+      // A failure mid-ALARM must not leak into the next test's starting state.
+      await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
+    }
   });
 
   test("a duress PIN silences ALARM but is indistinguishable in the UI from a normal disarm", async ({ page, request }) => {
     const sensorId = `e2e-instant-duress-${Date.now()}`;
-    const adminHeaders = { "content-type": "application/json", "x-admin-token": "e2e-admin-token" };
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
+    const adminHeaders = { "content-type": "application/json", "x-admin-token": ADMIN_TOKEN };
+    await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
     await request.put("/api/admin/config", { headers: adminHeaders, data: { sensors: [{ unifiId: sensorId, mode: "instant" }] } });
 
     await page.goto("/panel");
     await armViaConfirm(page);
     await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
 
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
     await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
 
     // Same exact assertions as the standard-PIN disarm above — the whole

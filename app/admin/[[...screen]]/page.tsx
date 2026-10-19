@@ -115,19 +115,23 @@ export default function AdminPage() {
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    reload();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the initial load is the effect
+    void reload();
   }, [reload]);
 
   // Settings drive the first-run wizard, so they load as soon as the token is confirmed.
   useEffect(() => {
     if (!token || !loggedIn) return;
     let cancelled = false;
-    fetchSettings(token).then((s) => {
-      if (cancelled || !s) return;
-      setSettings(s);
-      setShowSetup(!s.consoleConfigured && sessionStorage.getItem(SETUP_DISMISSED_KEY) !== "true");
-    });
+    fetchSettings(token)
+      .then((s) => {
+        if (cancelled || !s) return;
+        setSettings(s);
+        setShowSetup(!s.consoleConfigured && sessionStorage.getItem(SETUP_DISMISSED_KEY) !== "true");
+      })
+      .catch(() => {
+        // Settings only gate the setup wizard; a failed load leaves it closed and the next login retries.
+      });
     return () => {
       cancelled = true;
     };
@@ -160,8 +164,8 @@ export default function AdminPage() {
         // Transient network hiccup — the next tick retries.
       }
     }
-    poll();
-    const id = setInterval(poll, 2000);
+    void poll();
+    const id = setInterval(() => void poll(), 2000);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -176,11 +180,15 @@ export default function AdminPage() {
     if (!token || !loggedIn) return;
     let cancelled = false;
     async function poll() {
-      const s = await fetchUpdateStatus(token!);
-      if (!cancelled && s) setUpdateStatus(s);
+      try {
+        const s = await fetchUpdateStatus(token!);
+        if (!cancelled && s) setUpdateStatus(s);
+      } catch {
+        // Transient network hiccup — the next tick retries.
+      }
     }
-    poll();
-    const id = setInterval(poll, 60_000);
+    void poll();
+    const id = setInterval(() => void poll(), 60_000);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -247,9 +255,13 @@ export default function AdminPage() {
   useEffect(() => {
     if (!token || screen !== "tasks" || connectivity !== null) return;
     let cancelled = false;
-    fetchConnectivityStatus(token).then((s) => {
-      if (!cancelled) setConnectivity(s);
-    });
+    fetchConnectivityStatus(token)
+      .then((s) => {
+        if (!cancelled) setConnectivity(s);
+      })
+      .catch(() => {
+        // Stays null, which the Tasks screen shows as "not checked yet"; reopening the screen retries.
+      });
     return () => {
       cancelled = true;
     };
@@ -275,9 +287,13 @@ export default function AdminPage() {
   useEffect(() => {
     if (!token || screen !== "overview" || auditWindow !== null) return;
     let cancelled = false;
-    fetchAuditWindow(token, HEATMAP_WINDOW_DAYS).then((rows) => {
-      if (!cancelled) setAuditWindow(rows);
-    });
+    fetchAuditWindow(token, HEATMAP_WINDOW_DAYS)
+      .then((rows) => {
+        if (!cancelled) setAuditWindow(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setAuditWindow([]);
+      });
     return () => {
       cancelled = true;
     };

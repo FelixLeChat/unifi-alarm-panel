@@ -81,7 +81,8 @@ export function ingestSensorTrip(
     return false;
   }
 
-  lastTrips().set(unifiId, { at: now, source });
+  // Stamped after the engine took it: if handleSensorTrip throws, the other source's copy must still count.
   engine.handleSensorTrip(unifiId, mode);
+  lastTrips().set(unifiId, { at: now, source });
   return true;
 }

@@ -735,8 +735,9 @@ test.describe("admin portal", () => {
     expect(download.suggestedFilename()).toMatch(/^audit-log-\d{4}-\d{2}-\d{2}\.csv$/);
 
     const csvPath = await download.path();
-    const csv = readFileSync(csvPath!, "utf8");
-    expect(csv.split("\r\n")[0]).toBe("id,timestamp,actor,event,category,description,detail_json");
+    const csv = readFileSync(csvPath, "utf8");
+    // Starts with a UTF-8 BOM so Excel on Windows reads accented names correctly.
+    expect(csv.split("\r\n")[0]).toBe("\uFEFFid,timestamp,actor,event,category,description,detail_json");
     // The raw detail (e.g. sensorId) must survive into the export — that's
     // the whole point, beyond what the UI's humanized one-liner shows.
     expect(csv).toContain("e2e-csv-check");

@@ -7,17 +7,18 @@ import { verifyAdminToken } from "@/lib/auth/admin";
 import { getDb } from "@/lib/db";
 import { recordAudit } from "@/lib/services/audit";
 import { createPin, isPinTaken, listPins, revokePin, updatePin } from "@/lib/services/pins";
+import { pinSchema } from "@/lib/validation";
 
 const createPinSchema = z.object({
   label: z.string().trim().min(1).max(64),
-  pin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits"),
+  pin: pinSchema,
   isDuress: z.boolean().optional(),
 });
 
 const updatePinSchema = z
   .object({
     label: z.string().trim().min(1).max(64).optional(),
-    pin: z.string().regex(/^\d{4}$/, "PIN must be exactly 4 digits").optional(),
+    pin: pinSchema.optional(),
     isDuress: z.boolean().optional(),
   })
   .refine((v) => v.label !== undefined || v.pin !== undefined || v.isDuress !== undefined, "Nothing to update");

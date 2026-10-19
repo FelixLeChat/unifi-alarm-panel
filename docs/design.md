@@ -66,3 +66,7 @@ These are built here with tokens, not installed from shadcn:
 ## Checking a UI change
 
 `pnpm shots:baseline` on `main` and `pnpm shots` on your branch compare the screenshots pixel for pixel (see CONTRIBUTING.md): the admin screens and dialogs at 1440 and 390 pixels wide, and the kiosk states at tablet sizes plus one 390 pixel overflow check. Run the keyboard flows in `e2e/` too: `pnpm test:e2e`.
+
+## Adding a component
+
+`components.json` still says `iconLibrary: lucide`, so `pnpm dlx shadcn@latest add <name>` writes `lucide-react` imports that ESLint rejects. After adding a component, swap each icon for the matching module in `components/ui/icons/` (add one there if it is missing: a ten-line wrapper over `@material-symbols-svg/react`). Only icons with an importer are kept; `pnpm knip` lists the rest.

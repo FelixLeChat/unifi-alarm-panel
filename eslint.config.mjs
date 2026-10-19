@@ -16,6 +16,27 @@ const eslintConfig = defineConfig([
     ".claude/worktrees/**",
   ]),
   {
+    // Type-aware rules. These catch the class of bug a plain lint can't: a fetch whose rejection nobody
+    // handles (a skeleton that never resolves, a busy flag stuck on), an async callback handed to
+    // setInterval or forEach, a switch over a union that silently ignores a new member.
+    files: ["**/*.{ts,tsx,mts}"],
+    languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      // React event handlers may be async: the attribute check is off, the argument check stays on.
+      "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
+      "@typescript-eslint/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
+      "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports", disallowTypeAnnotations: false }],
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/await-thenable": "error",
+    },
+  },
+  {
+    // vi.fn().mockImplementation(async ...) is the normal way to fake fetch; the void-return check misreads it.
+    files: ["**/*.test.{ts,tsx}"],
+    rules: { "@typescript-eslint/no-misused-promises": "off" },
+  },
+  {
     // shadcn's own hook (installed by `shadcn add sidebar`): it sets state in an effect on purpose to read the viewport after mount. Re-adding the item overwrites the file, so the exception lives here.
     files: ["hooks/use-mobile.ts"],
     rules: { "react-hooks/set-state-in-effect": "off" },

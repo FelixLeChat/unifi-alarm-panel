@@ -7,7 +7,7 @@ import { verifyAdminToken } from "@/lib/auth/admin";
 import { getDb } from "@/lib/db";
 import { getLastArmDisarmEvent, recordAudit } from "@/lib/services/audit";
 import { listConfig, setConfigValue } from "@/lib/services/config";
-import { removeGo2rtcStream, upsertGo2rtcStream } from "@/lib/services/go2rtc-client";
+import { removeGo2rtcStream, upsertGo2rtcStream, isSafeStreamName } from "@/lib/services/go2rtc-client";
 import { getDeviceHealthStatus, normalizeMac } from "@/lib/services/protect-device-health";
 import { deleteSensor, getSensor, listSensors, upsertSensor } from "@/lib/services/sensors";
 import { getLastWebhookAgeSec, hasEverReceivedWebhook } from "@/lib/services/webhook-intake";
@@ -17,8 +17,9 @@ import { getLastWebhookAgeSec, hasEverReceivedWebhook } from "@/lib/services/web
 // writes arbitrary key/value pairs straight through — and a NaN or
 // past-32-bit delay reaches setTimeout, which clamps both to ~1ms: no exit
 // delay at all, or an entry delay that alarms the instant a door opens.
-// getDelays()/rate-limit.ts clamp defensively too; this is the layer that
-// gives the admin a 400 instead of silently storing something dangerous.
+// getDelays() clamps defensively too and rate-limit.ts falls back to its
+// default on a non-positive value; this is the layer that gives the admin a
+// 400 instead of silently storing something dangerous.
 const NUMERIC_CONFIG_KEYS: Record<string, { min: number; max: number }> = {
   exitDelaySec: { min: 0, max: 3600 },
   entryDelaySec: { min: 0, max: 3600 },
@@ -50,7 +51,7 @@ const configPutSchema = z.object({
         name: z.string().trim().min(1).optional(),
         mode: z.enum(["delayed", "instant", "ignore"]),
         // Becomes a go2rtc stream name (see isSafeStreamName): plain ID characters only.
-        cameraId: z.string().trim().regex(/^[A-Za-z0-9_.:-]{1,128}$/, "must be a camera ID").nullable().optional(),
+        cameraId: z.string().trim().refine(isSafeStreamName, "must be a camera ID").nullable().optional(),
         // rtsp:// and rtsps:// both accepted — go2rtc-client.ts only rewrites
         // the latter (UniFi's self-signed-cert workaround), a plain rtsp://
         // source is a legitimate input too (e.g. non-UniFi cameras, testing).
