@@ -198,7 +198,7 @@ export class AlarmEngine {
    * in SQLite but the setTimeout driving it does not, so without this a reboot
    * (or the auto-updater restarting the service) mid-countdown left the system
    * wedged: ENTRY_DELAY never escalating to ALARM while someone is inside, or
-   * ARMING never settling to ARMED. Reproduced live before this existed.
+   * ARMING never settling to ARMED.
    */
   private resumeTimer(timerEndsAt: number | null): void {
     const elapsedType =

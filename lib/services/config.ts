@@ -57,7 +57,7 @@ export const MAX_DELAY_SEC = 3600;
  * the Settings screen's Advanced table) or one past setTimeout's 32-bit
  * ceiling both reach setTimeout as NaN/overflow, where Node clamps them to
  * ~1ms — i.e. no exit delay at all, or an entry delay that alarms the instant
- * a door opens. Both reproduced before this guard existed. The API rejects
+ * a door opens. The API rejects
  * these too (see app/api/admin/config/route.ts); this is the layer that has
  * to hold even for a value written directly into the DB.
  */

@@ -233,7 +233,7 @@ export default function AdminPage() {
   // waiting for the hourly job — see lib/services/update-check.ts. Returns
   // whether the request itself succeeded, so the button can surface a
   // network/auth failure instead of silently doing nothing (fetchUpdateStatus
-  // returns null on any non-2xx, which used to be swallowed here).
+  // returns null on any non-2xx).
   const handleCheckUpdateNow = useCallback(async () => {
     if (!token) return false;
     const s = await fetchUpdateStatus(token, { refresh: true });

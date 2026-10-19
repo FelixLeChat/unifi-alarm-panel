@@ -81,7 +81,7 @@ export async function updatePin(db: Database.Database, id: number, update: PinUp
  * FIRST matching row, so a duplicate code is silently shadowed by whichever
  * was created first — and a shadowed duress PIN is catastrophic: it disarms
  * as the other person, attributes the audit entry to them, and never fires
- * the DURESS alert. Reproduced before this check existed.
+ * the DURESS alert.
  *
  * Hashes are salted, so there's no index to check against — this has to try
  * the candidate against each active hash, same as verifyPin. Fine at this

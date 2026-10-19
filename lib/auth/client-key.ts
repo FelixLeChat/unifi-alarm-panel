@@ -12,7 +12,7 @@
 // into another guard's namespace — e.g. flooding /api/disarm with
 // "webhook:<the console's address>" to lock out the real UniFi sensor
 // webhook, silently dropping every sensor trip while the system is armed.
-// Reproduced against a real build before this was neutralized. IPv6 sources
+// IPv6 sources
 // get mangled into an equivalent "_"-separated form, which is harmless: this
 // value is only ever a map key, never parsed back into an address.
 const MAX_SOURCE_LEN = 100;

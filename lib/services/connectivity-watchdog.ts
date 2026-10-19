@@ -97,13 +97,10 @@ export async function checkConnectivity(): Promise<void> {
   if (shouldNotify && !previousSilenceNotified) {
     const minutes = Math.round(sensorHeartbeatAgeSec / 60);
     // Both the webhook AND the realtime stream feed the same heartbeat (see
-    // sensor-ingest.ts), so this fires only when neither has seen anything —
-    // but "webhook feed looks dead" used to be the message either way, which
-    // read as a false alarm on a quiet office whenever the stream was in fact
-    // the one that was down. Naming the stream's own state here means the
-    // next time this fires, whether it's a real dead webhook (stream still
-    // covering) or a genuinely blind stretch (stream also down/disabled) is
-    // answered by the alert itself instead of another round of guessing.
+    // sensor-ingest.ts), so this fires only when neither has seen anything.
+    // The message names the stream's own state, so the alert itself says
+    // whether this is a dead webhook with the stream still covering, or a
+    // genuinely blind stretch with the stream also down or disabled.
     const streamNote =
       streamStatus === "disabled"
         ? "stream fallback is disabled (no SuperAdmin credential configured)"
