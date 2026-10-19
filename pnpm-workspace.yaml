@@ -9,7 +9,7 @@ overrides:
   brace-expansion@>=4.0.0 <5.0.11: ^5.0.11
   source-map-js@<1.2.2: ^1.2.2
   sharp@<0.35.5: ^0.35.5
-# braces has no patched release; dev-only (eslint-config-next glob), never bundled
+# braces (GHSA-vfj7-8cjw-p6xm) has no patched release. Reached only through devDependencies (eslint-config-next, knip, shadcn), none of which the standalone build ships.
 auditConfig:
   ignoreGhsas:
     - GHSA-vfj7-8cjw-p6xm

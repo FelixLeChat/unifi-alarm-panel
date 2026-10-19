@@ -21,9 +21,6 @@ importers:
       '@material-symbols-svg/react':
         specifier: ^0.15.0
         version: 0.15.0(react@19.3.0)
-      '@tailwindcss/postcss':
-        specifier: ^4.3.3
-        version: 4.3.3
       argon2:
         specifier: ^0.45.1
         version: 0.45.1
@@ -51,21 +48,12 @@ importers:
       react-dom:
         specifier: 19.3.0
         version: 19.3.0(react@19.3.0)
-      shadcn:
-        specifier: ^4.21.4
-        version: 4.21.4(supports-color@7.2.0)
       sonner:
         specifier: ^2.0.8
         version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tailwind-merge:
         specifier: ^3.7.0
         version: 3.7.0
-      tailwindcss:
-        specifier: ^4.3.3
-        version: 4.3.3
-      tw-animate-css:
-        specifier: ^1.4.0
-        version: 1.4.0
       undici:
         specifier: ^8.11.2
         version: 8.11.2
@@ -79,6 +67,9 @@ importers:
       '@playwright/test':
         specifier: ^1.64.0
         version: 1.64.0
+      '@tailwindcss/postcss':
+        specifier: ^4.3.3
+        version: 4.3.3
       '@types/better-sqlite3':
         specifier: ^9.6.0
         version: 9.6.0
@@ -106,9 +97,18 @@ importers:
       prettier:
         specifier: ^3.9.10
         version: 3.9.10
+      shadcn:
+        specifier: ^4.21.4
+        version: 4.21.4(supports-color@7.2.0)
+      tailwindcss:
+        specifier: ^4.3.3
+        version: 4.3.3
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
