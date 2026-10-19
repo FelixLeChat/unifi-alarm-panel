@@ -25,11 +25,7 @@ describe("DISARMED", () => {
   });
 
   it("sensor trips are logged only, never alerted", () => {
-    const result = transition(
-      disarmed(),
-      { type: "SENSOR_TRIP", now: 100, sensorId: "s1", mode: "instant" },
-      config,
-    );
+    const result = transition(disarmed(), { type: "SENSOR_TRIP", now: 100, sensorId: "s1", mode: "instant" }, config);
     expect(result.state.name).toBe("DISARMED");
     expect(result.effects).not.toContainEqual(expect.objectContaining({ type: "ALERT_ALARM" }));
     expect(result.effects).toContainEqual(
@@ -52,11 +48,7 @@ describe("ARMING (exit delay)", () => {
   });
 
   it("sensor trips during exit delay are logged only", () => {
-    const result = transition(
-      arming(),
-      { type: "SENSOR_TRIP", now: 10, sensorId: "s1", mode: "instant" },
-      config,
-    );
+    const result = transition(arming(), { type: "SENSOR_TRIP", now: 10, sensorId: "s1", mode: "instant" }, config);
     expect(result.state.name).toBe("ARMING");
     expect(result.effects).not.toContainEqual(expect.objectContaining({ type: "ALERT_ALARM" }));
   });
@@ -98,11 +90,7 @@ describe("ARMED", () => {
   });
 
   it("ignore-mode sensor does nothing but audit", () => {
-    const result = transition(
-      armed(),
-      { type: "SENSOR_TRIP", now: 500, sensorId: "s1", mode: "ignore" },
-      config,
-    );
+    const result = transition(armed(), { type: "SENSOR_TRIP", now: 500, sensorId: "s1", mode: "ignore" }, config);
     expect(result.state.name).toBe("ARMED");
     expect(result.effects).not.toContainEqual(expect.objectContaining({ type: "ALERT_ALARM" }));
   });
@@ -115,11 +103,7 @@ describe("ARMED", () => {
 
 describe("ENTRY_DELAY", () => {
   it("ENTRY_DELAY_ELAPSED with no disarm -> ALARM", () => {
-    const result = transition(
-      entryDelay("front-door", 0),
-      { type: "ENTRY_DELAY_ELAPSED", now: 45_000 },
-      config,
-    );
+    const result = transition(entryDelay("front-door", 0), { type: "ENTRY_DELAY_ELAPSED", now: 45_000 }, config);
     expect(result.state).toEqual({
       name: "ALARM",
       since: 45_000,
@@ -129,11 +113,7 @@ describe("ENTRY_DELAY", () => {
   });
 
   it("valid DISARM cancels the entry timer before it elapses", () => {
-    const result = transition(
-      entryDelay("front-door", 0),
-      { type: "DISARM", now: 20_000, duress: false },
-      config,
-    );
+    const result = transition(entryDelay("front-door", 0), { type: "DISARM", now: 20_000, duress: false }, config);
     expect(result.state).toEqual({ name: "DISARMED", since: 20_000 });
     expect(result.effects).toContainEqual({ type: "CANCEL_TIMERS" });
   });
@@ -173,7 +153,11 @@ describe("PIN_LOCKOUT", () => {
     expect(result.state).toEqual({ name: "ALARM", since: 100 });
     expect(result.effects).toContainEqual({ type: "ALERT_ALARM" });
     expect(result.effects).toContainEqual(
-      expect.objectContaining({ type: "AUDIT", event: "alarm_pin_lockout", detail: { source: "kiosk", from: "DISARMED" } }),
+      expect.objectContaining({
+        type: "AUDIT",
+        event: "alarm_pin_lockout",
+        detail: { source: "kiosk", from: "DISARMED" },
+      }),
     );
   });
 
@@ -237,7 +221,9 @@ describe("timer invariant", () => {
         const timed = state.name === "ARMING" || state.name === "ENTRY_DELAY";
         // An ELAPSED event is the timer itself firing, so the engine has already dropped it.
         const leaves = timed && result.state.name !== state.name && !event.type.endsWith("_ELAPSED");
-        const handled = result.effects.some((e) => ["CANCEL_TIMERS", "START_EXIT_TIMER", "START_ENTRY_TIMER"].includes(e.type));
+        const handled = result.effects.some((e) =>
+          ["CANCEL_TIMERS", "START_EXIT_TIMER", "START_ENTRY_TIMER"].includes(e.type),
+        );
         if (leaves) expect(handled, `${state.name} + ${event.type}`).toBe(true);
       }
     }

@@ -113,7 +113,11 @@ async function fetchWeather(lat: string, lon: string): Promise<WeatherReading | 
     const nextHours: HourlyReading[] = [];
     for (let i = startIdx; i < Math.min(startIdx + HOURLY_COUNT, hourly.time.length); i++) {
       const hourCondition = CONDITIONS[hourly.weather_code[i]] ?? DEFAULT_CONDITION;
-      nextHours.push({ hour: hourly.time[i].slice(11, 16), tempC: Math.round(hourly.temperature_2m[i]), icon: hourCondition.icon });
+      nextHours.push({
+        hour: hourly.time[i].slice(11, 16),
+        tempC: Math.round(hourly.temperature_2m[i]),
+        icon: hourCondition.icon,
+      });
     }
 
     return {

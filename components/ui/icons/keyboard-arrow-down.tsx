@@ -1,7 +1,7 @@
-import { KeyboardArrowDownW300 } from "@material-symbols-svg/react/rounded/icons/keyboard-arrow-down"
+import { KeyboardArrowDownW300 } from "@material-symbols-svg/react/rounded/icons/keyboard-arrow-down";
 
-import { iconProps, type IconProps } from "./icon-props"
+import { iconProps, type IconProps } from "./icon-props";
 
 export function KeyboardArrowDownIcon(props: IconProps) {
-  return <KeyboardArrowDownW300 {...iconProps(props)} />
+  return <KeyboardArrowDownW300 {...iconProps(props)} />;
 }

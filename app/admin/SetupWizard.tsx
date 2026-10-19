@@ -11,7 +11,8 @@ import { EYEBROW } from "./shared";
 const STEPS: { title: string; intro: string; group?: SettingsGroup }[] = [
   {
     title: "Encryption key",
-    intro: "Credentials you enter next are encrypted in the database with SECRETS_KEY, an environment variable only this server knows.",
+    intro:
+      "Credentials you enter next are encrypted in the database with SECRETS_KEY, an environment variable only this server knows.",
   },
   {
     title: "UniFi console",
@@ -72,14 +73,21 @@ export function SetupWizard({ settings, token, onSettingsSaved, onDone }: SetupW
           {settings.secretsKey === "ok" ? (
             <Alert>
               <AlertTitle>SECRETS_KEY is set</AlertTitle>
-              <AlertDescription>Credentials will be stored encrypted. Keep a copy of the key: without it, stored credentials have to be re-entered.</AlertDescription>
+              <AlertDescription>
+                Credentials will be stored encrypted. Keep a copy of the key: without it, stored credentials have to be
+                re-entered.
+              </AlertDescription>
             </Alert>
           ) : (
             <Alert variant="destructive">
-              <AlertTitle>{settings.secretsKey === "missing" ? "SECRETS_KEY is not set" : "SECRETS_KEY is invalid"}</AlertTitle>
+              <AlertTitle>
+                {settings.secretsKey === "missing" ? "SECRETS_KEY is not set" : "SECRETS_KEY is invalid"}
+              </AlertTitle>
               <AlertDescription>
                 <span>
-                  Generate one with <code className="font-mono">openssl rand -base64 32</code>, add it to the server&apos;s environment as <code className="font-mono">SECRETS_KEY</code>, and restart. Until then, credentials (API key, passwords, tokens) can&apos;t be saved.
+                  Generate one with <code className="font-mono">openssl rand -base64 32</code>, add it to the
+                  server&apos;s environment as <code className="font-mono">SECRETS_KEY</code>, and restart. Until then,
+                  credentials (API key, passwords, tokens) can&apos;t be saved.
                 </span>
               </AlertDescription>
             </Alert>

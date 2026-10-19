@@ -40,7 +40,6 @@ const DOOR_SLOTS = 8;
 const CLOCK_TIME_OPTS: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit", hour12: false };
 const CLOCK_DATE_OPTS: Intl.DateTimeFormatOptions = { weekday: "long", month: "long", day: "numeric" };
 
-
 function BackspaceIcon() {
   return (
     <svg className="backspace-icon" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">

@@ -9,7 +9,15 @@ import { getRemainingAttempts, isLockedOut, recordFailure } from "@/lib/services
 import { getProtectClient, type ProtectClient } from "@/lib/services/protect-client";
 import { getSensor, listDoorStatuses, listOpenGatingSensors } from "@/lib/services/sensors";
 import { getSetting } from "@/lib/services/settings";
-import { transition, type AlarmEvent, type AlarmState, type AlarmStateName, type Effect, type SensorMode, type TransitionConfig } from "@/lib/state/machine";
+import {
+  transition,
+  type AlarmEvent,
+  type AlarmState,
+  type AlarmStateName,
+  type Effect,
+  type SensorMode,
+  type TransitionConfig,
+} from "@/lib/state/machine";
 
 // The actorLabel syncExternalArmState() uses — pulled out so dispatch()'s
 // welcome-name guard below can reference the exact same value rather than a
@@ -319,9 +327,7 @@ export class AlarmEngine {
       case "ALERT_ALARM":
         logger.warn({ sensorId: effect.sensorId }, "ALARM triggered");
         // Fire-and-forget: a Slack/ntfy/Protect outage must never block the state machine.
-        void this.alertWithSnapshot("ALARM", effect.sensorId).catch((err) =>
-          logger.error({ err }, "notifier threw"),
-        );
+        void this.alertWithSnapshot("ALARM", effect.sensorId).catch((err) => logger.error({ err }, "notifier threw"));
         this.triggerSiren();
         break;
       case "ALERT_DURESS":
@@ -341,7 +347,8 @@ export class AlarmEngine {
     // Falls back to the default camera setting when the tripped sensor has no
     // camera of its own mapped yet, so an alert still carries a feed instead
     // of going out as bare text (dev: point it at protect:mock's fake camera).
-    const cameraId = (sensorId ? getSensor(this.db, sensorId)?.cameraId : null) ?? getSetting("protectDefaultCameraId", this.db);
+    const cameraId =
+      (sensorId ? getSensor(this.db, sensorId)?.cameraId : null) ?? getSetting("protectDefaultCameraId", this.db);
     const snapshot = cameraId ? await this.protectClientSource().getSnapshot(cameraId) : null;
     const liveViewUrl = cameraId ? this.protectClientSource().getLiveViewUrl(cameraId) : null;
     await this.notifierSource().send({
@@ -363,7 +370,9 @@ export class AlarmEngine {
   private triggerSiren(): void {
     const webhookId = getConfigValue(this.db, "sirenAlarmManagerWebhookId");
     if (!webhookId) return;
-    void this.protectClientSource().triggerAlarmManagerWebhook(webhookId).catch((err) => logger.error({ err }, "siren trigger threw"));
+    void this.protectClientSource()
+      .triggerAlarmManagerWebhook(webhookId)
+      .catch((err) => logger.error({ err }, "siren trigger threw"));
   }
 
   private armTimer(ms: number, elapsedType: "EXIT_DELAY_ELAPSED" | "ENTRY_DELAY_ELAPSED"): void {
@@ -419,10 +428,16 @@ export class AlarmEngine {
     const openSensors = this.getOpenGatingSensors();
     if (openSensors.length > 0) {
       if (!force) {
-        recordAudit(this.db, "arm_rejected_sensors_open", { actorLabel: verified.label, detail: { source: rateLimitKey, sensors: openSensors } });
+        recordAudit(this.db, "arm_rejected_sensors_open", {
+          actorLabel: verified.label,
+          detail: { source: rateLimitKey, sensors: openSensors },
+        });
         return { ok: false, reason: "sensors_open", openSensors };
       }
-      recordAudit(this.db, "arm_forced_with_sensors_open", { actorLabel: verified.label, detail: { source: rateLimitKey, sensors: openSensors } });
+      recordAudit(this.db, "arm_forced_with_sensors_open", {
+        actorLabel: verified.label,
+        detail: { source: rateLimitKey, sensors: openSensors },
+      });
     }
 
     this.dispatch({ type: "ARM", now: Date.now() }, verified.label);
@@ -540,9 +555,7 @@ export class AlarmEngine {
   }
 
   getStatus(): EngineStatus {
-    const remainingSec = this.timerEndsAt
-      ? Math.max(0, Math.ceil((this.timerEndsAt - Date.now()) / 1000))
-      : null;
+    const remainingSec = this.timerEndsAt ? Math.max(0, Math.ceil((this.timerEndsAt - Date.now()) / 1000)) : null;
     // Only while actually disarmed, and only within the window — re-arming
     // (even immediately) or the window lapsing both clear it, so the kiosk
     // never shows a stale welcome for whoever's there now.
@@ -556,7 +569,9 @@ export class AlarmEngine {
       remainingSec,
       welcomeName,
       triggeredBy: this.state.triggeredBy ?? null,
-      triggeredByName: this.state.triggeredBy ? (getSensor(this.db, this.state.triggeredBy.sensorId)?.name ?? null) : null,
+      triggeredByName: this.state.triggeredBy
+        ? (getSensor(this.db, this.state.triggeredBy.sensorId)?.name ?? null)
+        : null,
       armingTripCount: this.state.name === "ARMING" ? this.armingTripCount : null,
       armingTripDoors: this.state.name === "ARMING" ? this.armingTripDoors : null,
       doors: listDoorStatuses(this.db),

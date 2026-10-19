@@ -9,9 +9,9 @@ vi.mock("@/lib/services/webhook-intake", () => ({
   getLastEventSource: () => getLastEventSource(),
 }));
 
-const getStreamStatus = vi.fn<() => { status: "disabled" | "connected" | "disconnected"; lastError: string | null; connectedAt: string | null }>(
-  () => ({ status: "disabled", lastError: null, connectedAt: null }),
-);
+const getStreamStatus = vi.fn<
+  () => { status: "disabled" | "connected" | "disconnected"; lastError: string | null; connectedAt: string | null }
+>(() => ({ status: "disabled", lastError: null, connectedAt: null }));
 vi.mock("@/lib/services/protect-event-stream", () => ({ getStreamStatus: () => getStreamStatus() }));
 
 type SentAlert = { kind: string; message?: string };
@@ -146,7 +146,9 @@ describe("checkConnectivity", () => {
     getStreamStatus.mockReturnValue({ status: "disabled", lastError: null, connectedAt: null });
     const { checkConnectivity } = await import("./connectivity-watchdog");
     await checkConnectivity();
-    expect(send.mock.calls[0][0].message).toContain("stream fallback is disabled (no SuperAdmin credential configured)");
+    expect(send.mock.calls[0][0].message).toContain(
+      "stream fallback is disabled (no SuperAdmin credential configured)",
+    );
   });
 
   it("exposes streamStatus and lastEventSource on the connectivity status", async () => {

@@ -74,7 +74,13 @@ const PAGE_TITLES: Record<Screen, string> = {
 
 function armPillTreatment(state: AlarmStateName) {
   if (state === "ALARM") {
-    return { border: "border-transparent", bg: "bg-destructive", label: "text-destructive-foreground", meta: "text-destructive-foreground", dot: "bg-destructive-foreground" };
+    return {
+      border: "border-transparent",
+      bg: "bg-destructive",
+      label: "text-destructive-foreground",
+      meta: "text-destructive-foreground",
+      dot: "bg-destructive-foreground",
+    };
   }
   if (state === "DISARMED") {
     return {
@@ -235,21 +241,21 @@ export function AppShell({
         <SidebarContent>
           <SidebarGroup>
             <nav aria-label="Admin screens">
-            <SidebarMenu>
-              {NAV.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    isActive={item.id === screen}
-                    tooltip={item.label}
-                    aria-current={item.id === screen ? "page" : undefined}
-                    onClick={() => onScreenChange(item.id)}
-                  >
-                    <item.icon size={19} />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+              <SidebarMenu>
+                {NAV.map((item) => (
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      isActive={item.id === screen}
+                      tooltip={item.label}
+                      aria-current={item.id === screen ? "page" : undefined}
+                      onClick={() => onScreenChange(item.id)}
+                    >
+                      <item.icon size={19} />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
             </nav>
           </SidebarGroup>
         </SidebarContent>
@@ -278,7 +284,9 @@ export function AppShell({
                   `Update available: ${updateStatus.latestVersion}`}
               </Button>
             )}
-            <div className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 py-1.5 md:flex-none ${pill.border} ${pill.bg}`}>
+            <div
+              className={`flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-3 py-1.5 md:flex-none ${pill.border} ${pill.bg}`}
+            >
               <span className={`h-2 w-2 flex-none ${pill.dot}`} />
               <span className={`font-mono text-xs font-medium tracking-widest uppercase ${pill.label}`}>
                 {armLabel(state, displayRemainingSec, triggeredSensorName)}
@@ -312,7 +320,9 @@ export function AppShell({
       <AlertDialog open={armOpenSensors !== null} onOpenChange={(next) => !next && setArmOpenSensors(null)}>
         <AlertDialogContent finalFocus={armButtonRef} className="w-[340px] max-w-[calc(100%-2rem)]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-title-xs font-normal text-foreground">Door open. Arm anyway?</AlertDialogTitle>
+            <AlertDialogTitle className="font-display text-title-xs font-normal text-foreground">
+              Door open. Arm anyway?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {armOpenSensors && armOpenSensors.length > 0
                 ? `Still open: ${armOpenSensors.map((s) => s.name).join(", ")}.`

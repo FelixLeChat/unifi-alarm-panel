@@ -81,7 +81,9 @@ export function humanizeAuditEvent(event: string, detail: unknown): string {
       return "Arm requested: alarm in progress";
     case "arm_locked_out": {
       const source = detailValue(detail, "source");
-      return source ? `Arm attempt blocked: too many failed PINs from ${source}` : "Arm attempt blocked: too many failed PINs";
+      return source
+        ? `Arm attempt blocked: too many failed PINs from ${source}`
+        : "Arm attempt blocked: too many failed PINs";
     }
     case "arm_failed_invalid_pin": {
       const source = detailValue(detail, "source");
@@ -89,7 +91,9 @@ export function humanizeAuditEvent(event: string, detail: unknown): string {
     }
     case "disarm_locked_out": {
       const source = detailValue(detail, "source");
-      return source ? `Disarm attempt blocked: too many failed PINs from ${source}` : "Disarm attempt blocked: too many failed PINs";
+      return source
+        ? `Disarm attempt blocked: too many failed PINs from ${source}`
+        : "Disarm attempt blocked: too many failed PINs";
     }
     case "disarm_failed_invalid_pin": {
       const source = detailValue(detail, "source");
@@ -101,22 +105,36 @@ export function humanizeAuditEvent(event: string, detail: unknown): string {
     }
     case "pin_lockout_during_alarm": {
       const source = detailValue(detail, "source");
-      return source ? `Another failed-PIN lockout from ${source}: already in ALARM` : "Another failed-PIN lockout: already in ALARM";
+      return source
+        ? `Another failed-PIN lockout from ${source}: already in ALARM`
+        : "Another failed-PIN lockout: already in ALARM";
     }
     case "arm_rejected_sensors_open": {
       const sensors = detail && typeof detail === "object" ? (detail as Record<string, unknown>).sensors : undefined;
-      const names = Array.isArray(sensors) ? sensors.map((s) => (s as { name?: string })?.name).filter(Boolean).join(", ") : undefined;
+      const names = Array.isArray(sensors)
+        ? sensors
+            .map((s) => (s as { name?: string })?.name)
+            .filter(Boolean)
+            .join(", ")
+        : undefined;
       return names ? `Arm blocked. Door(s) open: ${names}` : "Arm blocked. A door is open";
     }
     case "arm_forced_with_sensors_open": {
       const sensors = detail && typeof detail === "object" ? (detail as Record<string, unknown>).sensors : undefined;
-      const names = Array.isArray(sensors) ? sensors.map((s) => (s as { name?: string })?.name).filter(Boolean).join(", ") : undefined;
+      const names = Array.isArray(sensors)
+        ? sensors
+            .map((s) => (s as { name?: string })?.name)
+            .filter(Boolean)
+            .join(", ")
+        : undefined;
       return names ? `Armed anyway with door(s) open: ${names}` : "Armed anyway with a door open";
     }
     case "alarm_instant":
       return sensorId ? `ALARM triggered: sensor '${sensorId}' (instant)` : "ALARM triggered (instant sensor)";
     case "alarm_instant_during_entry_delay":
-      return sensorId ? `ALARM triggered: sensor '${sensorId}' during entry delay` : "ALARM triggered during entry delay";
+      return sensorId
+        ? `ALARM triggered: sensor '${sensorId}' during entry delay`
+        : "ALARM triggered during entry delay";
     case "alarm_entry_timeout":
       return "Entry delay elapsed without disarm: ALARM triggered";
     case "entry_delay_started":
@@ -134,7 +152,10 @@ export function humanizeAuditEvent(event: string, detail: unknown): string {
       // up — it renders as prose rather than a raw event name for that reason.
       const profiles = detail && typeof detail === "object" ? (detail as Record<string, unknown>).profiles : undefined;
       const titles = Array.isArray(profiles)
-        ? profiles.map((p) => (p as { title?: string })?.title).filter(Boolean).join(", ")
+        ? profiles
+            .map((p) => (p as { title?: string })?.title)
+            .filter(Boolean)
+            .join(", ")
         : undefined;
       return titles ? `UniFi reported a breach. Profile(s): ${titles}` : "UniFi reported a breach";
     }
@@ -157,7 +178,9 @@ export function humanizeAuditEvent(event: string, detail: unknown): string {
       return "Sensor webhook payload could not be parsed";
     case "webhook_rejected": {
       const source = detailValue(detail, "source");
-      return source ? `Sensor webhook rejected: bad shared secret, from ${source}` : "Sensor webhook rejected: bad shared secret";
+      return source
+        ? `Sensor webhook rejected: bad shared secret, from ${source}`
+        : "Sensor webhook rejected: bad shared secret";
     }
     case "sensor_deleted": {
       const unifiId = detailValue(detail, "unifiId");
@@ -187,8 +210,10 @@ export function humanizeAuditEvent(event: string, detail: unknown): string {
       return Array.isArray(keys) && keys.length > 0 ? `${label}: ${keys.join(", ")}` : label;
     }
     case "config_updated": {
-      const configKeys = detail && typeof detail === "object" ? (detail as Record<string, unknown>).configKeys : undefined;
-      const sensorIds = detail && typeof detail === "object" ? (detail as Record<string, unknown>).sensorIds : undefined;
+      const configKeys =
+        detail && typeof detail === "object" ? (detail as Record<string, unknown>).configKeys : undefined;
+      const sensorIds =
+        detail && typeof detail === "object" ? (detail as Record<string, unknown>).sensorIds : undefined;
       const parts: string[] = [];
       if (Array.isArray(configKeys) && configKeys.length > 0) parts.push(configKeys.join(", "));
       if (Array.isArray(sensorIds) && sensorIds.length > 0) parts.push(`sensors: ${sensorIds.join(", ")}`);

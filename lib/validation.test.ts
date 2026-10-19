@@ -21,7 +21,11 @@ describe("armBodySchema", () => {
 
 describe("readSmallJsonBody", () => {
   const post = (body: string, headers: Record<string, string> = {}) =>
-    new Request("http://localhost/api/disarm", { method: "POST", body, headers: { "content-type": "application/json", ...headers } });
+    new Request("http://localhost/api/disarm", {
+      method: "POST",
+      body,
+      headers: { "content-type": "application/json", ...headers },
+    });
 
   it("parses a small JSON body", async () => {
     expect(await readSmallJsonBody(post('{"pin":"1234"}'))).toEqual({ pin: "1234" });

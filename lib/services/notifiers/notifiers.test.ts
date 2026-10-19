@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CompositeNotifier, NtfyChannel, NullNotifier, SlackChannel, type Notifier } from ".";
 
-const slack = (webhookUrl: string, botToken?: string, channelId?: string, consoleCamerasUrl?: string, timeZone = "UTC") =>
-  new SlackChannel({ webhookUrl, botToken, channelId }, { consoleCamerasUrl, timeZone });
+const slack = (
+  webhookUrl: string,
+  botToken?: string,
+  channelId?: string,
+  consoleCamerasUrl?: string,
+  timeZone = "UTC",
+) => new SlackChannel({ webhookUrl, botToken, channelId }, { consoleCamerasUrl, timeZone });
 const ntfy = (url: string, topic: string, consoleCamerasUrl?: string, timeZone = "UTC") =>
   new NtfyChannel({ url, topic }, { consoleCamerasUrl, timeZone });
 
@@ -93,7 +98,11 @@ describe("SlackChannel", () => {
     fetchMock.mockResolvedValue({ ok: true });
     const notifier = slack("https://hooks.slack.example/webhook");
 
-    await notifier.send({ kind: "ALARM", at: "now", snapshot: { buffer: Buffer.from([1]), contentType: "image/jpeg" } });
+    await notifier.send({
+      kind: "ALARM",
+      at: "now",
+      snapshot: { buffer: Buffer.from([1]), contentType: "image/jpeg" },
+    });
 
     expect(fetchMock).toHaveBeenCalledTimes(1); // webhook only
   });
@@ -136,7 +145,9 @@ describe("SlackChannel", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(4);
-    const completeCall = fetchMock.mock.calls.find((c) => c[0] === "https://slack.com/api/files.completeUploadExternal");
+    const completeCall = fetchMock.mock.calls.find(
+      (c) => c[0] === "https://slack.com/api/files.completeUploadExternal",
+    );
     const completeBody = JSON.parse(completeCall![1].body);
     expect(completeBody.channel_id).toBe("C123");
     expect(completeBody.files[0].id).toBe("F123");
@@ -244,11 +255,7 @@ describe("NtfyChannel", () => {
 
   it("falls back to the console-cameras link for Click when there's no sensor-specific one", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = ntfy(
-      "https://ntfy.internal",
-      "alarms",
-      "https://unifi.ui.com/consoles/abc/protect/dashboard",
-    );
+    const notifier = ntfy("https://ntfy.internal", "alarms", "https://unifi.ui.com/consoles/abc/protect/dashboard");
 
     await notifier.send({ kind: "ALARM", sensorId: "unmapped-sensor", at: "now" });
 
@@ -258,11 +265,7 @@ describe("NtfyChannel", () => {
 
   it("prefers the sensor-specific live-view link over the console-cameras fallback for Click", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const notifier = ntfy(
-      "https://ntfy.internal",
-      "alarms",
-      "https://unifi.ui.com/consoles/abc/protect/dashboard",
-    );
+    const notifier = ntfy("https://ntfy.internal", "alarms", "https://unifi.ui.com/consoles/abc/protect/dashboard");
 
     await notifier.send({
       kind: "ALARM",
@@ -280,7 +283,13 @@ describe("NtfyChannel", () => {
     const notifier = ntfy("https://ntfy.internal", "alarms");
 
     for (const kind of ["ALARM", "DURESS", "HEALTH"] as const) {
-      await notifier.send({ kind, sensorId: "front-door", message: "feed quiet", at: "now", liveViewUrl: "https://udm.local/cam" });
+      await notifier.send({
+        kind,
+        sensorId: "front-door",
+        message: "feed quiet",
+        at: "now",
+        liveViewUrl: "https://udm.local/cam",
+      });
     }
 
     for (const [, init] of fetchMock.mock.calls) expect(() => new Headers(init.headers)).not.toThrow();
@@ -311,7 +320,11 @@ describe("CompositeNotifier", () => {
   });
 
   it("one notifier failing doesn't stop the others or throw", async () => {
-    const failing: Notifier = { send: vi.fn(async () => { throw new Error("boom"); }) };
+    const failing: Notifier = {
+      send: vi.fn(async () => {
+        throw new Error("boom");
+      }),
+    };
     const ok: Notifier = { send: vi.fn(async () => {}) };
     const composite = new CompositeNotifier([failing, ok]);
 

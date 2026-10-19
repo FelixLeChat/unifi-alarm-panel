@@ -49,9 +49,7 @@ describe("AlarmEngine", () => {
   });
 
   it("restores prior state from the database on construction", () => {
-    db.prepare("INSERT INTO alarm_state (id, name, since) VALUES (1, 'ARMED', ?)").run(
-      new Date().toISOString(),
-    );
+    db.prepare("INSERT INTO alarm_state (id, name, since) VALUES (1, 'ARMED', ?)").run(new Date().toISOString());
     const engine = new AlarmEngine(db);
     expect(engine.getStatus().state).toBe("ARMED");
   });

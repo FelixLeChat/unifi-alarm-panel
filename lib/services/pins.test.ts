@@ -35,7 +35,9 @@ describe("createPin / verifyPin", () => {
   });
 
   it("skips a malformed hash instead of failing the whole check", async () => {
-    db.prepare("INSERT INTO pins (label, hash, updated_at) VALUES ('broken', 'not-a-hash', '2026-01-01T00:00:00Z')").run();
+    db.prepare(
+      "INSERT INTO pins (label, hash, updated_at) VALUES ('broken', 'not-a-hash', '2026-01-01T00:00:00Z')",
+    ).run();
     await createPin(db, "Alice", "1234");
     expect(await verifyPin(db, "1234")).toMatchObject({ ok: true, label: "Alice" });
   });

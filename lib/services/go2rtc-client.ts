@@ -59,7 +59,10 @@ export function isSafeStreamName(name: string): boolean {
  */
 export async function upsertGo2rtcStream(name: string, rtspUrl: string): Promise<boolean> {
   if (!isSafeStreamName(name)) {
-    logger.warn({ name }, "go2rtc stream not registered: the camera or sensor ID has characters a stream name can't hold");
+    logger.warn(
+      { name },
+      "go2rtc stream not registered: the camera or sensor ID has characters a stream name can't hold",
+    );
     return false;
   }
   try {
@@ -67,7 +70,10 @@ export async function upsertGo2rtcStream(name: string, rtspUrl: string): Promise
     const params = new URLSearchParams({ name });
     params.append("src", toGo2rtcSource(rtspUrl));
     params.append("src", `ffmpeg:${name}#video=mjpeg`);
-    const res = await fetch(`${baseUrl()}/api/streams?${params}`, { method: "PUT", signal: AbortSignal.timeout(5_000) });
+    const res = await fetch(`${baseUrl()}/api/streams?${params}`, {
+      method: "PUT",
+      signal: AbortSignal.timeout(5_000),
+    });
     if (!res.ok) logger.warn({ name, status: res.status }, "go2rtc stream registration failed");
     return res.ok;
   } catch (err) {

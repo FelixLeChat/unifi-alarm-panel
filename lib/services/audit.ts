@@ -154,7 +154,9 @@ interface WorkingIncident extends Omit<EventIncident, "sensors"> {
  */
 export function listEventIncidents(db: Database.Database, limit: number): EventIncident[] {
   const rows = (
-    db.prepare("SELECT id, ts, actor_label, event, detail_json FROM audit ORDER BY id DESC LIMIT ?").all(RAW_SCAN_LIMIT) as AuditDbRow[]
+    db
+      .prepare("SELECT id, ts, actor_label, event, detail_json FROM audit ORDER BY id DESC LIMIT ?")
+      .all(RAW_SCAN_LIMIT) as AuditDbRow[]
   )
     .map(toAuditRow)
     .reverse(); // oldest first, so a rolling window can be built forward in time
@@ -164,9 +166,18 @@ export function listEventIncidents(db: Database.Database, limit: number): EventI
 
   for (const row of rows) {
     if (TRIGGER_EVENTS.has(row.event)) {
-      const gapExceeded = !current || new Date(row.ts).getTime() - new Date(current.endedAt).getTime() > INCIDENT_GAP_MS;
+      const gapExceeded =
+        !current || new Date(row.ts).getTime() - new Date(current.endedAt).getTime() > INCIDENT_GAP_MS;
       if (gapExceeded) {
-        current = { id: row.id, startedAt: row.ts, endedAt: row.ts, triggeredAlarm: false, resolvedAt: null, resolvedBy: null, sensorMap: new Map() };
+        current = {
+          id: row.id,
+          startedAt: row.ts,
+          endedAt: row.ts,
+          triggeredAlarm: false,
+          resolvedAt: null,
+          resolvedBy: null,
+          sensorMap: new Map(),
+        };
         incidents.push(current);
       }
       const incident = current as WorkingIncident;

@@ -26,7 +26,10 @@ export function getProtectDispatcher(): Agent | undefined {
   const key = caCert ? `ca:${caCert}` : "insecure";
   if (cached?.key !== key) {
     void cached?.agent.close().catch(() => {});
-    cached = { key, agent: caCert ? new Agent({ connect: { ca: caCert } }) : new Agent({ connect: { rejectUnauthorized: false } }) };
+    cached = {
+      key,
+      agent: caCert ? new Agent({ connect: { ca: caCert } }) : new Agent({ connect: { rejectUnauthorized: false } }),
+    };
   }
   return cached.agent;
 }

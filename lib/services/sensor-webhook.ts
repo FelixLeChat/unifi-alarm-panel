@@ -16,11 +16,7 @@ export interface WebhookResult {
  * disarmed, delayed vs. instant. This just gets a raw UniFi payload into a
  * (sensorId, mode) pair without ever throwing, however malformed the body.
  */
-export function handleSensorWebhook(
-  db: Database.Database,
-  engine: AlarmEngine,
-  rawBody: string,
-): WebhookResult {
+export function handleSensorWebhook(db: Database.Database, engine: AlarmEngine, rawBody: string): WebhookResult {
   recordRawPayload(rawBody);
   logger.debug({ raw: rawBody }, "sensor webhook received");
 

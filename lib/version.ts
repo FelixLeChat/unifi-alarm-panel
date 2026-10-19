@@ -12,7 +12,8 @@ export function getAppVersion(): string {
       cached = readFileSync(join(process.cwd(), "VERSION"), "utf8").trim();
     } catch (err) {
       // No file is the dev case. Anything else (permissions, a broken deploy) must not pass as a dev build silently.
-      if ((err as NodeJS.ErrnoException).code !== "ENOENT") logger.warn({ err }, "could not read VERSION, reporting dev");
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT")
+        logger.warn({ err }, "could not read VERSION, reporting dev");
       cached = "dev";
     }
   }

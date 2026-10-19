@@ -275,7 +275,11 @@ export default function AdminPage() {
     const s = await fetchConnectivityStatus(token, { refresh: true });
     if (s) {
       setConnectivity(s);
-      toast.success(s.sensorHeartbeatStale || s.cameraReachable === false ? "Check complete. Something needs attention." : "Check complete. All good.");
+      toast.success(
+        s.sensorHeartbeatStale || s.cameraReachable === false
+          ? "Check complete. Something needs attention."
+          : "Check complete. All good.",
+      );
     } else {
       toast.error("Check now failed. The request didn't go through.");
     }
@@ -323,7 +327,14 @@ export default function AdminPage() {
   }
 
   if (!token) {
-    return <LoginScreen tokenInput={tokenInput} onTokenInputChange={setTokenInput} onSubmit={handleTokenSubmit} error={tokenError} />;
+    return (
+      <LoginScreen
+        tokenInput={tokenInput}
+        onTokenInputChange={setTokenInput}
+        onSubmit={handleTokenSubmit}
+        error={tokenError}
+      />
+    );
   }
 
   // A stored token isn't trusted until reload() confirms it, so a rejected one
@@ -374,7 +385,13 @@ export default function AdminPage() {
       {screen === "pins" && <PinsScreen pins={snapshot.pins} token={token} onSaved={reload} />}
       {screen === "delays" && <DelaysScreen config={snapshot.config} token={token} onSaved={reload} />}
       {screen === "settings" && (
-        <SettingsScreen config={snapshot.config} token={token} onSaved={reload} settings={settings} onSettingsSaved={setSettings} />
+        <SettingsScreen
+          config={snapshot.config}
+          token={token}
+          onSaved={reload}
+          settings={settings}
+          onSettingsSaved={setSettings}
+        />
       )}
       {screen === "audit" && <AuditLogScreen token={token} />}
       {screen === "events" && <EventsScreen token={token} />}

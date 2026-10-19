@@ -83,7 +83,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   if (!selfUpdate()) {
-    return NextResponse.json({ ok: false, error: "Running in Docker: pull the new image and recreate the container instead." }, { status: 409 });
+    return NextResponse.json(
+      { ok: false, error: "Running in Docker: pull the new image and recreate the container instead." },
+      { status: 409 },
+    );
   }
   const parsed = postSchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {

@@ -138,7 +138,10 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
 
   return (
     <>
-      <div className="relative flex max-h-[320px] items-center justify-center overflow-hidden bg-primary" style={{ aspectRatio: "16/9" }}>
+      <div
+        className="relative flex max-h-[320px] items-center justify-center overflow-hidden bg-primary"
+        style={{ aspectRatio: "16/9" }}
+      >
         {liveUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- a live MJPEG feed, not a static asset Next's image pipeline should optimize
           <img
@@ -160,7 +163,9 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
           <VideocamOffIcon size={36} className="text-muted-foreground" />
         )}
         <span className="absolute bottom-3 left-3.5 font-mono text-eyebrow-s tracking-eyebrow text-primary-foreground/70 uppercase">
-          {cameraId ? `${cameraId}${liveUrl ? " · live" : snapshotUrl ? "" : loading ? " · loading" : " · unreachable"}` : "No Protect camera mapped"}
+          {cameraId
+            ? `${cameraId}${liveUrl ? " · live" : snapshotUrl ? "" : loading ? " · loading" : " · unreachable"}`
+            : "No Protect camera mapped"}
         </span>
         {(liveUrl || snapshotUrl) && (
           <Button

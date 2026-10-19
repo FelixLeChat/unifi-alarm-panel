@@ -1,7 +1,7 @@
-import { MonitoringW300 } from "@material-symbols-svg/react/rounded/icons/monitoring"
+import { MonitoringW300 } from "@material-symbols-svg/react/rounded/icons/monitoring";
 
-import { iconProps, type IconProps } from "./icon-props"
+import { iconProps, type IconProps } from "./icon-props";
 
 export function MonitoringIcon(props: IconProps) {
-  return <MonitoringW300 {...iconProps(props)} />
+  return <MonitoringW300 {...iconProps(props)} />;
 }

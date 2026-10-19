@@ -51,9 +51,7 @@ describe("admin config route", () => {
     const before = (await (await GET(adminReq("GET", "/api/admin/config"))).json()) as { lastArmDisarm: unknown };
     expect(before.lastArmDisarm).toBeNull();
 
-    getDb()
-      .prepare("INSERT INTO audit (actor_label, event) VALUES (?, ?)")
-      .run("Alex", "armed");
+    getDb().prepare("INSERT INTO audit (actor_label, event) VALUES (?, ?)").run("Alex", "armed");
 
     const after = (await (await GET(adminReq("GET", "/api/admin/config"))).json()) as {
       lastArmDisarm: { event: string; actorLabel: string | null };
@@ -77,7 +75,9 @@ describe("admin config route", () => {
       const res = await PUT(adminReq("PUT", "/api/admin/config", { config: { [key]: value } }));
       expect(res.status).toBe(400);
 
-      const after = (await (await GET(adminReq("GET", "/api/admin/config"))).json()) as { config: Record<string, string> };
+      const after = (await (await GET(adminReq("GET", "/api/admin/config"))).json()) as {
+        config: Record<string, string>;
+      };
       expect(after.config[key]).not.toBe(value);
     });
 
@@ -154,7 +154,9 @@ describe("admin config route", () => {
   it("PUT registers a go2rtc stream, keyed by cameraId, when a sensor is saved with an rtspUrl", async () => {
     const res = await PUT(
       adminReq("PUT", "/api/admin/config", {
-        sensors: [{ unifiId: "front-door", mode: "instant", cameraId: "cam-1", rtspUrl: "rtsps://192.168.1.1:7441/abc" }],
+        sensors: [
+          { unifiId: "front-door", mode: "instant", cameraId: "cam-1", rtspUrl: "rtsps://192.168.1.1:7441/abc" },
+        ],
       }),
     );
     expect(res.status).toBe(200);
@@ -164,7 +166,9 @@ describe("admin config route", () => {
   it("PUT removes the go2rtc stream when rtspUrl is explicitly cleared", async () => {
     await PUT(
       adminReq("PUT", "/api/admin/config", {
-        sensors: [{ unifiId: "front-door", mode: "instant", cameraId: "cam-1", rtspUrl: "rtsps://192.168.1.1:7441/abc" }],
+        sensors: [
+          { unifiId: "front-door", mode: "instant", cameraId: "cam-1", rtspUrl: "rtsps://192.168.1.1:7441/abc" },
+        ],
       }),
     );
     await PUT(
@@ -184,7 +188,9 @@ describe("admin config route", () => {
   it("DELETE removes the go2rtc stream for a deleted sensor that had a live feed", async () => {
     await PUT(
       adminReq("PUT", "/api/admin/config", {
-        sensors: [{ unifiId: "front-door", mode: "instant", cameraId: "cam-1", rtspUrl: "rtsps://192.168.1.1:7441/abc" }],
+        sensors: [
+          { unifiId: "front-door", mode: "instant", cameraId: "cam-1", rtspUrl: "rtsps://192.168.1.1:7441/abc" },
+        ],
       }),
     );
     removeGo2rtcStream.mockClear();
@@ -212,7 +218,14 @@ describe("admin config route", () => {
   it("rejects an rtspUrl that isn't an rtsp(s):// URL, without touching go2rtc", async () => {
     const res = await PUT(
       adminReq("PUT", "/api/admin/config", {
-        sensors: [{ unifiId: "front-door", mode: "instant", cameraId: "cam-1", rtspUrl: "https://192.168.1.1/some-live-view-link" }],
+        sensors: [
+          {
+            unifiId: "front-door",
+            mode: "instant",
+            cameraId: "cam-1",
+            rtspUrl: "https://192.168.1.1/some-live-view-link",
+          },
+        ],
       }),
     );
     expect(res.status).toBe(400);

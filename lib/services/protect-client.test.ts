@@ -24,7 +24,11 @@ describe("UnifiProtectClient", () => {
       arrayBuffer: async () => bytes.buffer,
     });
 
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     const snapshot = await client.getSnapshot("cam-1");
 
     expect(snapshot).not.toBeNull();
@@ -42,7 +46,9 @@ describe("UnifiProtectClient", () => {
       .mockResolvedValueOnce({
         ok: false,
         status: 400,
-        clone: () => ({ text: async () => JSON.stringify({ error: "Camera does not support full HD snapshot", name: "BAD_REQUEST" }) }),
+        clone: () => ({
+          text: async () => JSON.stringify({ error: "Camera does not support full HD snapshot", name: "BAD_REQUEST" }),
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -50,7 +56,11 @@ describe("UnifiProtectClient", () => {
         arrayBuffer: async () => bytes.buffer,
       });
 
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     const snapshot = await client.getSnapshot("cam-1");
 
     expect(snapshot).not.toBeNull();
@@ -62,18 +72,30 @@ describe("UnifiProtectClient", () => {
 
   it("returns null on a non-2xx response instead of throwing", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 404 });
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     await expect(client.getSnapshot("cam-1")).resolves.toBeNull();
   });
 
   it("returns null when the request throws (network error) instead of propagating", async () => {
     fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     await expect(client.getSnapshot("cam-1")).resolves.toBeNull();
   });
 
   it("builds the live view URL from the configured template", () => {
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     expect(client.getLiveViewUrl("cam-1")).toBe("https://udm.local/protect/dashboard/cam-1");
   });
 
@@ -86,7 +108,11 @@ describe("UnifiProtectClient", () => {
       ],
     });
 
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     const cameras = await client.listCameras();
 
     expect(cameras).toEqual([
@@ -99,7 +125,11 @@ describe("UnifiProtectClient", () => {
 
   it("returns an empty camera list instead of throwing on failure", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 401 });
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     await expect(client.listCameras()).resolves.toEqual([]);
   });
 });
@@ -118,7 +148,11 @@ describe("UnifiProtectClient.triggerAlarmManagerWebhook", () => {
 
   it("POSTs to the alarm-manager webhook path with the X-API-KEY header", async () => {
     fetchMock.mockResolvedValue({ ok: true });
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
 
     const ok = await client.triggerAlarmManagerWebhook("webhook-abc");
 
@@ -131,13 +165,21 @@ describe("UnifiProtectClient.triggerAlarmManagerWebhook", () => {
 
   it("returns false instead of throwing when the request fails", async () => {
     fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     await expect(client.triggerAlarmManagerWebhook("webhook-abc")).resolves.toBe(false);
   });
 
   it("returns false on a non-ok response", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 404 });
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     await expect(client.triggerAlarmManagerWebhook("webhook-abc")).resolves.toBe(false);
   });
 });
@@ -156,7 +198,11 @@ describe("UnifiProtectClient TLS dispatcher scoping", () => {
   });
 
   it("passes no dispatcher — normal certificate verification — by default", async () => {
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     await client.getSnapshot("cam-1");
     const [, init] = fetchMock.mock.calls[0];
     expect(init.dispatcher).toBeUndefined();
@@ -164,7 +210,11 @@ describe("UnifiProtectClient TLS dispatcher scoping", () => {
 
   it("scopes a relaxed-TLS dispatcher to this client's fetch calls when insecure TLS is on", async () => {
     settings.set("protectInsecureTls", "true");
-    const client = new UnifiProtectClient("https://udm.local", "secret-key", "https://udm.local/protect/dashboard/{cameraId}");
+    const client = new UnifiProtectClient(
+      "https://udm.local",
+      "secret-key",
+      "https://udm.local/protect/dashboard/{cameraId}",
+    );
     await client.getSnapshot("cam-1");
     const [, init] = fetchMock.mock.calls[0];
     expect(init.dispatcher).toBeDefined();

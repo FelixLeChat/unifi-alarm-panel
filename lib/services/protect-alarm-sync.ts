@@ -166,7 +166,10 @@ export function reduceArmState(profiles: AlarmProfile[]): ReducedState | null {
 
   for (const profile of profiles) {
     if (!KNOWN_STATES.has(profile.state)) {
-      logger.warn({ profileId: profile.id, state: profile.state }, "Alarm Manager profile reported an unrecognized state");
+      logger.warn(
+        { profileId: profile.id, state: profile.state },
+        "Alarm Manager profile reported an unrecognized state",
+      );
       continue;
     }
     sawKnown = true;
@@ -199,7 +202,12 @@ declare global {
 // A new session when the credentials changed in the admin UI; the same one otherwise.
 export function getClient(creds: ProtectAlarmCredentials): ProtectAlarmSyncClient {
   const cached = globalThis.__uapProtectAlarmSyncClient;
-  if (!cached || cached.creds.host !== creds.host || cached.creds.username !== creds.username || cached.creds.password !== creds.password) {
+  if (
+    !cached ||
+    cached.creds.host !== creds.host ||
+    cached.creds.username !== creds.username ||
+    cached.creds.password !== creds.password
+  ) {
     globalThis.__uapProtectAlarmSyncClient = { creds, client: new ProtectAlarmSyncClient(creds) };
   }
   return globalThis.__uapProtectAlarmSyncClient!.client;

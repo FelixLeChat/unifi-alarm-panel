@@ -33,7 +33,7 @@ describe("auditRowsToCsv", () => {
   });
 
   it("neutralises a cell that would run as a spreadsheet formula", () => {
-    const csv = auditRowsToCsv([row({ actorLabel: "=HYPERLINK(\"http://x\")" })]);
+    const csv = auditRowsToCsv([row({ actorLabel: '=HYPERLINK("http://x")' })]);
     expect(csv).toContain(`"'=HYPERLINK(""http://x"")"`);
     expect(csv).not.toMatch(/,=HYPERLINK/);
   });

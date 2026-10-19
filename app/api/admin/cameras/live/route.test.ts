@@ -31,7 +31,10 @@ describe("admin camera live route", () => {
   it("proxies go2rtc's MJPEG response body and content-type on a valid token", async () => {
     const token = issueStreamToken("cam-1");
     fetchMock.mockResolvedValue(
-      new Response("frame-bytes", { status: 200, headers: { "content-type": "multipart/x-mixed-replace; boundary=ffserver" } }),
+      new Response("frame-bytes", {
+        status: 200,
+        headers: { "content-type": "multipart/x-mixed-replace; boundary=ffserver" },
+      }),
     );
     const { GET } = await import("./route");
     const res = await GET(new Request(`http://localhost/api/admin/cameras/live?cameraId=cam-1&token=${token}`));

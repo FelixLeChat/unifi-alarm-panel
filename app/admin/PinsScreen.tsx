@@ -148,7 +148,9 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
     if (!result.ok) {
       // Deliberately doesn't name whose PIN it collides with — that would leak
       // one employee's code to whoever is adding another.
-      showError(result.pinTaken ? "That PIN is already in use. Pick a different one." : "Could not add PIN. Try again.");
+      showError(
+        result.pinTaken ? "That PIN is already in use. Pick a different one." : "Could not add PIN. Try again.",
+      );
       return;
     }
     setLabel("");
@@ -213,7 +215,9 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
           </Field>
           <div className="flex h-9 items-center gap-2.5">
             <Switch checked={isDuress} onCheckedChange={setIsDuress} aria-labelledby="new-pin-duress-label" />
-            <span id="new-pin-duress-label" className="text-body-s text-foreground">Duress PIN</span>
+            <span id="new-pin-duress-label" className="text-body-s text-foreground">
+              Duress PIN
+            </span>
             <Tooltip>
               <TooltipTrigger
                 type="button"
@@ -223,7 +227,9 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
                 ?
               </TooltipTrigger>
               <TooltipContent>
-                {"Disarms normally, with no visible difference at the door, but silently alerts admins instead of a normal disarm. Example: someone forced to open the office under threat enters their duress PIN like usual. The door unlocks fine, but admins get a silent DURESS alert instead of the usual notification."}
+                {
+                  "Disarms normally, with no visible difference at the door, but silently alerts admins instead of a normal disarm. Example: someone forced to open the office under threat enters their duress PIN like usual. The door unlocks fine, but admins get a silent DURESS alert instead of the usual notification."
+                }
               </TooltipContent>
             </Tooltip>
           </div>
@@ -240,7 +246,9 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
           {pinError && <FieldError className="self-center text-xs">{pinError}</FieldError>}
         </form>
         <p className="m-0 max-w-[560px] text-xs leading-[1.55] text-muted-foreground">
-          {"A duress PIN disarms the system normally but sends a silent alert. Give one to anyone who opens the office alone."}
+          {
+            "A duress PIN disarms the system normally but sends a silent alert. Give one to anyone who opens the office alone."
+          }
         </p>
       </Card>
 
@@ -287,7 +295,12 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
             />
           </Field>
           {hasActiveFilter && (
-            <Button type="button" variant="ghost" size="sm" onClick={() => updateParams({ status: null, from: null, to: null })}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => updateParams({ status: null, from: null, to: null })}
+            >
               Clear filters
             </Button>
           )}
@@ -299,86 +312,91 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
 
       {pins.length > 0 ? (
         <Card className="overflow-hidden">
-<Table className="w-full">
-          <TableHeader>
-            <TableRow>
-              <SortHeader sortKey="label" sort={sort} dir={dir} onSortClick={handleSortClick}>
-                Label
-              </SortHeader>
-              <SortHeader sortKey="type" sort={sort} dir={dir} onSortClick={handleSortClick}>
-                Type
-              </SortHeader>
-              <SortHeader sortKey="status" sort={sort} dir={dir} onSortClick={handleSortClick}>
-                Status
-              </SortHeader>
-              <SortHeader sortKey="created" sort={sort} dir={dir} onSortClick={handleSortClick}>
-                Created
-              </SortHeader>
-              <TableHead className="border-b border-border px-4 py-2.5">
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedPins.length === 0 ? (
+          <Table className="w-full">
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="border-b border-border px-4 py-6 text-center text-xs text-muted-foreground">
-                  No PINs match these filters.
-                </TableCell>
+                <SortHeader sortKey="label" sort={sort} dir={dir} onSortClick={handleSortClick}>
+                  Label
+                </SortHeader>
+                <SortHeader sortKey="type" sort={sort} dir={dir} onSortClick={handleSortClick}>
+                  Type
+                </SortHeader>
+                <SortHeader sortKey="status" sort={sort} dir={dir} onSortClick={handleSortClick}>
+                  Status
+                </SortHeader>
+                <SortHeader sortKey="created" sort={sort} dir={dir} onSortClick={handleSortClick}>
+                  Created
+                </SortHeader>
+                <TableHead className="border-b border-border px-4 py-2.5">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
-            ) : (
-              sortedPins.map((p) => (
-                <TableRow
-                  key={p.id}
-                  tabIndex={0}
-                  onClick={() => setDetailTarget(p)}
-                  // Only Enter on the row itself: Enter on the Revoke button inside it must not also open Edit PIN.
-                  onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setDetailTarget(p)}
-                  className={`cursor-pointer ${p.active ? "" : "opacity-55"}`}
-                >
-                  <TableCell className="border-b border-border px-4 py-3 text-sm font-medium text-foreground">{p.label}</TableCell>
-                  <TableCell className="border-b border-border px-4 py-3">
-                    {p.isDuress ? (
-                      <Badge variant="accent">Duress</Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Standard</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="border-b border-border px-4 py-3">
-                    {p.active ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs text-success">
-                        <CheckIcon size={12} />
-                        Active
-                      </span>
-                    ) : (
-                      <Badge variant="outline">Revoked</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="border-b border-border px-4 py-3 font-mono text-xs text-muted-foreground">
-                    {formatDateOnly(p.createdAt)}
-                  </TableCell>
-                  <TableCell className="border-b border-border px-4 py-3 text-right">
-                    {p.active && (
-                      <Button
-                        size="sm"
-                        type="button"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRevokeTarget(p);
-                        }}
-                        className="text-destructive"
-                      >
-                        Revoke
-                      </Button>
-                    )}
+            </TableHeader>
+            <TableBody>
+              {sortedPins.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="border-b border-border px-4 py-6 text-center text-xs text-muted-foreground"
+                  >
+                    No PINs match these filters.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-</Card>
+              ) : (
+                sortedPins.map((p) => (
+                  <TableRow
+                    key={p.id}
+                    tabIndex={0}
+                    onClick={() => setDetailTarget(p)}
+                    // Only Enter on the row itself: Enter on the Revoke button inside it must not also open Edit PIN.
+                    onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setDetailTarget(p)}
+                    className={`cursor-pointer ${p.active ? "" : "opacity-55"}`}
+                  >
+                    <TableCell className="border-b border-border px-4 py-3 text-sm font-medium text-foreground">
+                      {p.label}
+                    </TableCell>
+                    <TableCell className="border-b border-border px-4 py-3">
+                      {p.isDuress ? (
+                        <Badge variant="accent">Duress</Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Standard</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="border-b border-border px-4 py-3">
+                      {p.active ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-success">
+                          <CheckIcon size={12} />
+                          Active
+                        </span>
+                      ) : (
+                        <Badge variant="outline">Revoked</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="border-b border-border px-4 py-3 font-mono text-xs text-muted-foreground">
+                      {formatDateOnly(p.createdAt)}
+                    </TableCell>
+                    <TableCell className="border-b border-border px-4 py-3 text-right">
+                      {p.active && (
+                        <Button
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRevokeTarget(p);
+                          }}
+                          className="text-destructive"
+                        >
+                          Revoke
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       ) : (
         <Card className="flex flex-col items-center gap-2.5 p-12 text-center">
           <PinIcon size={26} className="text-muted-foreground/40" />
@@ -389,7 +407,11 @@ export function PinsScreen({ pins, token, onSaved }: PinsScreenProps) {
         </Card>
       )}
 
-      <RevokeDialog label={revokeTarget?.label ?? null} onCancel={() => setRevokeTarget(null)} onConfirm={handleConfirmRevoke} />
+      <RevokeDialog
+        label={revokeTarget?.label ?? null}
+        onCancel={() => setRevokeTarget(null)}
+        onConfirm={handleConfirmRevoke}
+      />
       <PinDetailDialog pin={detailTarget} token={token} onClose={() => setDetailTarget(null)} onSaved={onSaved} />
     </div>
   );

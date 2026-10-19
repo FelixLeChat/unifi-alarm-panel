@@ -4,7 +4,10 @@ import { saveSettings } from "../settings";
 import { SignalChannel } from ".";
 
 const channel = () =>
-  new SignalChannel({ apiUrl: "http://signal-cli:8080", number: "+15145550100", recipients: ["+15145550101", "group.abc="] }, { timeZone: "UTC" });
+  new SignalChannel(
+    { apiUrl: "http://signal-cli:8080", number: "+15145550100", recipients: ["+15145550101", "group.abc="] },
+    { timeZone: "UTC" },
+  );
 const snapshot = { buffer: Buffer.from([1, 2, 3]), contentType: "image/jpeg" };
 
 describe("SignalChannel", () => {
@@ -26,7 +29,9 @@ describe("SignalChannel", () => {
 
   it("needs a URL, a sender and at least one recipient", () => {
     expect(new SignalChannel({ apiUrl: "http://x", number: "+1" }, { timeZone: "UTC" }).isConfigured()).toBe(false);
-    expect(new SignalChannel({ apiUrl: "http://x", number: "+1", recipients: [] }, { timeZone: "UTC" }).isConfigured()).toBe(false);
+    expect(
+      new SignalChannel({ apiUrl: "http://x", number: "+1", recipients: [] }, { timeZone: "UTC" }).isConfigured(),
+    ).toBe(false);
     expect(channel().isConfigured()).toBe(true);
   });
 
@@ -39,7 +44,11 @@ describe("SignalChannel", () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("http://signal-cli:8080/v2/send");
     const body = JSON.parse(init.body);
-    expect(body).toMatchObject({ number: "+15145550100", recipients: ["+15145550101", "group.abc="], text_mode: "normal" });
+    expect(body).toMatchObject({
+      number: "+15145550100",
+      recipients: ["+15145550101", "group.abc="],
+      text_mode: "normal",
+    });
     expect(body.message).toContain("front_door");
     expect(body.base64_attachments).toBeUndefined();
   });
@@ -57,7 +66,9 @@ describe("SignalChannel", () => {
 
   it("falls back to the text alone when the attachment is refused", async () => {
     fetchMock.mockImplementation(async (_url: string, init: { body: string }) =>
-      JSON.parse(init.body).base64_attachments ? { ok: false, status: 400, json: async () => ({ error: "bad attachment" }) } : { ok: true },
+      JSON.parse(init.body).base64_attachments
+        ? { ok: false, status: 400, json: async () => ({ error: "bad attachment" }) }
+        : { ok: true },
     );
 
     await channel().send({ kind: "DURESS", at: "now", snapshot });
@@ -78,7 +89,11 @@ describe("SignalChannel", () => {
   });
 
   it("test() makes one attempt and throws the container's reason", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 400, json: async () => ({ error: "Specified account does not exist" }) });
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: "Specified account does not exist" }),
+    });
     await expect(channel().test()).rejects.toThrow("Signal API answered 400: Specified account does not exist");
 
     fetchMock.mockRejectedValueOnce(Object.assign(new Error("fetch failed"), { cause: { code: "ECONNREFUSED" } }));
@@ -93,7 +108,10 @@ describe("Signal settings", () => {
   });
 
   it("accepts numbers and group ids, and rejects anything else", () => {
-    expect(saveSettings("notifications", { signalNumber: "+15145550100", signalRecipients: "+15145550101, group.AbC+/=" }).ok).toBe(true);
+    expect(
+      saveSettings("notifications", { signalNumber: "+15145550100", signalRecipients: "+15145550101, group.AbC+/=" })
+        .ok,
+    ).toBe(true);
     expect(saveSettings("notifications", { signalNumber: "5145550100" }).ok).toBe(false);
     expect(saveSettings("notifications", { signalRecipients: "+15145550101, bob" }).ok).toBe(false);
     expect(saveSettings("notifications", { signalApiUrl: "signal-cli:8080" }).ok).toBe(false);

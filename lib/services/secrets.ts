@@ -45,7 +45,9 @@ export function encryptSecret(name: string, plaintext: string): string {
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   cipher.setAAD(Buffer.from(name));
   const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
-  return [VERSION, iv.toString("base64"), cipher.getAuthTag().toString("base64"), ciphertext.toString("base64")].join(":");
+  return [VERSION, iv.toString("base64"), cipher.getAuthTag().toString("base64"), ciphertext.toString("base64")].join(
+    ":",
+  );
 }
 
 /** Null when the key is missing, wrong, or the value was tampered with: the caller treats the secret as unset. */

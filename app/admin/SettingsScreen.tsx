@@ -93,10 +93,14 @@ export function SettingsScreen({ config, token, onSaved, settings, onSettingsSav
     <div className="flex max-w-[640px] flex-col gap-8 p-4 md:p-7">
       {settings && settings.secretsKey !== "ok" && (
         <Alert variant="destructive">
-          <AlertTitle>{settings.secretsKey === "missing" ? "SECRETS_KEY is not set" : "SECRETS_KEY is invalid"}</AlertTitle>
+          <AlertTitle>
+            {settings.secretsKey === "missing" ? "SECRETS_KEY is not set" : "SECRETS_KEY is invalid"}
+          </AlertTitle>
           <AlertDescription>
             <span>
-              Credentials can&apos;t be saved until the server has one. Generate it with <code className="font-mono">openssl rand -base64 32</code>, set <code className="font-mono">SECRETS_KEY</code>, and restart.
+              Credentials can&apos;t be saved until the server has one. Generate it with{" "}
+              <code className="font-mono">openssl rand -base64 32</code>, set{" "}
+              <code className="font-mono">SECRETS_KEY</code>, and restart.
             </span>
           </AlertDescription>
         </Alert>
@@ -115,13 +119,11 @@ export function SettingsScreen({ config, token, onSaved, settings, onSettingsSav
       <div className="flex flex-col gap-4">
         <h2 className="m-0 text-body-m font-medium text-foreground">Test mode</h2>
         <Card className="flex items-start gap-5 p-5.5">
-          <Switch
-            checked={config.panelTestMode === "true"}
-            onCheckedChange={handleTestMode}
-            aria-label="Test mode"
-          />
+          <Switch checked={config.panelTestMode === "true"} onCheckedChange={handleTestMode} aria-label="Test mode" />
           <p className="m-0 text-body-s leading-[1.6] text-muted-foreground">
-            {"The alarm runs every normal step (state changes, Slack and ntfy alerts, snapshots, the UniFi siren) but the kiosk siren stays silent. Every other kiosk sound (keys, countdown beats, chimes) still plays. A banner on the kiosk shows it is on. For the trial period, so the neighbours don't hear it."}
+            {
+              "The alarm runs every normal step (state changes, Slack and ntfy alerts, snapshots, the UniFi siren) but the kiosk siren stays silent. Every other kiosk sound (keys, countdown beats, chimes) still plays. A banner on the kiosk shows it is on. For the trial period, so the neighbours don't hear it."
+            }
           </p>
         </Card>
       </div>
@@ -134,7 +136,8 @@ export function SettingsScreen({ config, token, onSaved, settings, onSettingsSav
               Max attempts
             </FieldLabel>
             <Input
-              id="rate-limit-max-attempts" aria-describedby="rate-limit-max-attempts-hint"
+              id="rate-limit-max-attempts"
+              aria-describedby="rate-limit-max-attempts-hint"
               type="number"
               min={1}
               max={20}
@@ -145,14 +148,17 @@ export function SettingsScreen({ config, token, onSaved, settings, onSettingsSav
               }}
               className="h-10 w-[130px] font-mono text-base"
             />
-            <FieldDescription id="rate-limit-max-attempts-hint">{"Wrong PINs, admin tokens, or webhook secrets from the same source before it's locked out."}</FieldDescription>
+            <FieldDescription id="rate-limit-max-attempts-hint">
+              {"Wrong PINs, admin tokens, or webhook secrets from the same source before it's locked out."}
+            </FieldDescription>
           </Field>
           <Field className="gap-1.5 *:data-[slot=input]:w-[130px] border-b border-border p-5.5">
             <FieldLabel htmlFor="rate-limit-window-sec" className={EYEBROW}>
               Window · seconds
             </FieldLabel>
             <Input
-              id="rate-limit-window-sec" aria-describedby="rate-limit-window-sec-hint"
+              id="rate-limit-window-sec"
+              aria-describedby="rate-limit-window-sec-hint"
               type="number"
               min={1}
               max={3600}
@@ -163,14 +169,17 @@ export function SettingsScreen({ config, token, onSaved, settings, onSettingsSav
               }}
               className="h-10 w-[130px] font-mono text-base"
             />
-            <FieldDescription id="rate-limit-window-sec-hint">{"Failures older than this stop counting toward the lockout."}</FieldDescription>
+            <FieldDescription id="rate-limit-window-sec-hint">
+              {"Failures older than this stop counting toward the lockout."}
+            </FieldDescription>
           </Field>
           <Field className="gap-1.5 *:data-[slot=input]:w-[130px] p-5.5">
             <FieldLabel htmlFor="rate-limit-lockout-sec" className={EYEBROW}>
               Lockout · seconds
             </FieldLabel>
             <Input
-              id="rate-limit-lockout-sec" aria-describedby="rate-limit-lockout-sec-hint"
+              id="rate-limit-lockout-sec"
+              aria-describedby="rate-limit-lockout-sec-hint"
               type="number"
               min={1}
               max={3600}
@@ -181,7 +190,9 @@ export function SettingsScreen({ config, token, onSaved, settings, onSettingsSav
               }}
               className="h-10 w-[130px] font-mono text-base"
             />
-            <FieldDescription id="rate-limit-lockout-sec-hint">{"How long a locked-out source stays locked out once it hits the max."}</FieldDescription>
+            <FieldDescription id="rate-limit-lockout-sec-hint">
+              {"How long a locked-out source stays locked out once it hits the max."}
+            </FieldDescription>
           </Field>
         </Card>
         <form onSubmit={handleSaveSecurity} className="flex items-center gap-3.5">
@@ -246,14 +257,18 @@ function AdvancedSection({
       <div className="flex flex-col gap-1">
         <h2 className="m-0 text-body-m font-medium text-foreground">Advanced</h2>
         <p className="m-0 text-body-s leading-[1.6] text-muted-foreground">
-          {"Power-user config keys: webhook payload mapping, camera-trigger types, the siren automation ID, and similar. See the README for what each one does."}
+          {
+            "Power-user config keys: webhook payload mapping, camera-trigger types, the siren automation ID, and similar. See the README for what each one does."
+          }
         </p>
       </div>
       <Card>
         {entries.length === 0 ? (
           <p className="m-0 p-5.5 text-body-s text-muted-foreground">No advanced keys set yet.</p>
         ) : (
-          entries.map(([key, value]) => <AdvancedRow key={key} configKey={key} initialValue={value} token={token} onSaved={onSaved} />)
+          entries.map(([key, value]) => (
+            <AdvancedRow key={key} configKey={key} initialValue={value} token={token} onSaved={onSaved} />
+          ))
         )}
       </Card>
       <form onSubmit={handleAdd} className="flex items-end gap-3">
@@ -281,11 +296,7 @@ function AdvancedSection({
             className="font-mono text-body-s"
           />
         </Field>
-        <Button
-          type="submit"
-          disabled={adding || !newKey.trim()}
-          className="flex-none"
-        >
+        <Button type="submit" disabled={adding || !newKey.trim()} className="flex-none">
           Add key
         </Button>
       </form>
@@ -329,13 +340,7 @@ function AdvancedRow({
         onChange={(e) => setValue(e.target.value)}
         className="h-8 min-w-0 flex-1 font-mono text-body-s"
       />
-      <Button
-        size="sm"
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="w-[70px] flex-none"
-      >
+      <Button size="sm" type="button" onClick={handleSave} disabled={saving} className="w-[70px] flex-none">
         {justSaved ? <CheckIcon size={12} /> : "Save"}
       </Button>
     </div>

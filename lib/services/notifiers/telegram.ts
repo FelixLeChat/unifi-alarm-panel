@@ -80,19 +80,28 @@ export class TelegramChannel implements Channel {
   private async call(method: string, init: RequestInit): Promise<void> {
     let res: Response;
     try {
-      res = await fetch(`${API}/bot${this.config.botToken}/${method}`, { method: "POST", ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
+      res = await fetch(`${API}/bot${this.config.botToken}/${method}`, {
+        method: "POST",
+        ...init,
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
     } catch (err) {
       throw new Error(`Telegram ${method} failed: ${this.describe(err)}`);
     }
     if (res.ok) return;
     // Telegram answers { ok: false, description: "Bad Request: chat not found" }.
     const body = (await res.json().catch(() => null)) as { description?: string } | null;
-    throw new Error(`Telegram ${method} answered ${res.status}${body?.description ? `: ${this.describe(body.description)}` : ""}`);
+    throw new Error(
+      `Telegram ${method} answered ${res.status}${body?.description ? `: ${this.describe(body.description)}` : ""}`,
+    );
   }
 
   private describe(err: unknown): string {
     const raw = typeof err === "string" ? err : describeNetworkError(err);
-    return raw.split(this.config.botToken!).join("[token]").replace(/\/bot[^/\s]+/g, "/bot[token]");
+    return raw
+      .split(this.config.botToken!)
+      .join("[token]")
+      .replace(/\/bot[^/\s]+/g, "/bot[token]");
   }
 }
 
@@ -100,5 +109,9 @@ export const telegram: ChannelDef = {
   id: "telegram",
   name: "Telegram",
   fields: telegramFields,
-  create: (read, ctx) => new TelegramChannel({ botToken: read("telegramBotToken") ?? undefined, chatId: read("telegramChatId") ?? undefined }, ctx),
+  create: (read, ctx) =>
+    new TelegramChannel(
+      { botToken: read("telegramBotToken") ?? undefined, chatId: read("telegramChatId") ?? undefined },
+      ctx,
+    ),
 };

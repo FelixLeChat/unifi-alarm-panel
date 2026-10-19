@@ -49,7 +49,10 @@ function readToken(): { token: string | null; readError: string | null } {
     // a live SSH session because the generic message pointed at bootstrap.sh
     // when the actual fix was a chown.
     const code = (err as NodeJS.ErrnoException).code;
-    const readError = code === "ENOENT" ? null : `can't read ${TOKEN_PATH}: ${code ?? String(err)} — check its ownership/permissions against the service's User= (see deploy/unifi-alarm-panel.service)`;
+    const readError =
+      code === "ENOENT"
+        ? null
+        : `can't read ${TOKEN_PATH}: ${code ?? String(err)} — check its ownership/permissions against the service's User= (see deploy/unifi-alarm-panel.service)`;
     return { token: null, readError };
   }
 }

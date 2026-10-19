@@ -32,7 +32,9 @@
 
   // A request that never settles must not wedge the keypad or the poll. Older WebViews lack AbortSignal.timeout; they fall back to no timeout.
   function timeoutSignal(ms) {
-    return typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(ms) : undefined;
+    return typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+      ? AbortSignal.timeout(ms)
+      : undefined;
   }
 
   // Version this page was rendered with (server-side, from VERSION) — a
@@ -107,7 +109,6 @@
 
   var ARM_CONFIRM_TITLE = "Arm the system?";
   var ARM_CONFIRM_SUB = "Everyone should be on their way out.";
-
 
   // ---------- PIN buffer + dots -------------------------------------------
 
@@ -286,7 +287,11 @@
   var pendingForceArm = false;
 
   function showSensorsOpenConfirm(openSensors) {
-    var names = (openSensors || []).map(function (s) { return s.name; }).join(", ");
+    var names = (openSensors || [])
+      .map(function (s) {
+        return s.name;
+      })
+      .join(", ");
     armConfirmTitleEl.textContent = "Door open. Arm anyway?";
     armConfirmSubEl.textContent = names ? "Still open: " + names : "A door is still open.";
     pendingForceArm = true;
@@ -446,7 +451,11 @@
     if (status.state === "ARMING") {
       // First status after a (re)load: trips already counted aren't news.
       var tripBaseline = firstStatus ? status.armingTripCount : wasState === "ARMING" ? lastArmingTripCount : 0;
-      if (typeof status.armingTripCount === "number" && tripBaseline !== null && status.armingTripCount > tripBaseline) {
+      if (
+        typeof status.armingTripCount === "number" &&
+        tripBaseline !== null &&
+        status.armingTripCount > tripBaseline
+      ) {
         play("door");
       }
       lastArmingTripCount = status.armingTripCount;
@@ -481,7 +490,8 @@
       // this same poll runs) — its own timeout already clears the message
       // on schedule, so clearing here too would wipe it early instead of
       // letting the admin actually read it.
-      else if ((wasState === "ENTRY_DELAY" || wasState === "ALARM" || wasState === "ARMING") && !messageTimer) setMessage("");
+      else if ((wasState === "ENTRY_DELAY" || wasState === "ALARM" || wasState === "ARMING") && !messageTimer)
+        setMessage("");
     }
 
     var isDisarmed = status.state === "DISARMED";
@@ -508,7 +518,9 @@
     renderDoors(status.doors || []);
     if (status.armedAt && status.armedBy && !isDisarmed) {
       armedInfoEl.textContent =
-        "Armed by " + status.armedBy + " at " +
+        "Armed by " +
+        status.armedBy +
+        " at " +
         new Date(status.armedAt).toLocaleTimeString("en-CA", { hour: "2-digit", minute: "2-digit", hour12: false });
       armedInfoEl.hidden = false;
     } else {
@@ -687,8 +699,18 @@
   // the listening page). Decoded once into Web Audio buffers after first unlock.
 
   var SOUND_NAMES = [
-    "key", "backspace", "arm-confirmed", "exit-beep", "door", "armed",
-    "arm-refused", "entry-beep", "disarm", "wrong-pin", "lockout", "alarm",
+    "key",
+    "backspace",
+    "arm-confirmed",
+    "exit-beep",
+    "door",
+    "armed",
+    "arm-refused",
+    "entry-beep",
+    "disarm",
+    "wrong-pin",
+    "lockout",
+    "alarm",
   ];
   var soundBuffers = {};
   var soundsRequested = false;
@@ -702,9 +724,13 @@
           return res.arrayBuffer();
         })
         .then(function (data) {
-          audioCtx.decodeAudioData(data, function (buf) {
-            soundBuffers[name] = buf;
-          }, function () {});
+          audioCtx.decodeAudioData(
+            data,
+            function (buf) {
+              soundBuffers[name] = buf;
+            },
+            function () {},
+          );
         })
         .catch(function () {});
     });

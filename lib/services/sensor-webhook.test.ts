@@ -64,8 +64,7 @@ describe("handleSensorWebhook", () => {
     handleSensorWebhook(db, engine, JSON.stringify({ sensorId: "brand-new-sensor", eventType: "open" }));
 
     const row = db.prepare("SELECT mode FROM sensors WHERE unifi_id = ?").get("brand-new-sensor") as
-      | { mode: string }
-      | undefined;
+      { mode: string } | undefined;
     expect(row?.mode).toBe("delayed");
   });
 

@@ -17,5 +17,8 @@ export async function POST(req: Request) {
   if (result.lockedOut) {
     return NextResponse.json({ ok: false }, { status: 429 });
   }
-  return NextResponse.json({ ok: result.ok, remainingAttempts: result.remainingAttempts }, { status: result.ok ? 200 : 401 });
+  return NextResponse.json(
+    { ok: result.ok, remainingAttempts: result.remainingAttempts },
+    { status: result.ok ? 200 : 401 },
+  );
 }

@@ -82,7 +82,8 @@ export class UnifiProtectClient implements ProtectClient {
   async probeCameras(): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
     try {
       const res = await this.fetch("/proxy/protect/integration/v1/cameras", { signal: AbortSignal.timeout(10_000) });
-      if (res.status === 401 || res.status === 403) return { ok: false, error: `the console rejected the API key (${res.status})` };
+      if (res.status === 401 || res.status === 403)
+        return { ok: false, error: `the console rejected the API key (${res.status})` };
       if (!res.ok) return { ok: false, error: `the console answered ${res.status}` };
       const body = (await res.json()) as unknown;
       return { ok: true, count: Array.isArray(body) ? body.length : 0 };
@@ -129,9 +130,12 @@ export class UnifiProtectClient implements ProtectClient {
    */
   async triggerAlarmManagerWebhook(webhookId: string): Promise<boolean> {
     try {
-      const res = await this.fetch(`/proxy/protect/integration/v1/alarm-manager/webhook/${encodeURIComponent(webhookId)}`, {
-        method: "POST",
-      });
+      const res = await this.fetch(
+        `/proxy/protect/integration/v1/alarm-manager/webhook/${encodeURIComponent(webhookId)}`,
+        {
+          method: "POST",
+        },
+      );
       if (!res.ok) logger.warn({ webhookId, status: res.status }, "Protect alarm-manager webhook trigger failed");
       return res.ok;
     } catch (err) {
@@ -175,7 +179,11 @@ export function getProtectClient(): ProtectClient {
     const apiKey = getSetting("protectApiKey");
     const client =
       baseUrl && apiKey
-        ? new UnifiProtectClient(baseUrl, apiKey, getSetting("protectLiveViewUrlTemplate") ?? `${baseUrl}/protect/dashboard/{cameraId}`)
+        ? new UnifiProtectClient(
+            baseUrl,
+            apiKey,
+            getSetting("protectLiveViewUrlTemplate") ?? `${baseUrl}/protect/dashboard/{cameraId}`,
+          )
         : new NullProtectClient();
     protectClientCache = { revision, client };
   }

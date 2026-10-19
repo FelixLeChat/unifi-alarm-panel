@@ -58,7 +58,13 @@ describe("alert routing", () => {
   });
 
   it("a channel with no kinds, or switched off, receives nothing", async () => {
-    saveSettings("notifications", { slackWebhookUrl: SLACK, ntfyUrl: NTFY, ntfyTopic: "alarms", slackAlertKinds: "none", ntfyEnabled: "false" });
+    saveSettings("notifications", {
+      slackWebhookUrl: SLACK,
+      ntfyUrl: NTFY,
+      ntfyTopic: "alarms",
+      slackAlertKinds: "none",
+      ntfyEnabled: "false",
+    });
     const notifier = buildNotifier();
 
     for (const kind of ["ALARM", "DURESS", "HEALTH"] as const) await notifier.send({ kind, at: "now" });
@@ -88,7 +94,9 @@ describe("per-channel test alert", () => {
 
     expect(await checkNotifications("ntfy")).toEqual([{ name: "ntfy", status: "ok", detail: "Test alert sent." }]);
     expect(sentTo()).toEqual([`${NTFY}/alarms`]);
-    expect(await checkNotifications("telegram")).toEqual([expect.objectContaining({ name: "Telegram", status: "skipped" })]);
+    expect(await checkNotifications("telegram")).toEqual([
+      expect.objectContaining({ name: "Telegram", status: "skipped" }),
+    ]);
     expect(await checkNotifications()).toHaveLength(2);
   });
 
@@ -118,7 +126,10 @@ describe("env seeding for the new channels", () => {
     expect(getSetting("telegramBotToken", db)).toBe("123:abc");
     expect(getSetting("telegramChatId", db)).toBe("-1001");
     expect(getSetting("signalRecipients", db)).toBe("+15145550101,group.abc");
-    const stored = db.prepare("SELECT value, secret FROM settings WHERE key = 'telegramBotToken'").get() as { value: string; secret: number };
+    const stored = db.prepare("SELECT value, secret FROM settings WHERE key = 'telegramBotToken'").get() as {
+      value: string;
+      secret: number;
+    };
     expect(stored.secret).toBe(1);
     expect(stored.value).not.toContain("123:abc");
   });

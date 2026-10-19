@@ -14,7 +14,9 @@ import { logger } from "@/lib/logger";
 export function verifyWebhookSecret(req: Request, url: URL): boolean {
   const expected = process.env.WEBHOOK_SHARED_SECRET;
   if (!isUsableSecret(expected)) {
-    logger.warn("sensor webhook rejected: WEBHOOK_SHARED_SECRET is not configured on this server, or is the placeholder or shorter than 12 characters");
+    logger.warn(
+      "sensor webhook rejected: WEBHOOK_SHARED_SECRET is not configured on this server, or is the placeholder or shorter than 12 characters",
+    );
     return false;
   }
 

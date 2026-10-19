@@ -21,9 +21,7 @@ afterEach(() => {
 describe("verifyWebhookSecret", () => {
   it("accepts the correct header", async () => {
     const { verifyWebhookSecret } = await import("./webhook");
-    expect(verifyWebhookSecret(req({ "x-alarm-secret": SECRET }), new URL("http://localhost/x"))).toBe(
-      true,
-    );
+    expect(verifyWebhookSecret(req({ "x-alarm-secret": SECRET }), new URL("http://localhost/x"))).toBe(true);
   });
 
   it("accepts the correct ?token= query param", async () => {
@@ -34,9 +32,7 @@ describe("verifyWebhookSecret", () => {
 
   it("rejects a wrong secret", async () => {
     const { verifyWebhookSecret } = await import("./webhook");
-    expect(
-      verifyWebhookSecret(req({ "x-alarm-secret": "wrong" }), new URL("http://localhost/x")),
-    ).toBe(false);
+    expect(verifyWebhookSecret(req({ "x-alarm-secret": "wrong" }), new URL("http://localhost/x"))).toBe(false);
   });
 
   it("rejects a missing secret", async () => {
@@ -47,9 +43,7 @@ describe("verifyWebhookSecret", () => {
   it("fails closed when no secret is configured on the server", async () => {
     delete process.env.WEBHOOK_SHARED_SECRET;
     const { verifyWebhookSecret } = await import("./webhook");
-    expect(
-      verifyWebhookSecret(req({ "x-alarm-secret": SECRET }), new URL("http://localhost/x")),
-    ).toBe(false);
+    expect(verifyWebhookSecret(req({ "x-alarm-secret": SECRET }), new URL("http://localhost/x"))).toBe(false);
   });
 
   it("locks out a source after repeated wrong secrets, even once it sends the right one", async () => {
@@ -59,9 +53,7 @@ describe("verifyWebhookSecret", () => {
     for (let i = 0; i < 5; i++) {
       verifyWebhookSecret(attacker, url);
     }
-    expect(
-      verifyWebhookSecret(req({ "x-alarm-secret": SECRET, "x-forwarded-for": "10.0.0.9" }), url),
-    ).toBe(false);
+    expect(verifyWebhookSecret(req({ "x-alarm-secret": SECRET, "x-forwarded-for": "10.0.0.9" }), url)).toBe(false);
   });
 
   it("does not lock out a different source", async () => {
@@ -71,8 +63,6 @@ describe("verifyWebhookSecret", () => {
     for (let i = 0; i < 5; i++) {
       verifyWebhookSecret(attacker, url);
     }
-    expect(
-      verifyWebhookSecret(req({ "x-alarm-secret": SECRET, "x-forwarded-for": "10.0.0.1" }), url),
-    ).toBe(true);
+    expect(verifyWebhookSecret(req({ "x-alarm-secret": SECRET, "x-forwarded-for": "10.0.0.1" }), url)).toBe(true);
   });
 });

@@ -74,7 +74,11 @@ export class NtfyChannel implements Channel {
   }
 
   test(): Promise<void> {
-    return postOnce(`${this.config.url}/${this.config.topic}`, { method: "POST", headers: { Title: "Test alert" }, body: TEST_MESSAGE });
+    return postOnce(`${this.config.url}/${this.config.topic}`, {
+      method: "POST",
+      headers: { Title: "Test alert" },
+      body: TEST_MESSAGE,
+    });
   }
 }
 

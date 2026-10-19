@@ -26,7 +26,10 @@ const eslintConfig = defineConfig([
       // React event handlers may be async: the attribute check is off, the argument check stays on.
       "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
       "@typescript-eslint/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
-      "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports", disallowTypeAnnotations: false }],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { fixStyle: "inline-type-imports", disallowTypeAnnotations: false },
+      ],
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
       "@typescript-eslint/await-thenable": "error",
     },
@@ -50,7 +53,10 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             { group: ["lucide-react"], message: "Import the per-icon module from @/components/ui/icons/ instead." },
-            { group: ["@material-symbols-svg/**"], message: "Only the modules in components/ui/icons/ may import the vendor package." },
+            {
+              group: ["@material-symbols-svg/**"],
+              message: "Only the modules in components/ui/icons/ may import the vendor package.",
+            },
           ],
         },
       ],
@@ -65,8 +71,14 @@ const eslintConfig = defineConfig([
         ...["Literal", "TemplateElement"].flatMap((node) => {
           const value = node === "Literal" ? "value" : "value.raw";
           return [
-            { selector: `${node}[${value}=/\\btext-\\[\\d/]`, message: "Arbitrary text size: use a type-scale class (text-body-s, text-title-xs...)." },
-            { selector: `${node}[${value}=/-\\[#[\\da-fA-F]{3,8}\\]/]`, message: "Raw hex colour: use a semantic token (bg-primary, text-muted-foreground...)." },
+            {
+              selector: `${node}[${value}=/\\btext-\\[\\d/]`,
+              message: "Arbitrary text size: use a type-scale class (text-body-s, text-title-xs...).",
+            },
+            {
+              selector: `${node}[${value}=/-\\[#[\\da-fA-F]{3,8}\\]/]`,
+              message: "Raw hex colour: use a semantic token (bg-primary, text-muted-foreground...).",
+            },
           ];
         }),
       ],

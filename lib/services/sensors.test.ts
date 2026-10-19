@@ -3,7 +3,16 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDb } from "@/lib/db";
 import { recordAudit } from "./audit";
 import { setConfigValue } from "./config";
-import { deleteSensor, getSensor, listOpenGatingSensors, listSensors, resolveSensorMode, resolveSensorModeForDevice, updateSensorState, upsertSensor } from "./sensors";
+import {
+  deleteSensor,
+  getSensor,
+  listOpenGatingSensors,
+  listSensors,
+  resolveSensorMode,
+  resolveSensorModeForDevice,
+  updateSensorState,
+  upsertSensor,
+} from "./sensors";
 
 let db: Database.Database;
 
@@ -223,8 +232,7 @@ describe("tripCount24h", () => {
 
 function currentState(unifiId: string): string | null {
   const row = db.prepare("SELECT current_state FROM sensors WHERE unifi_id = ?").get(unifiId) as
-    | { current_state: string | null }
-    | undefined;
+    { current_state: string | null } | undefined;
   return row?.current_state ?? null;
 }
 

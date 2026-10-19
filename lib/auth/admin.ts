@@ -6,7 +6,9 @@ import { logger } from "@/lib/logger";
 export function verifyAdminToken(req: Request): boolean {
   const expected = process.env.ADMIN_TOKEN;
   if (!isUsableSecret(expected)) {
-    logger.warn("admin request rejected: ADMIN_TOKEN is not configured on this server, or is the placeholder or shorter than 12 characters");
+    logger.warn(
+      "admin request rejected: ADMIN_TOKEN is not configured on this server, or is the placeholder or shorter than 12 characters",
+    );
     return false;
   }
 

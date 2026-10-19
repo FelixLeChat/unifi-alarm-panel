@@ -16,7 +16,13 @@ type SentAlert = { kind: string; message?: string };
 const send = vi.fn<(alert: SentAlert) => Promise<void>>(async () => {});
 vi.mock("./notifiers", () => ({ getNotifier: () => ({ send }) }));
 
-import { checkDeviceHealth, degradations, getDeviceHealthStatus, normalizeMac, toDeviceHealth } from "./protect-device-health";
+import {
+  checkDeviceHealth,
+  degradations,
+  getDeviceHealthStatus,
+  normalizeMac,
+  toDeviceHealth,
+} from "./protect-device-health";
 
 const online = {
   mac: "58:d6:1f:49:a7:15",
@@ -56,9 +62,12 @@ describe("toDeviceHealth", () => {
   // Whichever radio the device uses, the number the Protect UI draws as bars
   // is the one to report: Bluetooth for a UP-Sense, LoRa for a relay.
   it("reads the signal from whichever radio the device carries", () => {
-    expect(toDeviceHealth({ mac: "aa:bb", bluetoothConnectionState: { signalStrength: -63 } }, "sensor")?.signalDbm).toBe(-63);
     expect(
-      toDeviceHealth({ mac: "aa:bb", wirelessConnectionState: { signalState: { signalStrength: -91 } } }, "sensor")?.signalDbm,
+      toDeviceHealth({ mac: "aa:bb", bluetoothConnectionState: { signalStrength: -63 } }, "sensor")?.signalDbm,
+    ).toBe(-63);
+    expect(
+      toDeviceHealth({ mac: "aa:bb", wirelessConnectionState: { signalState: { signalStrength: -91 } } }, "sensor")
+        ?.signalDbm,
     ).toBe(-91);
     expect(toDeviceHealth({ mac: "aa:bb" }, "camera")?.signalDbm).toBeNull();
   });
@@ -68,7 +77,9 @@ describe("degradations", () => {
   const offline = { ...toDeviceHealth(online, "sensor")!, online: false };
 
   it("reports a device that just went offline", () => {
-    expect(degradations({ "58D61F49A715": toDeviceHealth(online, "sensor")! }, { "58D61F49A715": offline })).toHaveLength(1);
+    expect(
+      degradations({ "58D61F49A715": toDeviceHealth(online, "sensor")! }, { "58D61F49A715": offline }),
+    ).toHaveLength(1);
   });
 
   it("stays quiet while it remains offline", () => {
@@ -94,7 +105,9 @@ describe("checkDeviceHealth", () => {
   });
 
   it("alerts and audits a newly offline device", async () => {
-    authedGet.mockImplementation((path: string) => (path.endsWith("/sensors") ? [{ ...online, isConnected: false }] : []));
+    authedGet.mockImplementation((path: string) =>
+      path.endsWith("/sensors") ? [{ ...online, isConnected: false }] : [],
+    );
     await checkDeviceHealth();
     expect(send).toHaveBeenCalledTimes(1);
     expect(send.mock.calls[0][0]).toMatchObject({ kind: "HEALTH" });

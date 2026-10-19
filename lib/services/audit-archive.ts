@@ -66,4 +66,8 @@ export async function archiveCompletedAuditDays(db: Database.Database): Promise<
 // over since the last tick, so there's no need for anything finer-grained
 // than "at least once a day, with margin." Also runs once immediately on
 // boot (see lib/scheduler.ts), so a deploy/restart doesn't leave a gap.
-export const auditArchiveJob = { name: "audit-archive", intervalMs: 6 * 60 * 60 * 1000, run: () => archiveCompletedAuditDays(getDb()) };
+export const auditArchiveJob = {
+  name: "audit-archive",
+  intervalMs: 6 * 60 * 60 * 1000,
+  run: () => archiveCompletedAuditDays(getDb()),
+};

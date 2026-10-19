@@ -34,7 +34,14 @@ function formatUptime(sec: number): string {
   return `${minutes}m`;
 }
 
-export function OverviewScreen({ lastArmDisarm, auditWindow, status, sensors, config, onNavigate }: OverviewScreenProps) {
+export function OverviewScreen({
+  lastArmDisarm,
+  auditWindow,
+  status,
+  sensors,
+  config,
+  onNavigate,
+}: OverviewScreenProps) {
   const lastArmValue = lastArmDisarm
     ? `${lastArmDisarm.event === "armed" ? "Armed" : "Disarmed"} ${formatClockTime(lastArmDisarm.ts)}`
     : "n/a";
@@ -74,7 +81,13 @@ export function OverviewScreen({ lastArmDisarm, auditWindow, status, sensors, co
         <Card className="flex flex-col gap-2.5 px-5.5 py-5">
           <div className={EYEBROW}>Open right now</div>
           <div className="font-display text-title-xs leading-[1.1] text-foreground">{openValue}</div>
-          <Button type="button" variant="link" size="sm" onClick={() => onNavigate("sensors")} className="h-auto justify-start p-0 text-xs">
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            onClick={() => onNavigate("sensors")}
+            className="h-auto justify-start p-0 text-xs"
+          >
             {openMeta}
           </Button>
         </Card>
@@ -100,17 +113,17 @@ export function OverviewScreen({ lastArmDisarm, auditWindow, status, sensors, co
           </div>
         </div>
         <div className="overflow-x-auto">
-        <div className="grid w-max grid-flow-col grid-rows-7 gap-0.75" style={{ gridAutoColumns: "11px" }}>
-          {heatCols.map((col) =>
-            col.map((cell) => (
-              <span
-                key={cell.date}
-                title={`${cell.date}: ${cell.count} arm/disarm event${cell.count === 1 ? "" : "s"}`}
-                className={`h-[11px] w-[11px] ${LEVEL_BG[cell.level]} ${cell.level === 0 ? "box-border border border-border" : ""}`}
-              />
-            )),
-          )}
-        </div>
+          <div className="grid w-max grid-flow-col grid-rows-7 gap-0.75" style={{ gridAutoColumns: "11px" }}>
+            {heatCols.map((col) =>
+              col.map((cell) => (
+                <span
+                  key={cell.date}
+                  title={`${cell.date}: ${cell.count} arm/disarm event${cell.count === 1 ? "" : "s"}`}
+                  className={`h-[11px] w-[11px] ${LEVEL_BG[cell.level]} ${cell.level === 0 ? "box-border border border-border" : ""}`}
+                />
+              )),
+            )}
+          </div>
         </div>
         <div className="text-xs text-muted-foreground">
           {

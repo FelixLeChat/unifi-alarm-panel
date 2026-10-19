@@ -100,9 +100,7 @@ export function getSensor(db: Database.Database, unifiId: string): SensorRecord 
 
 export function listSensors(db: Database.Database): SensorRecord[] {
   const rows = db
-    .prepare(
-      `SELECT ${SENSOR_COLUMNS} FROM sensors ${tripStatsJoin(false)} ORDER BY sensors.id`,
-    )
+    .prepare(`SELECT ${SENSOR_COLUMNS} FROM sensors ${tripStatsJoin(false)} ORDER BY sensors.id`)
     .all() as SensorRow[];
   return rows.map(fromRow);
 }
@@ -193,9 +191,23 @@ function isCameraTriggerEvent(db: Database.Database, eventType: string | undefin
 function resolveOpenState(db: Database.Database, eventType: string | undefined): "open" | "closed" | null {
   if (eventType === undefined) return null;
   const openTypes = getConfigValue(db, "sensorOpenEventTypes");
-  if (openTypes && openTypes.split(",").map((s) => s.trim()).includes(eventType)) return "open";
+  if (
+    openTypes &&
+    openTypes
+      .split(",")
+      .map((s) => s.trim())
+      .includes(eventType)
+  )
+    return "open";
   const closedTypes = getConfigValue(db, "sensorClosedEventTypes");
-  if (closedTypes && closedTypes.split(",").map((s) => s.trim()).includes(eventType)) return "closed";
+  if (
+    closedTypes &&
+    closedTypes
+      .split(",")
+      .map((s) => s.trim())
+      .includes(eventType)
+  )
+    return "closed";
   return null;
 }
 

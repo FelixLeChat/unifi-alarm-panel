@@ -25,7 +25,10 @@ export interface ConnectivityStatus {
 }
 
 /** What the watchdog itself measures; the device/stream fields are merged in by the getter, read live rather than stored in this snapshot. */
-type WatchdogStatus = Omit<ConnectivityStatus, "devices" | "deviceHealthCheckedAt" | "streamStatus" | "streamLastError" | "lastEventSource"> & {
+type WatchdogStatus = Omit<
+  ConnectivityStatus,
+  "devices" | "deviceHealthCheckedAt" | "streamStatus" | "streamLastError" | "lastEventSource"
+> & {
   /** Whether the current silence has already been notified — kept apart from sensorHeartbeatStale because a silence with the stream connected is logged but not notified, and must still alert if the stream later drops. */
   silenceNotified: boolean;
 };
@@ -140,4 +143,8 @@ export async function checkConnectivityNow(): Promise<void> {
   await Promise.all([checkConnectivity(), checkDeviceHealth()]);
 }
 
-export const connectivityWatchdogJob = { name: "connectivity-watchdog", intervalMs: 5 * 60 * 1000, run: checkConnectivity };
+export const connectivityWatchdogJob = {
+  name: "connectivity-watchdog",
+  intervalMs: 5 * 60 * 1000,
+  run: checkConnectivity,
+};

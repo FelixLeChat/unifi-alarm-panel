@@ -1,4 +1,13 @@
-import type { AuditRow, EventIncident, LastArmDisarmEvent, PinSummary, SensorMode, SensorRecord, SensorType, StatusResponse } from "./shared";
+import type {
+  AuditRow,
+  EventIncident,
+  LastArmDisarmEvent,
+  PinSummary,
+  SensorMode,
+  SensorRecord,
+  SensorType,
+  StatusResponse,
+} from "./shared";
 
 function authedHeaders(token: string): HeadersInit {
   return { "x-admin-token": token, "content-type": "application/json" };
@@ -51,7 +60,10 @@ export interface ConnectivityStatus {
   deviceHealthCheckedAt: string | null;
 }
 
-export async function fetchConnectivityStatus(token: string, opts?: { refresh?: boolean }): Promise<ConnectivityStatus | null> {
+export async function fetchConnectivityStatus(
+  token: string,
+  opts?: { refresh?: boolean },
+): Promise<ConnectivityStatus | null> {
   const url = opts?.refresh ? "/api/admin/connectivity?refresh=true" : "/api/admin/connectivity";
   const res = await fetch(url, { headers: authedHeaders(token) });
   if (!res.ok) return null;
@@ -311,7 +323,10 @@ export async function armFromAdmin(token: string, force = false): Promise<Submit
     body: JSON.stringify({ force }),
   });
   if (res.status === 409) {
-    const data = (await res.json().catch(() => ({}))) as { reason?: "sensors_open"; openSensors?: { id: number; name: string }[] };
+    const data = (await res.json().catch(() => ({}))) as {
+      reason?: "sensors_open";
+      openSensors?: { id: number; name: string }[];
+    };
     return { ok: false, reason: data.reason, openSensors: data.openSensors };
   }
   return { ok: res.ok };
@@ -325,7 +340,10 @@ export async function submitPin(kind: "arm" | "disarm", pin: string, force = fal
   });
   if (res.status === 429) return { ok: false, lockedOut: true };
   if (res.status === 409) {
-    const data = (await res.json().catch(() => ({}))) as { reason?: "sensors_open"; openSensors?: { id: number; name: string }[] };
+    const data = (await res.json().catch(() => ({}))) as {
+      reason?: "sensors_open";
+      openSensors?: { id: number; name: string }[];
+    };
     return { ok: false, reason: data.reason, openSensors: data.openSensors };
   }
   return { ok: res.ok };
@@ -336,7 +354,10 @@ export type SettingsGroup = "console" | "notifications" | "panel";
 export interface SettingsSnapshot {
   secretsKey: "ok" | "missing" | "invalid";
   consoleConfigured: boolean;
-  groups: Record<SettingsGroup, { values: Record<string, string | null>; secrets: Record<string, { set: boolean; readable: boolean }> }>;
+  groups: Record<
+    SettingsGroup,
+    { values: Record<string, string | null>; secrets: Record<string, { set: boolean; readable: boolean }> }
+  >;
 }
 
 export async function fetchSettings(token: string): Promise<SettingsSnapshot | null> {
@@ -368,7 +389,11 @@ export interface SettingsCheckResult {
 }
 
 /** `channel`: test one notification channel (its id, like "telegram") instead of all of them. */
-export async function testSettings(token: string, target: "console" | "notifications", channel?: string): Promise<SettingsCheckResult[] | null> {
+export async function testSettings(
+  token: string,
+  target: "console" | "notifications",
+  channel?: string,
+): Promise<SettingsCheckResult[] | null> {
   const res = await fetch("/api/admin/settings/test", {
     method: "POST",
     headers: authedHeaders(token),

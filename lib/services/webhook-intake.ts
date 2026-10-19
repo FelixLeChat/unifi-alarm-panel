@@ -41,7 +41,12 @@ declare global {
 
 function getState(): WebhookIntakeState {
   if (!globalThis.__uapWebhookIntake) {
-    globalThis.__uapWebhookIntake = { recentPayloads: [], lastWebhookAt: null, bootAt: Date.now(), lastEventSource: null };
+    globalThis.__uapWebhookIntake = {
+      recentPayloads: [],
+      lastWebhookAt: null,
+      bootAt: Date.now(),
+      lastEventSource: null,
+    };
   }
   return globalThis.__uapWebhookIntake;
 }

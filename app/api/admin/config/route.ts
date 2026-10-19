@@ -124,7 +124,10 @@ export async function PUT(req: Request) {
   const badKey = invalidNumericKey(config);
   if (badKey) {
     const { min, max } = NUMERIC_CONFIG_KEYS[badKey];
-    return NextResponse.json({ ok: false, error: `${badKey} must be a number between ${min} and ${max}` }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: `${badKey} must be a number between ${min} and ${max}` },
+      { status: 400 },
+    );
   }
 
   const db = getDb();
