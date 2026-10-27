@@ -8,4 +8,6 @@
   "exclude": ["types"],
   // Imported from app/globals.css, which knip does not parse.
   "ignoreDependencies": ["shadcn", "tailwindcss", "tw-animate-css"],
+  // Host tool, run by the screenshots script, not an npm package.
+  "ignoreBinaries": ["ffmpeg"],
 }

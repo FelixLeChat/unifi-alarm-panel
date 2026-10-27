@@ -8,7 +8,7 @@ import { ALERT_KINDS, parseAlertKinds, RoutedNotifier, type AlertKind } from "./
 import type { Channel, ChannelDef, Notifier } from "./types";
 
 export type { AlertPayload, Channel, ChannelContext, ChannelDef, ChannelId, Notifier } from "./types";
-export { ALERT_KINDS, type AlertKind } from "./routing";
+export { type AlertKind } from "./routing";
 export { NtfyChannel } from "./ntfy";
 export { SignalChannel } from "./signal";
 export { SlackChannel } from "./slack";
