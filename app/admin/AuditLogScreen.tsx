@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,11 +33,17 @@ export function AuditLogScreen({ token }: AuditLogScreenProps) {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    fetchAuditPage(token, PAGE_SIZE, pageCursors[pageCursors.length - 1]).then((rows) => {
-      if (cancelled) return;
-      setAudit(rows);
-      setLoading(false);
-    });
+    fetchAuditPage(token, PAGE_SIZE, pageCursors[pageCursors.length - 1])
+      .then((rows) => {
+        if (cancelled) return;
+        setAudit(rows);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Could not load the audit log.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -92,71 +99,69 @@ export function AuditLogScreen({ token }: AuditLogScreenProps) {
       </div>
 
       <Card className="overflow-hidden">
-<Table className="w-full">
-        <TableHeader>
-          <TableRow>
-            <TableHead className={`${EYEBROW} w-[190px] border-b border-border px-4 py-2.5 text-left`}>Timestamp</TableHead>
-            <TableHead className={`${EYEBROW} w-[140px] border-b border-border px-4 py-2.5 text-left`}>Actor</TableHead>
-            <TableHead className={`${EYEBROW} border-b border-border px-4 py-2.5 text-left`}>Event</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.length === 0 ? (
+        <Table className="w-full">
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={3} className="border-b border-border px-4 py-6 text-center text-xs text-muted-foreground">
-                {loading ? <Skeleton className="mx-auto h-4 w-40" /> : "No events on this page."}
-              </TableCell>
+              <TableHead className={`${EYEBROW} w-[190px] border-b border-border px-4 py-2.5 text-left`}>
+                Timestamp
+              </TableHead>
+              <TableHead className={`${EYEBROW} w-[140px] border-b border-border px-4 py-2.5 text-left`}>
+                Actor
+              </TableHead>
+              <TableHead className={`${EYEBROW} border-b border-border px-4 py-2.5 text-left`}>Event</TableHead>
             </TableRow>
-          ) : (
-            rows.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell className="border-b border-border px-4 py-2.75 font-mono text-xs whitespace-nowrap text-muted-foreground">
-                  {formatAuditTimestamp(r.ts)}
-                </TableCell>
-                <TableCell className="border-b border-border px-4 py-2.75 text-body-s font-medium text-foreground">
-                  {r.actorLabel ?? ""}
-                </TableCell>
-                <TableCell className="border-b border-border px-4 py-2.75 text-body-s text-foreground">
-                  {humanizeAuditEvent(r.event, r.detail)}
-                  {r.detail != null && (
-                    <div className="mt-1 truncate font-mono text-body-xs text-muted-foreground" title={JSON.stringify(r.detail)}>
-                      {JSON.stringify(r.detail)}
-                    </div>
-                  )}
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  className="border-b border-border px-4 py-6 text-center text-xs text-muted-foreground"
+                >
+                  {loading ? <Skeleton className="mx-auto h-4 w-40" /> : "No events on this page."}
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-</Card>
+            ) : (
+              rows.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="border-b border-border px-4 py-2.75 font-mono text-xs whitespace-nowrap text-muted-foreground">
+                    {formatAuditTimestamp(r.ts)}
+                  </TableCell>
+                  <TableCell className="border-b border-border px-4 py-2.75 text-body-s font-medium text-foreground">
+                    {r.actorLabel ?? ""}
+                  </TableCell>
+                  <TableCell className="border-b border-border px-4 py-2.75 text-body-s text-foreground">
+                    {humanizeAuditEvent(r.event, r.detail)}
+                    {r.detail != null && (
+                      <div
+                        className="mt-1 truncate font-mono text-body-xs text-muted-foreground"
+                        title={JSON.stringify(r.detail)}
+                      >
+                        {JSON.stringify(r.detail)}
+                      </div>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
 
       <div className="flex items-center gap-3">
-        <Button
-          size="sm"
-          type="button"
-          variant="outline"
-          disabled={!hasNewer || loading}
-          onClick={handleNewer}
-        >
+        <Button size="sm" type="button" variant="outline" disabled={!hasNewer || loading} onClick={handleNewer}>
           ← Newer
         </Button>
         <span className="font-mono text-body-xs text-muted-foreground">Page {page}</span>
-        <Button
-          size="sm"
-          type="button"
-          variant="outline"
-          disabled={!hasOlder || loading}
-          onClick={handleOlder}
-        >
+        <Button size="sm" type="button" variant="outline" disabled={!hasOlder || loading} onClick={handleOlder}>
           Older →
         </Button>
       </div>
 
       <p className="m-0 text-xs text-muted-foreground">
         Read-only, and permanent. The audit trail is append-only and is never pruned from here. This table pages{" "}
-        {PAGE_SIZE} events at a time; Download CSV exports the 200 most recent, with the raw detail for every event.
-        For the full history, complete days also get archived to a dated CSV on disk automatically (see deploy docs),
+        {PAGE_SIZE} events at a time; Download CSV exports the 200 most recent, with the raw detail for every event. For
+        the full history, complete days also get archived to a dated CSV on disk automatically (see deploy docs),
         independent of this view.
       </p>
     </div>

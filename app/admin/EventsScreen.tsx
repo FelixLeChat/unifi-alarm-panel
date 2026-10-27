@@ -28,9 +28,13 @@ export function EventsScreen({ token }: EventsScreenProps) {
 
   useEffect(() => {
     let cancelled = false;
-    fetchEventIncidents(token).then((rows) => {
-      if (!cancelled) setIncidents(rows);
-    });
+    fetchEventIncidents(token)
+      .then((rows) => {
+        if (!cancelled) setIncidents(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setIncidents([]);
+      });
     return () => {
       cancelled = true;
     };
@@ -70,7 +74,10 @@ export function EventsScreen({ token }: EventsScreenProps) {
                   onClick={() => setExpandedId(isOpen ? null : incident.id)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left"
                 >
-                  <Badge variant={ongoing ? "destructive" : incident.triggeredAlarm ? "outline" : "secondary"} className="flex-none">
+                  <Badge
+                    variant={ongoing ? "destructive" : incident.triggeredAlarm ? "outline" : "secondary"}
+                    className="flex-none"
+                  >
                     {ongoing ? "Alarm ongoing" : incident.triggeredAlarm ? "Alarm" : "Entry delay"}
                   </Badge>
                   <div className="min-w-0 flex-1">

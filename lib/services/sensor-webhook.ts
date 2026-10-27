@@ -16,11 +16,7 @@ export interface WebhookResult {
  * disarmed, delayed vs. instant. This just gets a raw UniFi payload into a
  * (sensorId, mode) pair without ever throwing, however malformed the body.
  */
-export function handleSensorWebhook(
-  db: Database.Database,
-  engine: AlarmEngine,
-  rawBody: string,
-): WebhookResult {
+export function handleSensorWebhook(db: Database.Database, engine: AlarmEngine, rawBody: string): WebhookResult {
   recordRawPayload(rawBody);
   logger.debug({ raw: rawBody }, "sensor webhook received");
 
@@ -42,7 +38,9 @@ export function handleSensorWebhook(
   }
 
   const mode = resolveSensorMode(db, parsed.sensorId, parsed.eventType);
-  updateSensorState(db, parsed.sensorId, parsed.eventType);
+  const openState = updateSensorState(db, parsed.sensorId, parsed.eventType);
+  // A door closing updates the state that gates arming and stops there, the same rule the realtime stream applies (see classifyStreamEvent). Only a deployment that configured sensorClosedEventTypes can tell a close apart.
+  if (openState === "closed") return { status: 200, body: { ok: true } };
   // Via the shared ingest so a trip the realtime stream just delivered for
   // this same sensor isn't counted twice (see sensor-ingest.ts).
   ingestSensorTrip(engine, parsed.sensorId, mode, "webhook");

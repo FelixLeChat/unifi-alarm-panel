@@ -22,16 +22,15 @@ export function seedDefaultConfig(db: Database.Database): void {
 }
 
 export function getConfigValue(db: Database.Database, key: string): string | null {
-  const row = db.prepare("SELECT value FROM config WHERE key = ?").get(key) as
-    | { value: string }
-    | undefined;
+  const row = db.prepare("SELECT value FROM config WHERE key = ?").get(key) as { value: string } | undefined;
   return row?.value ?? null;
 }
 
 export function setConfigValue(db: Database.Database, key: string, value: string): void {
-  db.prepare(
-    "INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-  ).run(key, value);
+  db.prepare("INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(
+    key,
+    value,
+  );
 }
 
 /**
@@ -58,7 +57,7 @@ export const MAX_DELAY_SEC = 3600;
  * the Settings screen's Advanced table) or one past setTimeout's 32-bit
  * ceiling both reach setTimeout as NaN/overflow, where Node clamps them to
  * ~1ms — i.e. no exit delay at all, or an entry delay that alarms the instant
- * a door opens. Both reproduced before this guard existed. The API rejects
+ * a door opens. The API rejects
  * these too (see app/api/admin/config/route.ts); this is the layer that has
  * to hold even for a value written directly into the DB.
  */

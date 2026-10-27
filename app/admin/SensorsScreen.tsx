@@ -50,8 +50,17 @@ interface SensorsScreenProps {
 const RTSP_URL_PATTERN = /^rtsps?:\/\//;
 
 const MODE_OPTIONS: Array<{ value: SensorMode; label: string; description: string }> = [
-  { value: "delayed", label: "Delayed", description: "Entry and exit delays apply before the alarm trips. For doors and motion sensors people pass through." },
-  { value: "instant", label: "Instant", description: "Trips the alarm immediately when armed. For windows, tamper, and irregular access points." },
+  {
+    value: "delayed",
+    label: "Delayed",
+    description:
+      "Entry and exit delays apply before the alarm trips. For doors and motion sensors people pass through.",
+  },
+  {
+    value: "instant",
+    label: "Instant",
+    description: "Trips the alarm immediately when armed. For windows, tamper, and irregular access points.",
+  },
   { value: "ignore", label: "Ignore", description: "Never trips the alarm. Events still appear in the audit log." },
 ];
 
@@ -159,12 +168,16 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
     }
     let cancelled = false;
     setTripsLoading(true);
-    fetchSensorTrips(token, selected.unifiId, TRIP_HISTORY_LIMIT).then((rows) => {
-      if (!cancelled) {
-        setTrips(rows);
-        setTripsLoading(false);
-      }
-    });
+    fetchSensorTrips(token, selected.unifiId, TRIP_HISTORY_LIMIT)
+      .then((rows) => {
+        if (!cancelled) setTrips(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setTrips([]);
+      })
+      .finally(() => {
+        if (!cancelled) setTripsLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -220,7 +233,11 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
     const remaining = sensors.filter((s) => s.unifiId !== deleteTarget.unifiId);
     const next = remaining[0] ?? null;
     setSelectedId(next?.id ?? null);
-    window.history.replaceState(null, "", next ? `/admin/sensors/${encodeURIComponent(next.unifiId)}` : "/admin/sensors");
+    window.history.replaceState(
+      null,
+      "",
+      next ? `/admin/sensors/${encodeURIComponent(next.unifiId)}` : "/admin/sensors",
+    );
     setDeleteTarget(null);
     onSaved();
   }
@@ -251,14 +268,14 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
             hunting the wrong problem for two days. */}
         {sensorFeed.stale && (
           <div className="border-b border-border p-2">
-          <Alert>
-            <AlertTitle>No sensor events arriving</AlertTitle>
-            <AlertDescription>
-              {sensorFeed.everReceived
-                ? `Last webhook ${formatFeedAge(sensorFeed.ageSec)} ago. Statuses below are unknown until the feed recovers. Check the UniFi Alarm Manager webhook.`
-                : `Nothing since this server started ${formatFeedAge(sensorFeed.ageSec)} ago. Check the UniFi Alarm Manager outbound webhook config.`}
-            </AlertDescription>
-          </Alert>
+            <Alert>
+              <AlertTitle>No sensor events arriving</AlertTitle>
+              <AlertDescription>
+                {sensorFeed.everReceived
+                  ? `Last webhook ${formatFeedAge(sensorFeed.ageSec)} ago. Statuses below are unknown until the feed recovers. Check the UniFi Alarm Manager webhook.`
+                  : `Nothing since this server started ${formatFeedAge(sensorFeed.ageSec)} ago. Check the UniFi Alarm Manager outbound webhook config.`}
+              </AlertDescription>
+            </Alert>
           </div>
         )}
 
@@ -269,7 +286,9 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
                 <SensorsOffIcon size={20} />
               </EmptyMedia>
               <EmptyTitle>No sensors found</EmptyTitle>
-              <EmptyDescription>Sensors register automatically the first time they send a webhook event. Nothing to configure here yet.</EmptyDescription>
+              <EmptyDescription>
+                Sensors register automatically the first time they send a webhook event. Nothing to configure here yet.
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
@@ -283,7 +302,13 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
                   key={s.id}
                   size="sm"
                   variant={isSelected ? "outline" : "default"}
-                  render={<button type="button" onClick={() => selectSensor(s)} aria-current={isSelected ? "true" : undefined} />}
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => selectSensor(s)}
+                      aria-current={isSelected ? "true" : undefined}
+                    />
+                  }
                   className={`cursor-pointer text-left ${TRANSITION} ${isSelected ? "bg-emphasis/15" : "hover:bg-emphasis/15"} ${s.mode === "ignore" ? "opacity-60" : ""}`}
                 >
                   <ItemMedia>
@@ -336,9 +361,13 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
             <h2 className="m-0 min-w-0 font-display text-title-xs leading-[1.1] break-words text-foreground md:flex-none md:whitespace-nowrap">
               {selected.name}
             </h2>
-            <span className="flex-none font-mono text-xs whitespace-nowrap text-muted-foreground">{selected.unifiId}</span>
+            <span className="flex-none font-mono text-xs whitespace-nowrap text-muted-foreground">
+              {selected.unifiId}
+            </span>
             <span className="flex-none text-xs whitespace-nowrap text-muted-foreground">
-              {selected.lastTrippedAt ? `Last tripped ${formatAuditTimestamp(selected.lastTrippedAt)}` : "Never tripped"}
+              {selected.lastTrippedAt
+                ? `Last tripped ${formatAuditTimestamp(selected.lastTrippedAt)}`
+                : "Never tripped"}
             </span>
           </div>
 
@@ -361,13 +390,24 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
 
           {selected.cameraId === selected.unifiId && (
             <p className="m-0 -mt-2.5 text-xs leading-[1.5] text-muted-foreground">
-              {'This entry is a camera\'s own motion trigger, not a separate physical sensor. Its snapshot or live feed above is wired to itself automatically. Change "Protect camera ID" below only if you want a different camera\'s view attached instead.'}
+              {
+                "This entry is a camera's own motion trigger, not a separate physical sensor. Its snapshot or live feed above is wired to itself automatically. Change \"Protect camera ID\" below only if you want a different camera's view attached instead."
+              }
             </p>
           )}
 
-          <RadioGroup aria-label="Sensor mode" value={draftMode} onValueChange={(v) => setDraftMode(v as SensorMode)} className="gap-2">
+          <RadioGroup
+            aria-label="Sensor mode"
+            value={draftMode}
+            onValueChange={(v) => setDraftMode(v as SensorMode)}
+            className="gap-2"
+          >
             {MODE_OPTIONS.map((opt) => (
-              <FieldLabel key={opt.value} htmlFor={`sensor-mode-${opt.value}`} className="has-data-checked:bg-emphasis/15">
+              <FieldLabel
+                key={opt.value}
+                htmlFor={`sensor-mode-${opt.value}`}
+                className="has-data-checked:bg-emphasis/15"
+              >
                 <Field orientation="horizontal">
                   <FieldContent>
                     <FieldTitle>{opt.label}</FieldTitle>
@@ -388,7 +428,7 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
                 id="sensor-type"
                 value={draftSensorType ?? ""}
                 onChange={(e) => setDraftSensorType((e.target.value || null) as SensorType | null)}
-                >
+              >
                 <NativeSelectOption value="">Not set</NativeSelectOption>
                 {TYPE_OPTIONS.map((opt) => (
                   <NativeSelectOption key={opt.value} value={opt.value}>
@@ -481,7 +521,11 @@ export function SensorsScreen({ sensors, sensorFeed, token, onSaved }: SensorsSc
         </div>
       )}
 
-      <DeleteSensorDialog name={deleteTarget?.name ?? null} onCancel={() => setDeleteTarget(null)} onConfirm={handleConfirmDelete} />
+      <DeleteSensorDialog
+        name={deleteTarget?.name ?? null}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

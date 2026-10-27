@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ADMIN_TOKEN, DURESS_PIN, STANDARD_PIN } from "./constants";
+import { ADMIN_TOKEN, DURESS_PIN, STANDARD_PIN, WEBHOOK_SECRET } from "./constants";
 
 async function typePin(page: Page, pin: string): Promise<void> {
   for (const digit of pin) {
@@ -79,7 +79,10 @@ test.describe("panel kiosk", () => {
     await expect(page.locator("#action-btn")).toHaveText("Arm system");
   });
 
-  test("blocks arming while a gating door sensor is open, and 'Yes, arm' again overrides it", async ({ page, request }) => {
+  test("blocks arming while a gating door sensor is open, and 'Yes, arm' again overrides it", async ({
+    page,
+    request,
+  }) => {
     const doorId = `e2e-panel-gate-door-${Date.now()}`;
     try {
       // A distinct eventType (not the "open"/"close" other specs use) so this
@@ -162,7 +165,7 @@ test.describe("panel kiosk", () => {
     await expect(page.locator("#banner-label")).toHaveText("Disarmed");
   });
 
-  test("lists every door under the banner (open ones first)", async ({ page, request }) => {
+  test("lists every door under the banner, and a PIN disarms during the exit delay", async ({ page, request }) => {
     const doorId = `e2e-strip-door-${Date.now()}`;
     await request.put("/api/admin/config", {
       headers: { "x-admin-token": ADMIN_TOKEN },
@@ -181,9 +184,15 @@ test.describe("panel kiosk", () => {
     await expect(page.locator("#armed-info")).toBeHidden();
   });
 
-  test("test mode from the admin config shows a banner on the kiosk and reports through /api/status", async ({ page, request }) => {
+  test("test mode from the admin config shows a banner on the kiosk and reports through /api/status", async ({
+    page,
+    request,
+  }) => {
     const setTestMode = (on: boolean) =>
-      request.put("/api/admin/config", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { config: { panelTestMode: on ? "true" : "false" } } });
+      request.put("/api/admin/config", {
+        headers: { "x-admin-token": ADMIN_TOKEN },
+        data: { config: { panelTestMode: on ? "true" : "false" } },
+      });
     try {
       await page.goto("/panel");
       await expect(page.locator("#test-mode-badge")).toBeHidden();
@@ -239,7 +248,9 @@ test.describe("panel kiosk", () => {
       await expect(page.locator("#banner-label")).not.toHaveText("Disarmed");
     });
 
-    test("a wrong PIN shakes and shows a generic error with tries remaining — never which PIN or duress", async ({ page }) => {
+    test("a wrong PIN shakes and shows a generic error with tries remaining — never which PIN or duress", async ({
+      page,
+    }) => {
       await page.goto("/panel");
       // Wait out the 2s exit delay first: the ARMING -> ARMED poll clears the
       // message line (meant for "Door opened: …"), and used to wipe this
@@ -250,12 +261,16 @@ test.describe("panel kiosk", () => {
       // Not an exact count: every PIN attempt shares one lockout bucket (see
       // PIN_BUCKET in lib/engine/index.ts), so the exact remaining count
       // depends on suite run order.
-      await expect(page.locator("#message")).toHaveText(/^(Incorrect PIN\. \d+ tries remaining|LAST TRY: one more wrong PIN triggers the alarm)$/);
+      await expect(page.locator("#message")).toHaveText(
+        /^(Incorrect PIN\. \d+ tries remaining|LAST TRY: one more wrong PIN triggers the alarm)$/,
+      );
       const message = await page.locator("#message").textContent();
       expect(message?.toLowerCase()).not.toContain("duress");
     });
 
-    test("the 4th digit auto-submits the right PIN — no separate Disarm tap — and shows a welcome message", async ({ page }) => {
+    test("the 4th digit auto-submits the right PIN — no separate Disarm tap — and shows a welcome message", async ({
+      page,
+    }) => {
       await page.goto("/panel");
       await typePin(page, STANDARD_PIN);
       await expect(page.locator("#message")).toHaveText("System disarmed");
@@ -278,8 +293,40 @@ test.describe("panel kiosk", () => {
     const sensorId = `e2e-instant-${Date.now()}`;
     // Register the sensor as "instant" mode via the admin API so it trips
     // the alarm immediately rather than starting an entry delay.
-    const adminHeaders = { "content-type": "application/json", "x-admin-token": "e2e-admin-token" };
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
+    const adminHeaders = { "content-type": "application/json", "x-admin-token": ADMIN_TOKEN };
+    await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
+    await request.put("/api/admin/config", {
+      headers: adminHeaders,
+      data: { sensors: [{ unifiId: sensorId, mode: "instant" }] },
+    });
+
+    await page.goto("/panel");
+    try {
+      await armViaConfirm(page);
+      await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
+
+      await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
+
+      await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
+      await expect(page.locator("#status-banner")).toHaveClass(/state-alarm/);
+      await expect(page.locator("#message")).toHaveText("Enter PIN to silence and disarm");
+      await expect(page.locator("#action-btn")).toHaveText("Disarm");
+
+      await typePin(page, STANDARD_PIN);
+      await expect(page.locator("#banner-label")).toHaveText("Disarmed");
+    } finally {
+      // A failure mid-ALARM must not leak into the next test's starting state.
+      await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
+    }
+  });
+
+  test("a duress PIN silences ALARM but is indistinguishable in the UI from a normal disarm", async ({
+    page,
+    request,
+  }) => {
+    const sensorId = `e2e-instant-duress-${Date.now()}`;
+    const adminHeaders = { "content-type": "application/json", "x-admin-token": ADMIN_TOKEN };
+    await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
     await request.put("/api/admin/config", {
       headers: adminHeaders,
       data: { sensors: [{ unifiId: sensorId, mode: "instant" }] },
@@ -289,28 +336,7 @@ test.describe("panel kiosk", () => {
     await armViaConfirm(page);
     await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
 
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
-
-    await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
-    await expect(page.locator("#status-banner")).toHaveClass(/state-alarm/);
-    await expect(page.locator("#message")).toHaveText("Enter PIN to silence and disarm");
-    await expect(page.locator("#action-btn")).toHaveText("Disarm");
-
-    await typePin(page, STANDARD_PIN);
-    await expect(page.locator("#banner-label")).toHaveText("Disarmed");
-  });
-
-  test("a duress PIN silences ALARM but is indistinguishable in the UI from a normal disarm", async ({ page, request }) => {
-    const sensorId = `e2e-instant-duress-${Date.now()}`;
-    const adminHeaders = { "content-type": "application/json", "x-admin-token": "e2e-admin-token" };
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
-    await request.put("/api/admin/config", { headers: adminHeaders, data: { sensors: [{ unifiId: sensorId, mode: "instant" }] } });
-
-    await page.goto("/panel");
-    await armViaConfirm(page);
-    await expect(page.locator("#banner-label")).toHaveText("Armed", { timeout: 8_000 });
-
-    await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=${WEBHOOK_SECRET}`, { data: { sensorId, eventType: "open" } });
     await expect(page.locator("#banner-label")).toHaveText("ALARM", { timeout: 5_000 });
 
     // Same exact assertions as the standard-PIN disarm above — the whole
@@ -368,11 +394,17 @@ test.describe("panel kiosk", () => {
       // in flight, so back-to-back clicks can race. Each claims a different
       // source, which used to buy a fresh bucket per request and no lockout.
       for (let i = 0; i < 4; i++) {
-        const res = await request.post("/api/disarm", { headers: { "x-forwarded-for": `10.66.0.${i}` }, data: { pin: "0000" } });
+        const res = await request.post("/api/disarm", {
+          headers: { "x-forwarded-for": `10.66.0.${i}` },
+          data: { pin: "0000" },
+        });
         expect(res.status()).toBe(401);
       }
       // The 5th tips the shared bucket into lockout: 429, and a real ALARM (see handlePinLockout in lib/state/machine.ts).
-      const fifth = await request.post("/api/disarm", { headers: { "x-forwarded-for": "10.66.0.4" }, data: { pin: "0000" } });
+      const fifth = await request.post("/api/disarm", {
+        headers: { "x-forwarded-for": "10.66.0.4" },
+        data: { pin: "0000" },
+      });
       expect(fifth.status()).toBe(429);
 
       // At the real keypad, even the *correct* PIN is rejected while locked

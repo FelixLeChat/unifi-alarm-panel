@@ -34,7 +34,13 @@ interface TasksScreenProps {
   onCheckConnectivityNow: () => Promise<boolean>;
 }
 
-export function TasksScreen({ updateStatus, onCheckUpdateNow, onTriggerUpdate, connectivity, onCheckConnectivityNow }: TasksScreenProps) {
+export function TasksScreen({
+  updateStatus,
+  onCheckUpdateNow,
+  onTriggerUpdate,
+  connectivity,
+  onCheckConnectivityNow,
+}: TasksScreenProps) {
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [checkingConnectivity, setCheckingConnectivity] = useState(false);
   // Optimistic disable for the instant between the click and the server
@@ -90,45 +96,47 @@ export function TasksScreen({ updateStatus, onCheckUpdateNow, onTriggerUpdate, c
               <span className="text-muted-foreground">Latest</span>
               <span className="font-mono">{updateStatus?.latestVersion ?? "n/a"}</span>
               {updateStatus?.latestVersion && (
-                <span className="text-xs text-muted-foreground">{updateStatus.updateAvailable ? "(update available)" : "(up to date)"}</span>
+                <span className="text-xs text-muted-foreground">
+                  {updateStatus.updateAvailable ? "(update available)" : "(up to date)"}
+                </span>
               )}
             </div>
             <div className="text-xs text-muted-foreground">
               {`Checked hourly against GitHub Releases · last checked ${relativeTime(updateStatus?.checkedAt ?? null)}`}
             </div>
-            {updateStatus?.error && <p className="m-0 text-body-s leading-[1.6] text-destructive">{updateStatus.error}</p>}
+            {updateStatus?.error && (
+              <p className="m-0 text-body-s leading-[1.6] text-destructive">{updateStatus.error}</p>
+            )}
             {updateCheckFailed && (
-              <p className="m-0 text-body-s leading-[1.6] text-destructive">Check now failed. The request to the server didn&apos;t go through. Try reloading the page.</p>
+              <p className="m-0 text-body-s leading-[1.6] text-destructive">
+                Check now failed. The request to the server didn&apos;t go through. Try reloading the page.
+              </p>
             )}
             {applyStatusInfo && (
-              <p className={`m-0 text-body-s leading-[1.6] ${applyStatusInfo.tone === "destructive" ? "text-destructive" : "text-muted-foreground"}`}>
+              <p
+                className={`m-0 text-body-s leading-[1.6] ${applyStatusInfo.tone === "destructive" ? "text-destructive" : "text-muted-foreground"}`}
+              >
                 {applyStatusInfo.text}
               </p>
             )}
           </div>
         </div>
         <div className="flex items-center gap-3.5 p-5.5">
-          <Button
-            variant="secondary"
-            type="button"
-            disabled={checkingUpdate}
-            onClick={handleCheckUpdateNow}
-          >
+          <Button variant="secondary" type="button" disabled={checkingUpdate} onClick={handleCheckUpdateNow}>
             {checkingUpdate ? "Checking…" : "Check now"}
           </Button>
           {updateStatus?.selfUpdate !== false && (
-            <Button
-              type="button"
-              disabled={!updateStatus?.updateAvailable || applying}
-              onClick={handleTriggerUpdate}
-            >
-              {progressLabel ?? `Update to latest${updateStatus?.latestVersion ? ` (${updateStatus.latestVersion})` : ""}`}
+            <Button type="button" disabled={!updateStatus?.updateAvailable || applying} onClick={handleTriggerUpdate}>
+              {progressLabel ??
+                `Update to latest${updateStatus?.latestVersion ? ` (${updateStatus.latestVersion})` : ""}`}
             </Button>
           )}
         </div>
         {updateStatus?.selfUpdate === false && (
           <p className="m-0 px-5.5 pb-5.5 text-xs text-muted-foreground">
-            {"Running in Docker. To update, pull the new image and recreate the container: docker compose pull && docker compose up -d."}
+            {
+              "Running in Docker. To update, pull the new image and recreate the container: docker compose pull && docker compose up -d."
+            }
           </p>
         )}
         {updateStatus?.selfUpdate !== false && !updateStatus?.updateAvailable && !applying && (
@@ -145,7 +153,9 @@ export function TasksScreen({ updateStatus, onCheckUpdateNow, onTriggerUpdate, c
           <div className="flex flex-1 flex-col gap-1.5">
             <div className={EYEBROW}>Connectivity watchdog</div>
             <p className="m-0 text-body-s leading-[1.6] text-muted-foreground">
-              {"Polls sensor heartbeat and the default camera every 5 minutes, device health from UniFi every 2 hours. "}
+              {
+                "Polls sensor heartbeat and the default camera every 5 minutes, device health from UniFi every 2 hours. "
+              }
               {connectivity == null
                 ? ""
                 : connectivity.sensorHeartbeatStale
@@ -159,7 +169,9 @@ export function TasksScreen({ updateStatus, onCheckUpdateNow, onTriggerUpdate, c
               {` Last checked: ${relativeTime(connectivity?.checkedAt ?? null)}.`}
             </p>
             {connectivityCheckFailed && (
-              <p className="m-0 text-body-s leading-[1.6] text-destructive">Check now failed. The request to the server didn&apos;t go through. Try reloading the page.</p>
+              <p className="m-0 text-body-s leading-[1.6] text-destructive">
+                Check now failed. The request to the server didn&apos;t go through. Try reloading the page.
+              </p>
             )}
           </div>
         </div>

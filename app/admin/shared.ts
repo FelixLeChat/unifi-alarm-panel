@@ -1,6 +1,9 @@
 import { useCallback, useRef, useState } from "react";
 
-export type AlarmStateName = "DISARMED" | "ARMING" | "ARMED" | "ENTRY_DELAY" | "ALARM";
+// Type-only imports: the admin bundle never pulls server code in through these.
+import type { AlarmStateName, SensorMode } from "@/lib/state/machine";
+import type { SensorState, SensorType } from "@/lib/services/sensors";
+export type { AlarmStateName, SensorMode, SensorState, SensorType };
 
 export interface StatusResponse {
   state: AlarmStateName;
@@ -20,10 +23,6 @@ export interface PinSummary {
   createdAt: string;
   updatedAt: string;
 }
-
-export type SensorMode = "delayed" | "instant" | "ignore";
-export type SensorType = "motion" | "door";
-export type SensorState = "open" | "closed";
 
 export interface SensorRecord {
   id: number;
@@ -89,7 +88,8 @@ export type Screen = "overview" | "sensors" | "pins" | "delays" | "audit" | "eve
 
 // Eyebrow label: mono, uppercase, tracked — the recurring label pattern
 // used above nearly every field/section in this redesign.
-export const EYEBROW = "font-mono text-eyebrow-s leading-none tracking-eyebrow uppercase text-muted-foreground font-medium";
+export const EYEBROW =
+  "font-mono text-eyebrow-s leading-none tracking-eyebrow uppercase text-muted-foreground font-medium";
 
 export const TRANSITION = "transition-opacity duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]";
 
@@ -106,7 +106,10 @@ export function isUpdateApplyInProgress(applyStatus: string | null | undefined):
   return Boolean(applyStatus?.startsWith("requested:") || applyStatus?.startsWith("applying:"));
 }
 
-export function updateApplyProgressLabel(applyStatus: string | null | undefined, latestVersion: string | null): string | null {
+export function updateApplyProgressLabel(
+  applyStatus: string | null | undefined,
+  latestVersion: string | null,
+): string | null {
   if (applyStatus?.startsWith("applying:")) return `Updating to ${latestVersion}…`;
   if (applyStatus?.startsWith("requested:")) return "Update requested: waiting for the updater…";
   return null;
@@ -116,7 +119,9 @@ export function updateApplyProgressLabel(applyStatus: string | null | undefined,
 // are terminal states, worth a line of their own — requested:/applying: are
 // already covered by the button via updateApplyProgressLabel above, so
 // surfacing them here too would just repeat the same message twice.
-export function formatApplyStatus(applyStatus: string | null | undefined): { text: string; tone: "muted" | "destructive" } | null {
+export function formatApplyStatus(
+  applyStatus: string | null | undefined,
+): { text: string; tone: "muted" | "destructive" } | null {
   if (applyStatus?.startsWith("done:")) {
     return { text: `Last update applied: ${applyStatus.slice("done:".length)}.`, tone: "muted" };
   }
@@ -140,10 +145,13 @@ export function formatDayClockTime(iso: string): string {
   const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const daysAgo = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86_400_000);
   const day =
-    daysAgo <= 0 ? "Today"
-    : daysAgo === 1 ? "Yesterday"
-    : daysAgo < 7 ? d.toLocaleDateString("en-US", { weekday: "long" })
-    : formatDateOnly(iso);
+    daysAgo <= 0
+      ? "Today"
+      : daysAgo === 1
+        ? "Yesterday"
+        : daysAgo < 7
+          ? d.toLocaleDateString("en-US", { weekday: "long" })
+          : formatDateOnly(iso);
   return `${day} ${formatClockTime(iso)}`;
 }
 
@@ -224,7 +232,10 @@ export function sensorHealth(sensor: SensorRecord, feedStale: boolean): SensorHe
 
   const hoursSince = (Date.now() - new Date(sensor.lastTrippedAt).getTime()) / 3_600_000;
   if (sensor.tripCount7d === 0) {
-    return { level: "unknown", reason: `Nothing in the last 7 days: too quiet to have a baseline (last trip ${Math.round(hoursSince)}h ago)` };
+    return {
+      level: "unknown",
+      reason: `Nothing in the last 7 days: too quiet to have a baseline (last trip ${Math.round(hoursSince)}h ago)`,
+    };
   }
 
   const expectedGapHours = (7 * 24) / sensor.tripCount7d;

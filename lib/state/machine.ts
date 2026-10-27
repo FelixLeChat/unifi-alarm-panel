@@ -40,11 +40,7 @@ export interface TransitionResult {
   effects: Effect[];
 }
 
-export function transition(
-  state: AlarmState,
-  event: AlarmEvent,
-  config: TransitionConfig,
-): TransitionResult {
+export function transition(state: AlarmState, event: AlarmEvent, config: TransitionConfig): TransitionResult {
   if (event.type === "DISARM") {
     return handleDisarm(state, event);
   }
@@ -66,10 +62,7 @@ export function transition(
   }
 }
 
-function handleDisarm(
-  state: AlarmState,
-  event: Extract<AlarmEvent, { type: "DISARM" }>,
-): TransitionResult {
+function handleDisarm(state: AlarmState, event: Extract<AlarmEvent, { type: "DISARM" }>): TransitionResult {
   const effects: Effect[] = [];
   if (event.duress) {
     effects.push({ type: "ALERT_DURESS" });
@@ -93,27 +86,22 @@ function handleDisarm(
  * aren't: that's the one signal here that means someone is actively trying
  * to get in, whether or not the system happened to be armed at the time.
  */
-function handlePinLockout(
-  state: AlarmState,
-  event: Extract<AlarmEvent, { type: "PIN_LOCKOUT" }>,
-): TransitionResult {
+function handlePinLockout(state: AlarmState, event: Extract<AlarmEvent, { type: "PIN_LOCKOUT" }>): TransitionResult {
   if (state.name === "ALARM") {
     return { state, effects: [{ type: "AUDIT", event: "pin_lockout_during_alarm", detail: { source: event.source } }] };
   }
   return {
     state: { name: "ALARM", since: event.now },
     effects: [
+      // ARMING or ENTRY_DELAY may have a countdown running: drop it, or it fires into ALARM as a stale timer and the panel keeps showing it.
+      { type: "CANCEL_TIMERS" },
       { type: "ALERT_ALARM" },
       { type: "AUDIT", event: "alarm_pin_lockout", detail: { source: event.source, from: state.name } },
     ],
   };
 }
 
-function handleDisarmed(
-  state: AlarmState,
-  event: AlarmEvent,
-  config: TransitionConfig,
-): TransitionResult {
+function handleDisarmed(state: AlarmState, event: AlarmEvent, config: TransitionConfig): TransitionResult {
   switch (event.type) {
     case "ARM":
       return {
@@ -174,11 +162,7 @@ function handleArming(state: AlarmState, event: AlarmEvent): TransitionResult {
   }
 }
 
-function handleArmed(
-  state: AlarmState,
-  event: AlarmEvent,
-  config: TransitionConfig,
-): TransitionResult {
+function handleArmed(state: AlarmState, event: AlarmEvent, config: TransitionConfig): TransitionResult {
   switch (event.type) {
     case "SENSOR_TRIP":
       if (event.mode === "instant") {
@@ -201,9 +185,7 @@ function handleArmed(
       }
       return {
         state,
-        effects: [
-          { type: "AUDIT", event: "sensor_trip_ignored_mode", detail: { sensorId: event.sensorId } },
-        ],
+        effects: [{ type: "AUDIT", event: "sensor_trip_ignored_mode", detail: { sensorId: event.sensorId } }],
       };
     case "ARM":
       return { state, effects: [{ type: "AUDIT", event: "arm_ignored_already_armed" }] };
@@ -237,6 +219,7 @@ function handleEntryDelay(state: AlarmState, event: AlarmEvent): TransitionResul
         return {
           state: { name: "ALARM", since: event.now, triggeredBy: { sensorId: event.sensorId } },
           effects: [
+            { type: "CANCEL_TIMERS" },
             { type: "ALERT_ALARM", sensorId: event.sensorId },
             {
               type: "AUDIT",

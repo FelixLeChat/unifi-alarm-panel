@@ -9,7 +9,7 @@ function row(overrides: Partial<AuditRow> = {}): AuditRow {
 describe("auditRowsToCsv", () => {
   it("starts with the header row, CRLF-joined", () => {
     const csv = auditRowsToCsv([]);
-    expect(csv).toBe(AUDIT_CSV_HEADER.join(",") + "\r\n");
+    expect(csv).toBe("\uFEFF" + AUDIT_CSV_HEADER.join(",") + "\r\n");
   });
 
   it("includes the raw detail JSON, not just the humanized description", () => {
@@ -30,5 +30,11 @@ describe("auditRowsToCsv", () => {
     const fields = dataLine.split(",");
     expect(fields[2]).toBe(""); // actor
     expect(fields[6]).toBe(""); // detail_json
+  });
+
+  it("neutralises a cell that would run as a spreadsheet formula", () => {
+    const csv = auditRowsToCsv([row({ actorLabel: '=HYPERLINK("http://x")' })]);
+    expect(csv).toContain(`"'=HYPERLINK(""http://x"")"`);
+    expect(csv).not.toMatch(/,=HYPERLINK/);
   });
 });

@@ -116,10 +116,7 @@ export function buildDeviceIndex(client: ProtectClient): Map<string, DeviceRef> 
  * signal changes, recording settings). Pure — every decision this makes is
  * testable without a console.
  */
-export function classifyStreamEvent(
-  event: TypedEvent,
-  devices: Map<string, DeviceRef>,
-): StreamSensorEvent | null {
+export function classifyStreamEvent(event: TypedEvent, devices: Map<string, DeviceRef>): StreamSensorEvent | null {
   if (event.kind === "motionDetected") {
     const device = devices.get(event.cameraId);
     // An unknown id means the index is behind the controller; skipping is
@@ -237,7 +234,9 @@ let running: { signature: string; controller: AbortController } | null = null;
 export function syncProtectEventStream(deps: EventStreamDeps): void {
   const creds = getCredentials();
   const insecure = isProtectTlsInsecure();
-  const signature = creds ? JSON.stringify([creds.host, creds.username, creds.password, insecure, getSetting("protectCaCert")]) : "";
+  const signature = creds
+    ? JSON.stringify([creds.host, creds.username, creds.password, insecure, getSetting("protectCaCert")])
+    : "";
   if (running?.signature === signature) return;
 
   running?.controller.abort();

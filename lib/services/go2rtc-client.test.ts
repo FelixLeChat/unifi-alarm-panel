@@ -1,7 +1,14 @@
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb } from "@/lib/db";
-import { go2rtcMjpegUrl, isSafeStreamName, removeGo2rtcStream, resyncGo2rtcStreams, toGo2rtcSource, upsertGo2rtcStream } from "./go2rtc-client";
+import {
+  go2rtcMjpegUrl,
+  isSafeStreamName,
+  removeGo2rtcStream,
+  resyncGo2rtcStreams,
+  toGo2rtcSource,
+  upsertGo2rtcStream,
+} from "./go2rtc-client";
 import { upsertSensor } from "./sensors";
 
 const settings = vi.hoisted(() => new Map<string, string>());
@@ -12,7 +19,9 @@ vi.mock("./settings", async (importOriginal) => ({
 
 describe("toGo2rtcSource", () => {
   it("rewrites rtsps:// to rtspx:// and strips ?enableSrtp, per go2rtc's documented UniFi workaround", () => {
-    expect(toGo2rtcSource("rtsps://192.168.1.1:7441/aBcDeFgHiJkLmNoP?enableSrtp")).toBe("rtspx://192.168.1.1:7441/aBcDeFgHiJkLmNoP");
+    expect(toGo2rtcSource("rtsps://192.168.1.1:7441/aBcDeFgHiJkLmNoP?enableSrtp")).toBe(
+      "rtspx://192.168.1.1:7441/aBcDeFgHiJkLmNoP",
+    );
   });
 
   it("drops a #fragment, which go2rtc would read as its own source options", () => {

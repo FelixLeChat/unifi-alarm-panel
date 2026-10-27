@@ -19,7 +19,9 @@ test.describe("brand assets", () => {
     }
     const manifest = await (await request.get("/site.webmanifest")).json();
     expect(manifest.name).toBe("UniFi Alarm Panel");
-    expect(manifest.icons.map((i: { sizes: string }) => i.sizes)).toEqual(expect.arrayContaining(["192x192", "512x512"]));
+    expect(manifest.icons.map((i: { sizes: string }) => i.sizes)).toEqual(
+      expect.arrayContaining(["192x192", "512x512"]),
+    );
     for (const icon of manifest.icons) expect((await request.get(icon.src)).status(), icon.src).toBe(200);
   });
 

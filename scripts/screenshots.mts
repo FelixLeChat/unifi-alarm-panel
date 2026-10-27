@@ -9,7 +9,7 @@
  *   docker run --rm -d --name shot-go2rtc -p 127.0.0.1:1984:1984 alexxit/go2rtc   # so the go2rtc check passes too
  *   pnpm build
  *   echo v1.2.0 > VERSION   # the panel footer shows it; "dev" otherwise (delete the file after)
- *   PORT=3188 DATABASE_PATH=./data/shot.db ADMIN_TOKEN=t WEBHOOK_SHARED_SECRET=s \
+ *   PORT=3188 DATABASE_PATH=./data/shot.db ADMIN_TOKEN=screenshot-token WEBHOOK_SHARED_SECRET=screenshot-secret \
  *     SECRETS_KEY=$(openssl rand -base64 32) DEFAULT_EXIT_DELAY_SEC=60 pnpm start &
  *   pnpm exec tsx scripts/screenshots.mts
  */
@@ -21,16 +21,24 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const BASE = process.env.SHOT_BASE ?? "http://localhost:3188";
-const TOKEN = process.env.SHOT_ADMIN_TOKEN ?? "t";
+const TOKEN = process.env.SHOT_ADMIN_TOKEN ?? "screenshot-token";
 const SECRET = process.env.SHOT_WEBHOOK_SECRET ?? "s";
 const OUT = "docs/screenshots";
 const DB_PATH = process.env.SHOT_DB ?? "./data/shot.db";
 const MOCK_CONSOLE = process.env.SHOT_MOCK_CONSOLE ?? "http://localhost:8089";
 
 const admin = (method: string, path: string, body?: unknown) =>
-  fetch(BASE + path, { method, headers: { "x-admin-token": TOKEN, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  fetch(BASE + path, {
+    method,
+    headers: { "x-admin-token": TOKEN, "content-type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
 const hook = (sensorId: string, eventType: string) =>
-  fetch(`${BASE}/api/hooks/sensor?token=${SECRET}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sensorId, eventType }) });
+  fetch(`${BASE}/api/hooks/sensor?token=${SECRET}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ sensorId, eventType }),
+  });
 const post = (path: string, body: unknown = {}) =>
   fetch(BASE + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -96,7 +104,11 @@ await hook("front", "close");
 await hook("back", "close");
 
 const panel = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-const shot = async (page: typeof panel, name: string, clip?: { x: number; y: number; width: number; height: number }) => {
+const shot = async (
+  page: typeof panel,
+  name: string,
+  clip?: { x: number; y: number; width: number; height: number },
+) => {
   await sleep(2500);
   await page.screenshot({ path: `${OUT}/${name}.png`, clip });
 };
@@ -122,7 +134,10 @@ await post("/api/disarm", { pin: "1234" });
 await admin("PUT", "/api/admin/config", { config: { exitDelaySec: 8, entryDelaySec: 8 } });
 const record = async (name: string, run: (page: typeof panel) => Promise<void>) => {
   const dir = mkdtempSync(join(tmpdir(), "uap-rec-"));
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, recordVideo: { dir, size: { width: 1280, height: 800 } } });
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    recordVideo: { dir, size: { width: 1280, height: 800 } },
+  });
   const page = await context.newPage();
   await page.goto(`${BASE}/panel`);
   await sleep(1500);
@@ -130,8 +145,15 @@ const record = async (name: string, run: (page: typeof panel) => Promise<void>) 
   const video = page.video()!;
   await context.close();
   execFileSync("ffmpeg", [
-    "-y", "-loglevel", "error", "-ss", "0.6", "-i", await video.path(),
-    "-vf", "fps=10,scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=bayer:bayer_scale=4",
+    "-y",
+    "-loglevel",
+    "error",
+    "-ss",
+    "0.6",
+    "-i",
+    await video.path(),
+    "-vf",
+    "fps=10,scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=bayer:bayer_scale=4",
     `${OUT}/${name}.gif`,
   ]);
   rmSync(dir, { recursive: true, force: true });
@@ -146,7 +168,10 @@ const tapPin = async (page: typeof panel, pin: string) => {
 await record("panel-arming", async (page) => {
   await page.locator("#action-btn").click();
   await sleep(700);
-  await page.locator("#arm-confirm-yes").click({ timeout: 3000 }).catch(() => {});
+  await page
+    .locator("#arm-confirm-yes")
+    .click({ timeout: 3000 })
+    .catch(() => {});
   await sleep(12_500);
 });
 await record("panel-entry-delay", async (page) => {
@@ -212,6 +237,9 @@ await adminPage.goto(`${BASE}/admin/settings`);
 await adminPage.getByRole("heading", { name: "Notifications" }).waitFor();
 await adminPage.getByRole("heading", { name: "ntfy", exact: true }).scrollIntoViewIfNeeded();
 await sleep(500);
-await adminPage.getByRole("heading", { name: "ntfy", exact: true }).locator("xpath=../..").screenshot({ path: `${OUT}/admin-notifications.png` });
+await adminPage
+  .getByRole("heading", { name: "ntfy", exact: true })
+  .locator("xpath=../..")
+  .screenshot({ path: `${OUT}/admin-notifications.png` });
 
 await browser.close();

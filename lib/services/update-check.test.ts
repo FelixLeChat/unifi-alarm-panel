@@ -31,7 +31,10 @@ describe("checkForUpdate", () => {
     readFileSyncMock.mockImplementation(() => {
       throw fsError("ENOENT");
     });
-    fetchMock.mockResolvedValue({ ok: true, json: async () => [{ tag_name: "v1.0.0", published_at: "2026-01-01T00:00:00Z" }] });
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [{ tag_name: "v1.0.0", published_at: "2026-01-01T00:00:00Z" }],
+    });
     const { checkForUpdate, getUpdateStatus } = await import("./update-check");
     await checkForUpdate();
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -61,8 +64,13 @@ describe("checkForUpdate", () => {
   });
 
   it("flags updateAvailable when the latest release tag differs from the running version", async () => {
-    readFileSyncMock.mockImplementation((path: string) => (String(path).includes("github-token") ? "gh-token" : "v1.0.0"));
-    fetchMock.mockResolvedValue({ ok: true, json: async () => [{ tag_name: "v1.1.0", published_at: "2026-01-01T00:00:00Z" }] });
+    readFileSyncMock.mockImplementation((path: string) =>
+      String(path).includes("github-token") ? "gh-token" : "v1.0.0",
+    );
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [{ tag_name: "v1.1.0", published_at: "2026-01-01T00:00:00Z" }],
+    });
     const { checkForUpdate, getUpdateStatus } = await import("./update-check");
     await checkForUpdate();
     const status = getUpdateStatus();
@@ -79,7 +87,9 @@ describe("checkForUpdate", () => {
    * whatever the API happened to put first.
    */
   it("picks the release with the latest published_at, not whichever the API lists first", async () => {
-    readFileSyncMock.mockImplementation((path: string) => (String(path).includes("github-token") ? "gh-token" : "v1.0.0-rc.9"));
+    readFileSyncMock.mockImplementation((path: string) =>
+      String(path).includes("github-token") ? "gh-token" : "v1.0.0-rc.9",
+    );
     fetchMock.mockResolvedValue({
       ok: true,
       json: async () => [
@@ -117,8 +127,13 @@ describe("checkForUpdate", () => {
    * connectivity-watchdog.test.ts.
    */
   it("survives a fresh module import, simulating instrumentation.ts's separate bundle", async () => {
-    readFileSyncMock.mockImplementation((path: string) => (String(path).includes("github-token") ? "gh-token" : "v1.0.0"));
-    fetchMock.mockResolvedValue({ ok: true, json: async () => [{ tag_name: "v1.1.0", published_at: "2026-01-01T00:00:00Z" }] });
+    readFileSyncMock.mockImplementation((path: string) =>
+      String(path).includes("github-token") ? "gh-token" : "v1.0.0",
+    );
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [{ tag_name: "v1.1.0", published_at: "2026-01-01T00:00:00Z" }],
+    });
     const writer = await import("./update-check");
     await writer.checkForUpdate();
 

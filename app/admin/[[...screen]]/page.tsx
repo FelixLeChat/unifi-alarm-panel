@@ -94,7 +94,7 @@ export default function AdminPage() {
 
   const reload = useCallback(async () => {
     if (!token) return;
-    const result = await fetchAdminSnapshot(token);
+    const result = await fetchAdminSnapshot(token).catch(() => "error" as const);
     if (result === "unauthorized") {
       sessionStorage.removeItem(TOKEN_KEY);
       setToken(null);
@@ -102,24 +102,36 @@ export default function AdminPage() {
       setTokenError("Token rejected.");
       return;
     }
+    if (result === "error") {
+      // Keep what is on screen on a poll failure; before the first load, fall back to the login screen with a message rather than a blank page.
+      setLoggedIn((was) => {
+        if (!was) setTokenError("Could not reach the server. Try again.");
+        return was;
+      });
+      return;
+    }
     setSnapshot(result);
     setLoggedIn(true);
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    reload();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the initial load is the effect
+    void reload();
   }, [reload]);
 
   // Settings drive the first-run wizard, so they load as soon as the token is confirmed.
   useEffect(() => {
     if (!token || !loggedIn) return;
     let cancelled = false;
-    fetchSettings(token).then((s) => {
-      if (cancelled || !s) return;
-      setSettings(s);
-      setShowSetup(!s.consoleConfigured && sessionStorage.getItem(SETUP_DISMISSED_KEY) !== "true");
-    });
+    fetchSettings(token)
+      .then((s) => {
+        if (cancelled || !s) return;
+        setSettings(s);
+        setShowSetup(!s.consoleConfigured && sessionStorage.getItem(SETUP_DISMISSED_KEY) !== "true");
+      })
+      .catch(() => {
+        // Settings only gate the setup wizard; a failed load leaves it closed and the next login retries.
+      });
     return () => {
       cancelled = true;
     };
@@ -152,8 +164,8 @@ export default function AdminPage() {
         // Transient network hiccup — the next tick retries.
       }
     }
-    poll();
-    const id = setInterval(poll, 2000);
+    void poll();
+    const id = setInterval(() => void poll(), 2000);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -168,11 +180,15 @@ export default function AdminPage() {
     if (!token || !loggedIn) return;
     let cancelled = false;
     async function poll() {
-      const s = await fetchUpdateStatus(token!);
-      if (!cancelled && s) setUpdateStatus(s);
+      try {
+        const s = await fetchUpdateStatus(token!);
+        if (!cancelled && s) setUpdateStatus(s);
+      } catch {
+        // Transient network hiccup — the next tick retries.
+      }
     }
-    poll();
-    const id = setInterval(poll, 60_000);
+    void poll();
+    const id = setInterval(() => void poll(), 60_000);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -217,7 +233,7 @@ export default function AdminPage() {
   // waiting for the hourly job — see lib/services/update-check.ts. Returns
   // whether the request itself succeeded, so the button can surface a
   // network/auth failure instead of silently doing nothing (fetchUpdateStatus
-  // returns null on any non-2xx, which used to be swallowed here).
+  // returns null on any non-2xx).
   const handleCheckUpdateNow = useCallback(async () => {
     if (!token) return false;
     const s = await fetchUpdateStatus(token, { refresh: true });
@@ -239,9 +255,13 @@ export default function AdminPage() {
   useEffect(() => {
     if (!token || screen !== "tasks" || connectivity !== null) return;
     let cancelled = false;
-    fetchConnectivityStatus(token).then((s) => {
-      if (!cancelled) setConnectivity(s);
-    });
+    fetchConnectivityStatus(token)
+      .then((s) => {
+        if (!cancelled) setConnectivity(s);
+      })
+      .catch(() => {
+        // Stays null, which the Tasks screen shows as "not checked yet"; reopening the screen retries.
+      });
     return () => {
       cancelled = true;
     };
@@ -255,7 +275,11 @@ export default function AdminPage() {
     const s = await fetchConnectivityStatus(token, { refresh: true });
     if (s) {
       setConnectivity(s);
-      toast.success(s.sensorHeartbeatStale || s.cameraReachable === false ? "Check complete. Something needs attention." : "Check complete. All good.");
+      toast.success(
+        s.sensorHeartbeatStale || s.cameraReachable === false
+          ? "Check complete. Something needs attention."
+          : "Check complete. All good.",
+      );
     } else {
       toast.error("Check now failed. The request didn't go through.");
     }
@@ -267,9 +291,13 @@ export default function AdminPage() {
   useEffect(() => {
     if (!token || screen !== "overview" || auditWindow !== null) return;
     let cancelled = false;
-    fetchAuditWindow(token, HEATMAP_WINDOW_DAYS).then((rows) => {
-      if (!cancelled) setAuditWindow(rows);
-    });
+    fetchAuditWindow(token, HEATMAP_WINDOW_DAYS)
+      .then((rows) => {
+        if (!cancelled) setAuditWindow(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setAuditWindow([]);
+      });
     return () => {
       cancelled = true;
     };
@@ -299,7 +327,14 @@ export default function AdminPage() {
   }
 
   if (!token) {
-    return <LoginScreen tokenInput={tokenInput} onTokenInputChange={setTokenInput} onSubmit={handleTokenSubmit} error={tokenError} />;
+    return (
+      <LoginScreen
+        tokenInput={tokenInput}
+        onTokenInputChange={setTokenInput}
+        onSubmit={handleTokenSubmit}
+        error={tokenError}
+      />
+    );
   }
 
   // A stored token isn't trusted until reload() confirms it, so a rejected one
@@ -350,7 +385,13 @@ export default function AdminPage() {
       {screen === "pins" && <PinsScreen pins={snapshot.pins} token={token} onSaved={reload} />}
       {screen === "delays" && <DelaysScreen config={snapshot.config} token={token} onSaved={reload} />}
       {screen === "settings" && (
-        <SettingsScreen config={snapshot.config} token={token} onSaved={reload} settings={settings} onSettingsSaved={setSettings} />
+        <SettingsScreen
+          config={snapshot.config}
+          token={token}
+          onSaved={reload}
+          settings={settings}
+          onSettingsSaved={setSettings}
+        />
       )}
       {screen === "audit" && <AuditLogScreen token={token} />}
       {screen === "events" && <EventsScreen token={token} />}

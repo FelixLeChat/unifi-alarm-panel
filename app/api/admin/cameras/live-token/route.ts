@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { issueStreamToken } from "@/lib/auth/stream-token";
 import { verifyAdminToken } from "@/lib/auth/admin";
+import { isSafeStreamName } from "@/lib/services/go2rtc-client";
 
 /** Mints a short-lived token the admin UI passes to /api/admin/cameras/live — see lib/auth/stream-token.ts for why. */
 export async function GET(req: Request) {
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
   }
 
   const cameraId = new URL(req.url).searchParams.get("cameraId");
-  if (!cameraId) {
+  if (!cameraId || !isSafeStreamName(cameraId)) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 

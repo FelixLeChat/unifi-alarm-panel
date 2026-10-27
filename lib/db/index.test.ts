@@ -20,11 +20,9 @@ describe("migrate", () => {
   it("is idempotent — reopening an already-migrated database doesn't re-run migrations or lose data", () => {
     const dbPath = join(dir, "alarm.db");
     const db1 = createDb(dbPath);
-    db1.prepare("INSERT INTO pins (label, hash, updated_at) VALUES (?, ?, ?)").run(
-      "Existing",
-      "hash",
-      "2026-01-01T00:00:00.000Z",
-    );
+    db1
+      .prepare("INSERT INTO pins (label, hash, updated_at) VALUES (?, ?, ?)")
+      .run("Existing", "hash", "2026-01-01T00:00:00.000Z");
     db1.close();
 
     // A real restart re-runs createDb() against the same file. Re-applying
@@ -45,8 +43,14 @@ describe("migrate", () => {
     const db = new Database(dbPath);
 
     const broken: Migration[] = [
-      { id: 1, sql: "CREATE TABLE widgets (id INTEGER PRIMARY KEY, label TEXT NOT NULL); INSERT INTO widgets (label) VALUES ('existing');" },
-      { id: 2, sql: "ALTER TABLE widgets ADD COLUMN note TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'));" },
+      {
+        id: 1,
+        sql: "CREATE TABLE widgets (id INTEGER PRIMARY KEY, label TEXT NOT NULL); INSERT INTO widgets (label) VALUES ('existing');",
+      },
+      {
+        id: 2,
+        sql: "ALTER TABLE widgets ADD COLUMN note TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'));",
+      },
     ];
     expect(() => migrate(db, broken)).toThrow(/non-constant default/);
 
@@ -57,13 +61,14 @@ describe("migrate", () => {
 
     const fixed: Migration[] = [
       broken[0],
-      { id: 2, sql: "ALTER TABLE widgets ADD COLUMN note TEXT; UPDATE widgets SET note = 'backfilled' WHERE note IS NULL;" },
+      {
+        id: 2,
+        sql: "ALTER TABLE widgets ADD COLUMN note TEXT; UPDATE widgets SET note = 'backfilled' WHERE note IS NULL;",
+      },
     ];
     expect(() => migrate(db, fixed)).not.toThrow();
 
-    const appliedAfterFix = (db.prepare("SELECT id FROM schema_migrations").all() as { id: number }[]).map(
-      (r) => r.id,
-    );
+    const appliedAfterFix = (db.prepare("SELECT id FROM schema_migrations").all() as { id: number }[]).map((r) => r.id);
     expect(appliedAfterFix).toEqual([1, 2]);
     expect(db.prepare("SELECT note FROM widgets").get()).toEqual({ note: "backfilled" });
 

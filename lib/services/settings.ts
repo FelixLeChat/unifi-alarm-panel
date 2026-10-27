@@ -27,7 +27,10 @@ export { SETTINGS_GROUPS, type SettingsGroup };
  */
 
 const numberIn = (min: number, max: number) =>
-  text(32).refine((v) => Number.isFinite(Number(v)) && Number(v) >= min && Number(v) <= max, `must be a number between ${min} and ${max}`);
+  text(32).refine(
+    (v) => Number.isFinite(Number(v)) && Number(v) >= min && Number(v) <= max,
+    `must be a number between ${min} and ${max}`,
+  );
 const hour = text(2).refine((v) => /^\d{1,2}$/.test(v) && Number(v) <= 23, "must be an hour from 0 to 23");
 const timezone = text(64).refine((v) => {
   try {
@@ -77,7 +80,8 @@ function field(key: SettingKey): FieldDef {
 }
 
 function readRow(db: Database.Database, key: string): { value: string; secret: number } | undefined {
-  return db.prepare("SELECT value, secret FROM settings WHERE key = ?").get(key) as { value: string; secret: number } | undefined;
+  return db.prepare("SELECT value, secret FROM settings WHERE key = ?").get(key) as
+    { value: string; secret: number } | undefined;
 }
 
 /** The setting's value, decrypted if secret. Null when unset, or when a secret can't be decrypted (missing or changed SECRETS_KEY). */
@@ -159,7 +163,11 @@ export function saveSettings(
   }
 
   if (writes.some((w) => w.secret && w.value !== null) && secretsKeyStatus() !== "ok") {
-    return { ok: false, error: "SECRETS_KEY is missing or invalid, so credentials can't be stored. Generate one with `openssl rand -base64 32`, set it, and restart." };
+    return {
+      ok: false,
+      error:
+        "SECRETS_KEY is missing or invalid, so credentials can't be stored. Generate one with `openssl rand -base64 32`, set it, and restart.",
+    };
   }
 
   const upsert = db.prepare(
@@ -183,7 +191,10 @@ export function saveSettings(
  * imported; a secret that couldn't be encrypted yet (no SECRETS_KEY) leaves
  * it unmarked so the next boot, with the key, finishes the job.
  */
-export function seedSettingsFromEnv(db: Database.Database, env: Record<string, string | undefined> = process.env): void {
+export function seedSettingsFromEnv(
+  db: Database.Database,
+  env: Record<string, string | undefined> = process.env,
+): void {
   if (readRow(db, SEEDED_KEY)) return;
   const exists = db.prepare("SELECT 1 FROM settings WHERE key = ?");
   const insert = db.prepare("INSERT INTO settings (key, value, secret) VALUES (?, ?, ?)");

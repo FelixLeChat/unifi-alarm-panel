@@ -26,6 +26,10 @@ jobs:
 
       - run: pnpm lint
 
+      - run: pnpm format:check
+
+      - run: pnpm knip
+
       # The runner image ships shellcheck. Covers the systemd and Proxmox install scripts; style-level notes are not enforced.
       - run: shellcheck --severity=warning deploy/*.sh deploy/proxmox/*.sh
 

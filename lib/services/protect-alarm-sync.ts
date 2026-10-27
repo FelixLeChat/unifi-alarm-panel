@@ -65,7 +65,7 @@ export class ProtectAlarmSyncClient {
       // Fail fast instead: this is a LAN call that normally answers in ms.
       signal: init.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       ...(dispatcher ? { dispatcher } : {}),
-    } as RequestInit);
+    });
   }
 
   private async login(): Promise<Session> {
@@ -166,7 +166,10 @@ export function reduceArmState(profiles: AlarmProfile[]): ReducedState | null {
 
   for (const profile of profiles) {
     if (!KNOWN_STATES.has(profile.state)) {
-      logger.warn({ profileId: profile.id, state: profile.state }, "Alarm Manager profile reported an unrecognized state");
+      logger.warn(
+        { profileId: profile.id, state: profile.state },
+        "Alarm Manager profile reported an unrecognized state",
+      );
       continue;
     }
     sawKnown = true;
@@ -199,7 +202,12 @@ declare global {
 // A new session when the credentials changed in the admin UI; the same one otherwise.
 export function getClient(creds: ProtectAlarmCredentials): ProtectAlarmSyncClient {
   const cached = globalThis.__uapProtectAlarmSyncClient;
-  if (!cached || cached.creds.host !== creds.host || cached.creds.username !== creds.username || cached.creds.password !== creds.password) {
+  if (
+    !cached ||
+    cached.creds.host !== creds.host ||
+    cached.creds.username !== creds.username ||
+    cached.creds.password !== creds.password
+  ) {
     globalThis.__uapProtectAlarmSyncClient = { creds, client: new ProtectAlarmSyncClient(creds) };
   }
   return globalThis.__uapProtectAlarmSyncClient!.client;

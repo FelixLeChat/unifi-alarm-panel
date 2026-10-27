@@ -15,11 +15,13 @@ async function offscreen(page: Page): Promise<string[]> {
     for (const el of document.querySelectorAll<HTMLElement>("main *, header *, button, a, input")) {
       // A box that scrolls on its own (a table, the heatmap) may be wider than the screen.
       let scrolls = false;
-      for (let p = el.parentElement; p; p = p.parentElement) if (["auto", "scroll"].includes(getComputedStyle(p).overflowX)) scrolls = true;
+      for (let p = el.parentElement; p; p = p.parentElement)
+        if (["auto", "scroll"].includes(getComputedStyle(p).overflowX)) scrolls = true;
       if (scrolls) continue;
       if (el.closest("[aria-hidden=true], .sr-only")) continue;
       const r = el.getBoundingClientRect();
-      if (r.width && r.right > window.innerWidth + 1) out.push(`${el.tagName} "${(el.textContent ?? "").trim().slice(0, 30)}" ends at ${Math.round(r.right)}`);
+      if (r.width && r.right > window.innerWidth + 1)
+        out.push(`${el.tagName} "${(el.textContent ?? "").trim().slice(0, 30)}" ends at ${Math.round(r.right)}`);
     }
     return out;
   });

@@ -22,7 +22,9 @@ describe("admin connectivity route", () => {
   });
 
   it("returns the current connectivity status without refresh", async () => {
-    const res = await GET(new Request("http://localhost/api/admin/connectivity", { headers: { "x-admin-token": ADMIN_TOKEN } }));
+    const res = await GET(
+      new Request("http://localhost/api/admin/connectivity", { headers: { "x-admin-token": ADMIN_TOKEN } }),
+    );
     expect(res.status).toBe(200);
     const body = (await res.json()) as { checkedAt: string | null };
     expect(body).toHaveProperty("sensorHeartbeatAgeSec");
@@ -34,7 +36,11 @@ describe("admin connectivity route", () => {
   // in connectivity-watchdog.test.ts, this just proves the route wires it
   // through and returns a freshly-checked status.
   it("GET with ?refresh=true forces a check and advances checkedAt", async () => {
-    const res = await GET(new Request("http://localhost/api/admin/connectivity?refresh=true", { headers: { "x-admin-token": ADMIN_TOKEN } }));
+    const res = await GET(
+      new Request("http://localhost/api/admin/connectivity?refresh=true", {
+        headers: { "x-admin-token": ADMIN_TOKEN },
+      }),
+    );
     expect(res.status).toBe(200);
     const body = (await res.json()) as { checkedAt: string | null };
     expect(body.checkedAt).not.toBeNull();

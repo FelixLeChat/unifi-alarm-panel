@@ -8,7 +8,7 @@ import { ALERT_KINDS, parseAlertKinds, RoutedNotifier, type AlertKind } from "./
 import type { Channel, ChannelDef, Notifier } from "./types";
 
 export type { AlertPayload, Channel, ChannelContext, ChannelDef, ChannelId, Notifier } from "./types";
-export { ALERT_KINDS, type AlertKind } from "./routing";
+export { type AlertKind } from "./routing";
 export { NtfyChannel } from "./ntfy";
 export { SignalChannel } from "./signal";
 export { SlackChannel } from "./slack";
@@ -52,7 +52,11 @@ export function buildNotifier(): Notifier {
   const notifiers = listChannels()
     .filter((c) => c.enabled)
     .map((c) => (c.kinds.size === ALERT_KINDS.length ? c.channel : new RoutedNotifier(c.channel, c.kinds)));
-  return notifiers.length === 0 ? new NullNotifier() : notifiers.length === 1 ? notifiers[0] : new CompositeNotifier(notifiers);
+  return notifiers.length === 0
+    ? new NullNotifier()
+    : notifiers.length === 1
+      ? notifiers[0]
+      : new CompositeNotifier(notifiers);
 }
 
 export interface ListedChannel {

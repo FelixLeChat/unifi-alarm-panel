@@ -7,6 +7,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   process.env.DATABASE_PATH = ":memory:";
   closeDb();
+  delete globalThis.__uapRateLimitBuckets;
 });
 
 afterEach(() => {
@@ -110,5 +111,13 @@ describe("rate-limit", () => {
     setConfigValue(getDb(), "rateLimitWindowSec", "60");
     recordFailure(key);
     expect(isLockedOut(key)).toBe(false); // one failure, not five
+  });
+
+  it("sweeps expired buckets once many distinct keys pile up, so a rotating X-Forwarded-For can't grow the map forever", () => {
+    for (let i = 0; i < 1_000; i++) recordFailure(`spoof-${i}`);
+    expect(globalThis.__uapRateLimitBuckets!.size).toBe(1_000);
+    vi.advanceTimersByTime(6 * 60 * 1000); // past the 5 minute window
+    recordFailure("one-more");
+    expect(globalThis.__uapRateLimitBuckets!.size).toBe(1);
   });
 });

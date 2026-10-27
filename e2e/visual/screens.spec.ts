@@ -8,7 +8,10 @@ import { ADMIN_TOKEN, DURESS_PIN_LABEL, STANDARD_PIN } from "../constants";
 const HOOK = `/api/hooks/sensor?token=e2e-webhook-secret`;
 const DOOR = "visual-front-door";
 // Desktop and phone. The kiosk keeps its own tablet sizes below.
-const WIDTHS = [[1440, 900], [390, 844]] as const;
+const WIDTHS = [
+  [1440, 900],
+  [390, 844],
+] as const;
 
 // Not "serial": after a diff the rest of the walk must still run, so one pass reports every changed screen.
 // Tests run in file order on one worker and don't depend on each other.
@@ -22,7 +25,11 @@ async function signIn(page: Page): Promise<void> {
 
 async function open(page: Page, label: string): Promise<void> {
   // Phone width: the sidebar is a drawer, so open it before picking a screen.
-  if (!(await page.getByRole("navigation", { name: "Admin screens" }).getByText(label, { exact: true }).isVisible())) await page.getByRole("button", { name: /sidebar/i }).first().click();
+  if (!(await page.getByRole("navigation", { name: "Admin screens" }).getByText(label, { exact: true }).isVisible()))
+    await page
+      .getByRole("button", { name: /sidebar/i })
+      .first()
+      .click();
   await page.getByText(label, { exact: true }).click();
   await expect(page.getByRole("heading", { name: label })).toBeVisible();
 }
@@ -65,90 +72,90 @@ async function shot(page: Page, name: string, extra: Locator[] = []): Promise<vo
 }
 
 for (const [width, height] of WIDTHS) {
-test.describe(`admin ${width}`, () => {
-  test.use({ viewport: { width, height } });
-  const name = (base: string) => `${base}-${width}`;
+  test.describe(`admin ${width}`, () => {
+    test.use({ viewport: { width, height } });
+    const name = (base: string) => `${base}-${width}`;
 
-  // A failed shot restarts the worker and re-runs this hook: seed once, or later screens would
-  // show a second trip and drift for reasons that have nothing to do with the UI.
-  test.beforeAll(async ({ request }) => {
-    const audit = await request.get("/api/admin/audit", { headers: { "x-admin-token": ADMIN_TOKEN } });
-    if (JSON.stringify(await audit.json()).includes(DOOR)) return;
-    await request.post(HOOK, { data: { sensorId: DOOR, eventType: "open" } });
-  });
+    // A failed shot restarts the worker and re-runs this hook: seed once, or later screens would
+    // show a second trip and drift for reasons that have nothing to do with the UI.
+    test.beforeAll(async ({ request }) => {
+      const audit = await request.get("/api/admin/audit", { headers: { "x-admin-token": ADMIN_TOKEN } });
+      if (JSON.stringify(await audit.json()).includes(DOOR)) return;
+      await request.post(HOOK, { data: { sensorId: DOOR, eventType: "open" } });
+    });
 
-  test("login", async ({ page }) => {
-    await page.goto("/admin");
-    await expect(page.locator("#admin-token")).toBeVisible();
-    await shot(page, name("admin-login"));
-  });
+    test("login", async ({ page }) => {
+      await page.goto("/admin");
+      await expect(page.locator("#admin-token")).toBeVisible();
+      await shot(page, name("admin-login"));
+    });
 
-  test("login rejected", async ({ page }) => {
-    await page.goto("/admin");
-    await page.locator("#admin-token").fill("not-the-token");
-    await page.getByRole("button", { name: "Enter" }).click();
-    await expect(page.getByText("Token rejected.")).toBeVisible();
-    await shot(page, name("admin-login-rejected"));
-  });
+    test("login rejected", async ({ page }) => {
+      await page.goto("/admin");
+      await page.locator("#admin-token").fill("not-the-token");
+      await page.getByRole("button", { name: "Enter" }).click();
+      await expect(page.getByText("Token rejected.")).toBeVisible();
+      await shot(page, name("admin-login-rejected"));
+    });
 
-  test("screens", async ({ page }) => {
-    await signIn(page);
-    await shot(page, name("admin-overview"));
-    for (const [label, slug] of [
-      ["Sensors", "sensors"],
-      ["PINs", "pins"],
-      ["Delays", "delays"],
-      ["Audit log", "audit"],
-      ["Events", "events"],
-      ["Tasks", "tasks"],
-      ["Settings", "settings"],
-    ]) {
-      await open(page, label);
-      await shot(page, name(`admin-${slug}`));
-    }
-  });
+    test("screens", async ({ page }) => {
+      await signIn(page);
+      await shot(page, name("admin-overview"));
+      for (const [label, slug] of [
+        ["Sensors", "sensors"],
+        ["PINs", "pins"],
+        ["Delays", "delays"],
+        ["Audit log", "audit"],
+        ["Events", "events"],
+        ["Tasks", "tasks"],
+        ["Settings", "settings"],
+      ]) {
+        await open(page, label);
+        await shot(page, name(`admin-${slug}`));
+      }
+    });
 
-  test("sensor detail and delete dialog", async ({ page }) => {
-    await signIn(page);
-    await open(page, "Sensors");
-    await page.getByRole("button").filter({ hasText: DOOR }).click();
-    await shot(page, name("admin-sensor-detail"));
-    await page.getByRole("button", { name: "Delete sensor" }).click();
-    await expect(page.getByRole("heading", { name: `Delete "${DOOR}"?` })).toBeVisible();
-    await shot(page, name("admin-dialog-delete-sensor"));
-  });
+    test("sensor detail and delete dialog", async ({ page }) => {
+      await signIn(page);
+      await open(page, "Sensors");
+      await page.getByRole("button").filter({ hasText: DOOR }).click();
+      await shot(page, name("admin-sensor-detail"));
+      await page.getByRole("button", { name: "Delete sensor" }).click();
+      await expect(page.getByRole("heading", { name: `Delete "${DOOR}"?` })).toBeVisible();
+      await shot(page, name("admin-dialog-delete-sensor"));
+    });
 
-  test("pin detail, revoke dialog and toast", async ({ page }) => {
-    await signIn(page);
-    await open(page, "PINs");
-    await page.getByRole("row").filter({ hasText: DURESS_PIN_LABEL }).click();
-    await expect(page.getByRole("heading", { name: "Edit PIN" })).toBeVisible();
-    await shot(page, name("admin-dialog-pin-detail"));
-    await page.keyboard.press("Escape");
-    await page.getByRole("row").filter({ hasText: DURESS_PIN_LABEL }).getByRole("button", { name: "Revoke" }).click();
-    await expect(page.getByRole("heading", { name: `Revoke "${DURESS_PIN_LABEL}"?` })).toBeVisible();
-    await shot(page, name("admin-dialog-revoke-pin"));
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await page.locator("#new-pin-label").fill(`Visual PIN ${width}`);
-    await page.locator("#new-pin-code").fill(width === 1440 ? "9753" : "9754"); // one DB for both widths: a PIN code must be unique
-    await page.getByRole("button", { name: "Add PIN" }).click();
-    await expect(page.getByText("PIN added. Active immediately.")).toBeVisible();
-    // The Add PIN button fades to its "Added" state; which frame the shot catches changes between runs.
-    await shot(page, name("admin-pins-toast"), [page.getByRole("button", { name: "Added" })]);
-  });
+    test("pin detail, revoke dialog and toast", async ({ page }) => {
+      await signIn(page);
+      await open(page, "PINs");
+      await page.getByRole("row").filter({ hasText: DURESS_PIN_LABEL }).click();
+      await expect(page.getByRole("heading", { name: "Edit PIN" })).toBeVisible();
+      await shot(page, name("admin-dialog-pin-detail"));
+      await page.keyboard.press("Escape");
+      await page.getByRole("row").filter({ hasText: DURESS_PIN_LABEL }).getByRole("button", { name: "Revoke" }).click();
+      await expect(page.getByRole("heading", { name: `Revoke "${DURESS_PIN_LABEL}"?` })).toBeVisible();
+      await shot(page, name("admin-dialog-revoke-pin"));
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await page.locator("#new-pin-label").fill(`Visual PIN ${width}`);
+      await page.locator("#new-pin-code").fill(width === 1440 ? "9753" : "9754"); // one DB for both widths: a PIN code must be unique
+      await page.getByRole("button", { name: "Add PIN" }).click();
+      await expect(page.getByText("PIN added. Active immediately.")).toBeVisible();
+      // The Add PIN button fades to its "Added" state; which frame the shot catches changes between runs.
+      await shot(page, name("admin-pins-toast"), [page.getByRole("button", { name: "Added" })]);
+    });
 
-  test("arm dialogs", async ({ page, request }) => {
-    // Disarm dialog with the PIN keypad: arm first, then open "Disarm".
-    await signIn(page);
-    await page.getByRole("button", { name: "Arm system" }).click();
-    await expect(page.getByRole("button", { name: "Disarm" })).toBeVisible();
-    await page.getByRole("button", { name: "Disarm" }).click();
-    await expect(page.getByRole("alertdialog")).toBeVisible();
-    await shot(page, name("admin-dialog-disarm-pin"));
-    await page.keyboard.press("Escape");
-    await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
+    test("arm dialogs", async ({ page, request }) => {
+      // Disarm dialog with the PIN keypad: arm first, then open "Disarm".
+      await signIn(page);
+      await page.getByRole("button", { name: "Arm system" }).click();
+      await expect(page.getByRole("button", { name: "Disarm" })).toBeVisible();
+      await page.getByRole("button", { name: "Disarm" }).click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      await shot(page, name("admin-dialog-disarm-pin"));
+      await page.keyboard.press("Escape");
+      await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
+    });
   });
-});
 }
 
 test.describe("panel", () => {
@@ -172,8 +179,14 @@ test.describe("panel", () => {
     const headers = { "x-admin-token": ADMIN_TOKEN };
     const doorId = "visual-panel-door";
     try {
-      await request.put("/api/admin/config", { headers, data: { config: { sensorOpenEventTypes: "visual-open", sensorClosedEventTypes: "visual-close" } } });
-      await request.put("/api/admin/config", { headers, data: { sensors: [{ unifiId: doorId, mode: "instant", sensorType: "door" }] } });
+      await request.put("/api/admin/config", {
+        headers,
+        data: { config: { sensorOpenEventTypes: "visual-open", sensorClosedEventTypes: "visual-close" } },
+      });
+      await request.put("/api/admin/config", {
+        headers,
+        data: { sensors: [{ unifiId: doorId, mode: "instant", sensorType: "door" }] },
+      });
       await request.post(HOOK, { data: { sensorId: doorId, eventType: "visual-open" } });
 
       await page.goto("/panel");
@@ -190,7 +203,10 @@ test.describe("panel", () => {
       await expect(page.locator("#test-mode-badge")).toBeVisible({ timeout: 6_000 });
       await shot(page, "panel-test-mode", volatile(page));
     } finally {
-      await request.put("/api/admin/config", { headers, data: { config: { panelTestMode: "false", sensorOpenEventTypes: "", sensorClosedEventTypes: "" } } });
+      await request.put("/api/admin/config", {
+        headers,
+        data: { config: { panelTestMode: "false", sensorOpenEventTypes: "", sensorClosedEventTypes: "" } },
+      });
       await request.delete(`/api/admin/config?unifiId=${doorId}`, { headers });
     }
   });

@@ -32,7 +32,9 @@ afterEach(() => {
 
 describe("saveSettings", () => {
   it("stores plain values and reads them back", () => {
-    expect(saveSettings("console", { protectApiBaseUrl: "https://192.168.1.1", protectHost: "192.168.1.1" }, db)).toEqual({
+    expect(
+      saveSettings("console", { protectApiBaseUrl: "https://192.168.1.1", protectHost: "192.168.1.1" }, db),
+    ).toEqual({
       ok: true,
       changed: ["protectApiBaseUrl", "protectHost"],
     });
@@ -41,7 +43,10 @@ describe("saveSettings", () => {
 
   it("encrypts secrets at rest and decrypts them for server code", () => {
     saveSettings("notifications", { slackBotToken: "xoxb-real-token" }, db);
-    const raw = db.prepare("SELECT value, secret FROM settings WHERE key = 'slackBotToken'").get() as { value: string; secret: number };
+    const raw = db.prepare("SELECT value, secret FROM settings WHERE key = 'slackBotToken'").get() as {
+      value: string;
+      secret: number;
+    };
     expect(raw.secret).toBe(1);
     expect(raw.value).not.toContain("xoxb-real-token");
     expect(getSetting("slackBotToken", db)).toBe("xoxb-real-token");
@@ -120,7 +125,11 @@ describe("seedSettingsFromEnv", () => {
   it("imports env values once, encrypting secrets", () => {
     const fresh = createDb(":memory:");
     fresh.prepare("DELETE FROM settings").run();
-    seedSettingsFromEnv(fresh, { PROTECT_API_BASE_URL: "https://console.local", PROTECT_API_KEY: "env-key", ALERT_TIMEZONE: "UTC" });
+    seedSettingsFromEnv(fresh, {
+      PROTECT_API_BASE_URL: "https://console.local",
+      PROTECT_API_KEY: "env-key",
+      ALERT_TIMEZONE: "UTC",
+    });
     expect(getSetting("protectApiBaseUrl", fresh)).toBe("https://console.local");
     expect(getSetting("protectApiKey", fresh)).toBe("env-key");
 

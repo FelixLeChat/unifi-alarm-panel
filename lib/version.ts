@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { logger } from "@/lib/logger";
 
 let cached: string | undefined;
 
@@ -9,7 +10,10 @@ export function getAppVersion(): string {
   if (cached === undefined) {
     try {
       cached = readFileSync(join(process.cwd(), "VERSION"), "utf8").trim();
-    } catch {
+    } catch (err) {
+      // No file is the dev case. Anything else (permissions, a broken deploy) must not pass as a dev build silently.
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT")
+        logger.warn({ err }, "could not read VERSION, reporting dev");
       cached = "dev";
     }
   }

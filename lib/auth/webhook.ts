@@ -1,4 +1,4 @@
-import { safeEqual } from "./safe-equal";
+import { isUsableSecret, safeEqual } from "./safe-equal";
 import { clientKey } from "./client-key";
 import { isLockedOut, recordFailure, recordSuccess } from "@/lib/services/rate-limit";
 import { logger } from "@/lib/logger";
@@ -13,8 +13,10 @@ import { logger } from "@/lib/logger";
  */
 export function verifyWebhookSecret(req: Request, url: URL): boolean {
   const expected = process.env.WEBHOOK_SHARED_SECRET;
-  if (!expected) {
-    logger.warn("sensor webhook rejected: WEBHOOK_SHARED_SECRET is not configured on this server");
+  if (!isUsableSecret(expected)) {
+    logger.warn(
+      "sensor webhook rejected: WEBHOOK_SHARED_SECRET is not configured on this server, or is the placeholder or shorter than 12 characters",
+    );
     return false;
   }
 

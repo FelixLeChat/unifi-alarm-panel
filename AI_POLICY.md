@@ -1,6 +1,6 @@
 # AI policy
 
-Use AI tools if they help you. This policy is about what you post, not which tools you use to write it.
+This project was largely written with Claude Code under one maintainer's direction and review (see "How it was built" in the [README](README.md)). The same standard applies to contributions: use AI tools if they help you. This policy is about what you post, not which tools you use to write it.
 
 - **A person reads it and sends it.** Don't wire a bot or an agent up to open issues, comment or submit pull requests for you.
 - **Write issues and discussion posts yourself.** Fill in the template in your own words and answer maintainers yourself.

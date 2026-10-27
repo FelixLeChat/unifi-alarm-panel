@@ -1,4 +1,4 @@
-import type { SVGProps } from "react"
+import type { SVGProps } from "react";
 
 /**
  * Each module in this folder wraps one Material Symbols glyph (Rounded, weight
@@ -13,12 +13,10 @@ import type { SVGProps } from "react"
  * icon is the only thing carrying the meaning, such as an icon-only button.
  */
 export type IconProps = Omit<SVGProps<SVGSVGElement>, "ref"> & {
-  size?: number
-  label?: string
-}
+  size?: number;
+  label?: string;
+};
 
 export function iconProps({ size = 20, label, ...rest }: IconProps) {
-  return label
-    ? { size, role: "img", "aria-label": label, ...rest }
-    : { size, "aria-hidden": true, ...rest }
+  return label ? { size, role: "img", "aria-label": label, ...rest } : { size, "aria-hidden": true, ...rest };
 }

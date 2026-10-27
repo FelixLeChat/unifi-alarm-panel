@@ -25,7 +25,10 @@ export interface ConnectivityStatus {
 }
 
 /** What the watchdog itself measures; the device/stream fields are merged in by the getter, read live rather than stored in this snapshot. */
-type WatchdogStatus = Omit<ConnectivityStatus, "devices" | "deviceHealthCheckedAt" | "streamStatus" | "streamLastError" | "lastEventSource"> & {
+type WatchdogStatus = Omit<
+  ConnectivityStatus,
+  "devices" | "deviceHealthCheckedAt" | "streamStatus" | "streamLastError" | "lastEventSource"
+> & {
   /** Whether the current silence has already been notified — kept apart from sensorHeartbeatStale because a silence with the stream connected is logged but not notified, and must still alert if the stream later drops. */
   silenceNotified: boolean;
 };
@@ -94,13 +97,10 @@ export async function checkConnectivity(): Promise<void> {
   if (shouldNotify && !previousSilenceNotified) {
     const minutes = Math.round(sensorHeartbeatAgeSec / 60);
     // Both the webhook AND the realtime stream feed the same heartbeat (see
-    // sensor-ingest.ts), so this fires only when neither has seen anything —
-    // but "webhook feed looks dead" used to be the message either way, which
-    // read as a false alarm on a quiet office whenever the stream was in fact
-    // the one that was down. Naming the stream's own state here means the
-    // next time this fires, whether it's a real dead webhook (stream still
-    // covering) or a genuinely blind stretch (stream also down/disabled) is
-    // answered by the alert itself instead of another round of guessing.
+    // sensor-ingest.ts), so this fires only when neither has seen anything.
+    // The message names the stream's own state, so the alert itself says
+    // whether this is a dead webhook with the stream still covering, or a
+    // genuinely blind stretch with the stream also down or disabled.
     const streamNote =
       streamStatus === "disabled"
         ? "stream fallback is disabled (no SuperAdmin credential configured)"
@@ -140,4 +140,8 @@ export async function checkConnectivityNow(): Promise<void> {
   await Promise.all([checkConnectivity(), checkDeviceHealth()]);
 }
 
-export const connectivityWatchdogJob = { name: "connectivity-watchdog", intervalMs: 5 * 60 * 1000, run: checkConnectivity };
+export const connectivityWatchdogJob = {
+  name: "connectivity-watchdog",
+  intervalMs: 5 * 60 * 1000,
+  run: checkConnectivity,
+};

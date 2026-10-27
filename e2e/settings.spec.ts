@@ -5,7 +5,10 @@ import { ADMIN_TOKEN } from "./constants";
 const SEEDED_CONSOLE = { protectApiBaseUrl: "http://127.0.0.1:9", protectApiKey: "e2e-api-key" };
 
 async function putSettings(request: APIRequestContext, group: string, values: Record<string, string | null>) {
-  const res = await request.put("/api/admin/settings", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { group, values } });
+  const res = await request.put("/api/admin/settings", {
+    headers: { "x-admin-token": ADMIN_TOKEN },
+    data: { group, values },
+  });
   expect(res.status(), await res.text()).toBe(200);
 }
 

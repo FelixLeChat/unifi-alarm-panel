@@ -100,9 +100,7 @@ export function getSensor(db: Database.Database, unifiId: string): SensorRecord 
 
 export function listSensors(db: Database.Database): SensorRecord[] {
   const rows = db
-    .prepare(
-      `SELECT ${SENSOR_COLUMNS} FROM sensors ${tripStatsJoin(false)} ORDER BY sensors.id`,
-    )
+    .prepare(`SELECT ${SENSOR_COLUMNS} FROM sensors ${tripStatsJoin(false)} ORDER BY sensors.id`)
     .all() as SensorRow[];
   return rows.map(fromRow);
 }
@@ -193,9 +191,23 @@ function isCameraTriggerEvent(db: Database.Database, eventType: string | undefin
 function resolveOpenState(db: Database.Database, eventType: string | undefined): "open" | "closed" | null {
   if (eventType === undefined) return null;
   const openTypes = getConfigValue(db, "sensorOpenEventTypes");
-  if (openTypes && openTypes.split(",").map((s) => s.trim()).includes(eventType)) return "open";
+  if (
+    openTypes &&
+    openTypes
+      .split(",")
+      .map((s) => s.trim())
+      .includes(eventType)
+  )
+    return "open";
   const closedTypes = getConfigValue(db, "sensorClosedEventTypes");
-  if (closedTypes && closedTypes.split(",").map((s) => s.trim()).includes(eventType)) return "closed";
+  if (
+    closedTypes &&
+    closedTypes
+      .split(",")
+      .map((s) => s.trim())
+      .includes(eventType)
+  )
+    return "closed";
   return null;
 }
 
@@ -205,10 +217,11 @@ function resolveOpenState(db: Database.Database, eventType: string | undefined):
  * never guess. Call after the sensor row is known to exist (e.g. after
  * resolveSensorMode).
  */
-export function updateSensorState(db: Database.Database, unifiId: string, eventType?: string): void {
+export function updateSensorState(db: Database.Database, unifiId: string, eventType?: string): SensorState | null {
   const state = resolveOpenState(db, eventType);
-  if (state === null) return;
+  if (state === null) return null;
   setSensorState(db, unifiId, state);
+  return state;
 }
 
 /**
@@ -268,7 +281,13 @@ function registerIfUnknown(
   name?: string,
 ): SensorMode {
   const existing = getSensor(db, unifiId);
-  if (existing) return existing.mode;
+  if (existing) {
+    // The webhook registers a sensor under its raw id; the stream is the first source that knows the device's name.
+    if (name && existing.name === unifiId && name !== unifiId) {
+      db.prepare("UPDATE sensors SET name = ? WHERE unifi_id = ?").run(name, unifiId);
+    }
+    return existing.mode;
+  }
 
   const defaultMode = (getConfigValue(db, "defaultSensorMode") as SensorMode | null) ?? "delayed";
   db.prepare("INSERT INTO sensors (unifi_id, name, mode, camera_id) VALUES (?, ?, ?, ?)").run(

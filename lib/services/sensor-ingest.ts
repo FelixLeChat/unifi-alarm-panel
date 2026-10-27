@@ -64,12 +64,7 @@ export function isCrossSourceDuplicate(unifiId: string, source: TripSource, now 
  * delivered the same physical event a moment ago. Returns whether the
  * engine saw it.
  */
-export function ingestSensorTrip(
-  engine: AlarmEngine,
-  unifiId: string,
-  mode: SensorMode,
-  source: TripSource,
-): boolean {
+export function ingestSensorTrip(engine: AlarmEngine, unifiId: string, mode: SensorMode, source: TripSource): boolean {
   const now = Date.now();
   // Stamped even for a duplicate: the feed is demonstrably alive either way,
   // and the heartbeat's question is "is anything arriving", not "was this
@@ -81,7 +76,8 @@ export function ingestSensorTrip(
     return false;
   }
 
-  lastTrips().set(unifiId, { at: now, source });
+  // Stamped after the engine took it: if handleSensorTrip throws, the other source's copy must still count.
   engine.handleSensorTrip(unifiId, mode);
+  lastTrips().set(unifiId, { at: now, source });
   return true;
 }

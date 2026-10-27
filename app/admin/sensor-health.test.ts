@@ -54,11 +54,22 @@ describe("sensorHealth", () => {
   // sensor is red however recently it tripped, and it beats even a stale
   // feed, because that one IS a statement about this device.
   it("puts what UniFi says about the device ahead of trip freshness", () => {
-    const offline = sensor({ device: { online: false, lastSeenAt: null, batteryPercent: 44, batteryLow: false, tampered: false, signalDbm: -70 } });
+    const offline = sensor({
+      device: {
+        online: false,
+        lastSeenAt: null,
+        batteryPercent: 44,
+        batteryLow: false,
+        tampered: false,
+        signalDbm: -70,
+      },
+    });
     expect(sensorHealth(offline, false).level).toBe("red");
     expect(sensorHealth(offline, true).level).toBe("red");
 
-    const lowBattery = sensor({ device: { online: true, lastSeenAt: null, batteryPercent: 4, batteryLow: true, tampered: false, signalDbm: -70 } });
+    const lowBattery = sensor({
+      device: { online: true, lastSeenAt: null, batteryPercent: 4, batteryLow: true, tampered: false, signalDbm: -70 },
+    });
     expect(sensorHealth(lowBattery, false).level).toBe("yellow");
     expect(sensorHealth(lowBattery, false).reason).toContain("4%");
   });
@@ -72,7 +83,14 @@ describe("sensorHealth", () => {
       tripCount7d: 0,
       tripCount24h: 0,
       lastTrippedAt: null,
-      device: { online: true, lastSeenAt: new Date().toISOString(), batteryPercent: null, batteryLow: false, tampered: false, signalDbm: null },
+      device: {
+        online: true,
+        lastSeenAt: new Date().toISOString(),
+        batteryPercent: null,
+        batteryLow: false,
+        tampered: false,
+        signalDbm: null,
+      },
     });
     const verdict = sensorHealth(quietCamera, false);
     expect(verdict.level).toBe("green");

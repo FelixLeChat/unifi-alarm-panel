@@ -41,7 +41,12 @@ declare global {
 
 function getState(): WebhookIntakeState {
   if (!globalThis.__uapWebhookIntake) {
-    globalThis.__uapWebhookIntake = { recentPayloads: [], lastWebhookAt: null, bootAt: Date.now(), lastEventSource: null };
+    globalThis.__uapWebhookIntake = {
+      recentPayloads: [],
+      lastWebhookAt: null,
+      bootAt: Date.now(),
+      lastEventSource: null,
+    };
   }
   return globalThis.__uapWebhookIntake;
 }
@@ -100,16 +105,21 @@ function getByPath(obj: unknown, path: string): unknown {
   }, obj);
 }
 
+const MAX_SENSOR_ID_LENGTH = 128;
+
 export function parseSensorWebhook(db: Database.Database, body: unknown): ParsedSensorEvent | null {
   const sensorIdPath = getConfigValue(db, "webhookSensorIdPath") ?? DEFAULT_SENSOR_ID_PATH;
   const eventTypePath = getConfigValue(db, "webhookEventTypePath") ?? DEFAULT_EVENT_TYPE_PATH;
 
   const sensorIdRaw = getByPath(body, sensorIdPath);
-  if (sensorIdRaw === undefined || sensorIdRaw === null || sensorIdRaw === "") return null;
+  // Only a string or a number can name a sensor: an object or array would collapse to "[object Object]" or "a,b" and register as a sensor row. The length cap matches the go2rtc stream-name shape (isSafeStreamName).
+  if (typeof sensorIdRaw !== "string" && typeof sensorIdRaw !== "number") return null;
+  const sensorId = String(sensorIdRaw).trim();
+  if (sensorId === "" || sensorId.length > MAX_SENSOR_ID_LENGTH) return null;
 
   const eventTypeRaw = getByPath(body, eventTypePath);
   return {
-    sensorId: String(sensorIdRaw),
+    sensorId,
     eventType: eventTypeRaw !== undefined && eventTypeRaw !== null ? String(eventTypeRaw) : undefined,
   };
 }

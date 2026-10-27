@@ -83,11 +83,23 @@ export function isLockedOut(key: string): boolean {
   return true;
 }
 
+// Keys include the caller-controlled X-Forwarded-For (admin and webhook namespaces), so a caller rotating it can create a bucket per request. Past this many, expired buckets are swept before a new one is added.
+const SWEEP_ABOVE = 1_000;
+
+function sweepExpired(buckets: Map<string, Bucket>, now: number): void {
+  const windowMs = getWindowMs();
+  for (const [k, b] of buckets) {
+    const expired = b.lockedUntil ? now >= b.lockedUntil : now - b.firstFailAt > windowMs;
+    if (expired) buckets.delete(k);
+  }
+}
+
 export function recordFailure(key: string): void {
   const buckets = getBuckets();
   const now = Date.now();
   const bucket = buckets.get(key);
   if (!bucket || now - bucket.firstFailAt > getWindowMs()) {
+    if (!bucket && buckets.size >= SWEEP_ABOVE) sweepExpired(buckets, now);
     buckets.set(key, { failCount: 1, firstFailAt: now, lockedUntil: null });
     return;
   }

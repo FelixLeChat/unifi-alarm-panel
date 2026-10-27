@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProtectClient, TypedEvent } from "unifi-protect";
 import { createDb } from "@/lib/db";
@@ -143,7 +143,14 @@ describe("consumeEventStream", () => {
   // second source down, silently, which is the failure mode this source
   // exists to remove.
   it("keeps consuming after a handler throws", async () => {
-    const poison = { kind: "devicePatched", modelKey: "sensor", id: SENSOR_ID, get patch(): never { throw new Error("boom"); } } as unknown as TypedEvent;
+    const poison = {
+      kind: "devicePatched",
+      modelKey: "sensor",
+      id: SENSOR_ID,
+      get patch(): never {
+        throw new Error("boom");
+      },
+    } as unknown as TypedEvent;
     await consumeEventStream(fakeClient([poison, patched(SENSOR_ID, { isOpened: true })]), { db, engine });
 
     expect(handleSensorTrip).toHaveBeenCalledWith(SENSOR_MAC, "delayed");

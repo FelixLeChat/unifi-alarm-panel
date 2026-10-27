@@ -119,10 +119,7 @@ export function toDeviceHealth(raw: RawDevice, kind: "sensor" | "camera"): Devic
  * poll after a restart) still counts as an edge if it's degraded now:
  * a restart must not swallow a condition that's still true.
  */
-export function degradations(
-  previous: Record<string, DeviceHealth>,
-  current: Record<string, DeviceHealth>,
-): string[] {
+export function degradations(previous: Record<string, DeviceHealth>, current: Record<string, DeviceHealth>): string[] {
   const lines: string[] = [];
   for (const [mac, device] of Object.entries(current)) {
     const before = previous[mac];
@@ -130,7 +127,9 @@ export function degradations(
       lines.push(`${device.name} (${mac}) is offline in UniFi Protect`);
     }
     if (device.batteryLow && before?.batteryLow !== true) {
-      lines.push(`${device.name} (${mac}) has a low battery${device.batteryPercent != null ? ` (${device.batteryPercent}%)` : ""}`);
+      lines.push(
+        `${device.name} (${mac}) has a low battery${device.batteryPercent != null ? ` (${device.batteryPercent}%)` : ""}`,
+      );
     }
     if (device.tampered && before?.tampered !== true) {
       lines.push(`${device.name} (${mac}) reported tampering`);

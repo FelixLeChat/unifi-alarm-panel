@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDb } from "@/lib/db";
 import { getLastArmDisarmEvent, listEventIncidents } from "./audit";
@@ -88,7 +88,9 @@ describe("listEventIncidents", () => {
     const incidents = listEventIncidents(db, 30);
     expect(incidents).toHaveLength(1);
     expect(incidents[0].triggeredAlarm).toBe(true);
-    expect(incidents[0].sensors).toEqual([{ sensorId: "front-door", tripCount: 3, firstTs: minutes(0), lastTs: minutes(2) }]);
+    expect(incidents[0].sensors).toEqual([
+      { sensorId: "front-door", tripCount: 3, firstTs: minutes(0), lastTs: minutes(2) },
+    ]);
   });
 
   it("groups trips from different sensors within the window into one multi-sensor incident", () => {
@@ -96,7 +98,7 @@ describe("listEventIncidents", () => {
     insertAt(minutes(1), "sensor_trip_during_entry_delay", { sensorId: "hallway-motion" });
 
     const [incident] = listEventIncidents(db, 30);
-    expect(incident.sensors.map((s) => s.sensorId).sort()) .toEqual(["front-door", "hallway-motion"]);
+    expect(incident.sensors.map((s) => s.sensorId).sort()).toEqual(["front-door", "hallway-motion"]);
   });
 
   it("is a rolling window measured from the last trip, not the first — a chain of trips spaced under 5 min apart stays one incident even if the total span exceeds 5 min", () => {

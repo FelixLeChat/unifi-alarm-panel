@@ -1,9 +1,18 @@
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createDb } from "@/lib/db";
 import { recordAudit } from "./audit";
 import { setConfigValue } from "./config";
-import { deleteSensor, getSensor, listOpenGatingSensors, listSensors, resolveSensorMode, updateSensorState, upsertSensor } from "./sensors";
+import {
+  deleteSensor,
+  getSensor,
+  listOpenGatingSensors,
+  listSensors,
+  resolveSensorMode,
+  resolveSensorModeForDevice,
+  updateSensorState,
+  upsertSensor,
+} from "./sensors";
 
 let db: Database.Database;
 
@@ -223,8 +232,7 @@ describe("tripCount24h", () => {
 
 function currentState(unifiId: string): string | null {
   const row = db.prepare("SELECT current_state FROM sensors WHERE unifi_id = ?").get(unifiId) as
-    | { current_state: string | null }
-    | undefined;
+    { current_state: string | null } | undefined;
   return row?.current_state ?? null;
 }
 
@@ -316,5 +324,14 @@ describe("deleteSensor", () => {
     deleteSensor(db, "front-door");
     const mode = resolveSensorMode(db, "front-door");
     expect(mode).toBe("delayed"); // back to the default, not the deleted "ignore" setting
+  });
+
+  it("gives a webhook-registered sensor the device name once the stream reports it, and never overwrites an admin name", () => {
+    expect(resolveSensorMode(db, "58D61F49A73B")).toBe("delayed");
+    expect(getSensor(db, "58D61F49A73B")?.name).toBe("58D61F49A73B");
+    resolveSensorModeForDevice(db, "58D61F49A73B", false, "Back Door");
+    expect(getSensor(db, "58D61F49A73B")?.name).toBe("Back Door");
+    resolveSensorModeForDevice(db, "58D61F49A73B", false, "Renamed on console");
+    expect(getSensor(db, "58D61F49A73B")?.name).toBe("Back Door");
   });
 });

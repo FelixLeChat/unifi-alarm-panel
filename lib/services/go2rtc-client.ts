@@ -59,14 +59,21 @@ export function isSafeStreamName(name: string): boolean {
  */
 export async function upsertGo2rtcStream(name: string, rtspUrl: string): Promise<boolean> {
   if (!isSafeStreamName(name)) {
-    logger.warn({ name }, "go2rtc stream not registered: the camera or sensor ID has characters a stream name can't hold");
+    logger.warn(
+      { name },
+      "go2rtc stream not registered: the camera or sensor ID has characters a stream name can't hold",
+    );
     return false;
   }
-  const params = new URLSearchParams({ name });
-  params.append("src", toGo2rtcSource(rtspUrl));
-  params.append("src", `ffmpeg:${name}#video=mjpeg`);
   try {
-    const res = await fetch(`${baseUrl()}/api/streams?${params}`, { method: "PUT" });
+    // Inside the try: new URL() throws on an unparseable value, and this runs unawaited at boot (resyncGo2rtcStreams).
+    const params = new URLSearchParams({ name });
+    params.append("src", toGo2rtcSource(rtspUrl));
+    params.append("src", `ffmpeg:${name}#video=mjpeg`);
+    const res = await fetch(`${baseUrl()}/api/streams?${params}`, {
+      method: "PUT",
+      signal: AbortSignal.timeout(5_000),
+    });
     if (!res.ok) logger.warn({ name, status: res.status }, "go2rtc stream registration failed");
     return res.ok;
   } catch (err) {
@@ -78,7 +85,10 @@ export async function upsertGo2rtcStream(name: string, rtspUrl: string): Promise
 /** Unregisters a camera's live stream. Never throws — same reasoning as upsertGo2rtcStream. */
 export async function removeGo2rtcStream(name: string): Promise<void> {
   try {
-    const res = await fetch(`${baseUrl()}/api/streams?${new URLSearchParams({ src: name })}`, { method: "DELETE" });
+    const res = await fetch(`${baseUrl()}/api/streams?${new URLSearchParams({ src: name })}`, {
+      method: "DELETE",
+      signal: AbortSignal.timeout(5_000),
+    });
     if (!res.ok) logger.warn({ name, status: res.status }, "go2rtc stream removal failed");
   } catch (err) {
     logger.warn({ err, name }, "go2rtc stream removal threw");

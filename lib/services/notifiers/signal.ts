@@ -10,7 +10,11 @@ const NUMBER = /^\+\d{6,15}$/;
 // A group id as signal-cli-rest-api lists it under /v1/groups: "group." and the base64 id.
 const RECIPIENT = /^(\+\d{6,15}|group\.[A-Za-z0-9+/=_-]+)$/;
 
-const parseRecipients = (raw: string) => raw.split(",").map((r) => r.trim()).filter(Boolean);
+const parseRecipients = (raw: string) =>
+  raw
+    .split(",")
+    .map((r) => r.trim())
+    .filter(Boolean);
 
 export const signalFields = {
   signalApiUrl: { group: "notifications", schema: httpUrl, env: "SIGNAL_API_URL" },
@@ -86,7 +90,9 @@ export class SignalChannel implements Channel {
     };
     if (snapshot) {
       const filename = snapshot.contentType.includes("png") ? "snapshot.png" : "snapshot.jpg";
-      body.base64_attachments = [`data:${snapshot.contentType};filename=${filename};base64,${snapshot.buffer.toString("base64")}`];
+      body.base64_attachments = [
+        `data:${snapshot.contentType};filename=${filename};base64,${snapshot.buffer.toString("base64")}`,
+      ];
     }
     let res: Response;
     try {

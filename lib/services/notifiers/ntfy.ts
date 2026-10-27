@@ -60,6 +60,7 @@ export class NtfyChannel implements Channel {
 
     await sendWithRetry("ntfy notification failed after retry", async () => {
       const res = await fetch(url, {
+        signal: AbortSignal.timeout(10_000),
         method: "POST",
         headers,
         body: alert.snapshot
@@ -73,7 +74,11 @@ export class NtfyChannel implements Channel {
   }
 
   test(): Promise<void> {
-    return postOnce(`${this.config.url}/${this.config.topic}`, { method: "POST", headers: { Title: "Test alert" }, body: TEST_MESSAGE });
+    return postOnce(`${this.config.url}/${this.config.topic}`, {
+      method: "POST",
+      headers: { Title: "Test alert" },
+      body: TEST_MESSAGE,
+    });
   }
 }
 

@@ -8,7 +8,7 @@ export default function Home() {
       <h1 className="text-title-s font-display">UniFi Alarm Panel</h1>
       <p className="text-muted-foreground">Backend is running.</p>
       <nav className="flex gap-4 text-sm underline">
-        <a href="/panel">Kiosk panel</a>
+        <Link href="/panel">Kiosk panel</Link>
         <Link href="/admin">Admin</Link>
         <a href="/api/health">/api/health</a>
       </nav>

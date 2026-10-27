@@ -21,6 +21,7 @@ Security fixes go into the latest release. Upgrade to it before reporting someth
 ## Running it safely
 
 - Keep it on a trusted LAN. Don't expose `/admin` or `/api` to the internet.
-- Generate long random values for `ADMIN_TOKEN`, `WEBHOOK_SHARED_SECRET` and `SECRETS_KEY`, and keep `SECRETS_KEY` separate from your database backups.
+- Generate long random values for `ADMIN_TOKEN`, `WEBHOOK_SHARED_SECRET` and `SECRETS_KEY`, and keep `SECRETS_KEY` separate from your database backups. The app refuses a token or secret shorter than 12 characters.
+- `/api/health` is unauthenticated and reports the engine state and connectivity flags only. The Protect device inventory is behind `/api/admin/connectivity`.
 - Prefer the console's CA certificate over "Skip certificate check". Never set `NODE_TLS_REJECT_UNAUTHORIZED=0`.
 - The SuperAdmin account is optional. Leave it unset unless you need the arm-state sync and the realtime event stream.

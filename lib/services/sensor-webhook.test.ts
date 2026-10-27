@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb } from "@/lib/db";
 import { AlarmEngine } from "@/lib/engine";
@@ -64,8 +64,7 @@ describe("handleSensorWebhook", () => {
     handleSensorWebhook(db, engine, JSON.stringify({ sensorId: "brand-new-sensor", eventType: "open" }));
 
     const row = db.prepare("SELECT mode FROM sensors WHERE unifi_id = ?").get("brand-new-sensor") as
-      | { mode: string }
-      | undefined;
+      { mode: string } | undefined;
     expect(row?.mode).toBe("delayed");
   });
 
@@ -100,5 +99,23 @@ describe("handleSensorWebhook", () => {
       current_state: string | null;
     };
     expect(row.current_state).toBe("open");
+  });
+
+  it("a door close (configured sensorClosedEventTypes) updates the door state and is not a trip", async () => {
+    setConfigValue(db, "sensorOpenEventTypes", "open");
+    setConfigValue(db, "sensorClosedEventTypes", "close");
+    upsertSensor(db, "front-door", "Front Door", "instant", null, null, "door");
+    await createPin(db, "Alex", "1234");
+    const engine = new AlarmEngine(db, notifier);
+    await engine.arm("1234");
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(engine.getStatus().state).toBe("ARMED");
+
+    handleSensorWebhook(db, engine, JSON.stringify({ sensorId: "front-door", eventType: "close" }));
+    expect(engine.getStatus().state).toBe("ARMED");
+    expect(engine.getStatus().doors).toEqual([{ id: expect.any(Number), name: "Front Door", open: false }]);
+
+    handleSensorWebhook(db, engine, JSON.stringify({ sensorId: "front-door", eventType: "open" }));
+    expect(engine.getStatus().state).toBe("ALARM");
   });
 });

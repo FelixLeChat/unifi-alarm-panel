@@ -61,7 +61,8 @@ export function DelaysScreen({ config, token, onSaved }: DelaysScreenProps) {
             Exit delay · seconds
           </FieldLabel>
           <Input
-            id="exit-delay" aria-describedby="exit-delay-hint"
+            id="exit-delay"
+            aria-describedby="exit-delay-hint"
             type="number"
             min={0}
             max={300}
@@ -73,14 +74,17 @@ export function DelaysScreen({ config, token, onSaved }: DelaysScreenProps) {
             }}
             className="h-10 w-[130px] font-mono text-base"
           />
-          <FieldDescription id="exit-delay-hint">{"Time to leave after arming. Delayed sensors won't trip until this runs out."}</FieldDescription>
+          <FieldDescription id="exit-delay-hint">
+            {"Time to leave after arming. Delayed sensors won't trip until this runs out."}
+          </FieldDescription>
         </Field>
         <Field className="gap-1.5 *:data-[slot=input]:w-[130px] p-5.5">
           <FieldLabel htmlFor="entry-delay" className={EYEBROW}>
             Entry delay · seconds
           </FieldLabel>
           <Input
-            id="entry-delay" aria-describedby="entry-delay-hint"
+            id="entry-delay"
+            aria-describedby="entry-delay-hint"
             type="number"
             min={0}
             max={300}
@@ -92,7 +96,9 @@ export function DelaysScreen({ config, token, onSaved }: DelaysScreenProps) {
             }}
             className="h-10 w-[130px] font-mono text-base"
           />
-          <FieldDescription id="entry-delay-hint">{"Time to enter a PIN after a delayed sensor opens, before the siren fires."}</FieldDescription>
+          <FieldDescription id="entry-delay-hint">
+            {"Time to enter a PIN after a delayed sensor opens, before the siren fires."}
+          </FieldDescription>
         </Field>
       </Card>
       <form onSubmit={handleSave} className="flex items-center gap-3.5">

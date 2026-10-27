@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { consumeStreamToken } from "@/lib/auth/stream-token";
-import { go2rtcMjpegUrl } from "@/lib/services/go2rtc-client";
+import { go2rtcMjpegUrl, isSafeStreamName } from "@/lib/services/go2rtc-client";
 import { logger } from "@/lib/logger";
 
 /**
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const cameraId = url.searchParams.get("cameraId");
   const token = url.searchParams.get("token");
-  if (!cameraId || !token || !consumeStreamToken(token, cameraId)) {
+  if (!cameraId || !isSafeStreamName(cameraId) || !token || !consumeStreamToken(token, cameraId)) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 

@@ -34,11 +34,21 @@ describe("admin events route", () => {
     const res = await GET(adminReq("/api/admin/events"));
     expect(res.status).toBe(200);
     const { incidents } = (await res.json()) as {
-      incidents: { sensors: { sensorId: string; sensorName: string; cameraId: string | null; rtspUrl: string | null }[] }[];
+      incidents: {
+        sensors: { sensorId: string; sensorName: string; cameraId: string | null; rtspUrl: string | null }[];
+      }[];
     };
     expect(incidents).toHaveLength(1);
     expect(incidents[0].sensors).toEqual([
-      { sensorId: "front-door", sensorName: "Front Door", cameraId: "cam-1", rtspUrl: "rtsps://cam.local/1", tripCount: 1, firstTs: expect.any(String), lastTs: expect.any(String) },
+      {
+        sensorId: "front-door",
+        sensorName: "Front Door",
+        cameraId: "cam-1",
+        rtspUrl: "rtsps://cam.local/1",
+        tripCount: 1,
+        firstTs: expect.any(String),
+        lastTs: expect.any(String),
+      },
     ]);
   });
 
@@ -47,7 +57,9 @@ describe("admin events route", () => {
     recordAudit(db, "alarm_instant", { detail: { sensorId: "unknown-sensor" } });
 
     const res = await GET(adminReq("/api/admin/events"));
-    const { incidents } = (await res.json()) as { incidents: { sensors: { sensorName: string; cameraId: string | null }[] }[] };
+    const { incidents } = (await res.json()) as {
+      incidents: { sensors: { sensorName: string; cameraId: string | null }[] }[];
+    };
     expect(incidents[0].sensors).toEqual([expect.objectContaining({ sensorName: "unknown-sensor", cameraId: null })]);
   });
 
@@ -57,7 +69,11 @@ describe("admin events route", () => {
     // one is its own incident (20 min apart, well outside the 5-min window).
     for (let i = 0; i < 150; i++) {
       const ts = new Date(Date.UTC(2026, 0, 1, 0, i * 20)).toISOString();
-      db.prepare("INSERT INTO audit (ts, event, detail_json) VALUES (?, ?, ?)").run(ts, "alarm_instant", JSON.stringify({ sensorId: `s-${i}` }));
+      db.prepare("INSERT INTO audit (ts, event, detail_json) VALUES (?, ?, ?)").run(
+        ts,
+        "alarm_instant",
+        JSON.stringify({ sensorId: `s-${i}` }),
+      );
     }
 
     const res = await GET(adminReq("/api/admin/events?limit=9999"));
@@ -69,7 +85,11 @@ describe("admin events route", () => {
     const db = getDb();
     for (let i = 0; i < 40; i++) {
       const ts = new Date(Date.UTC(2026, 0, 1, 0, i * 20)).toISOString();
-      db.prepare("INSERT INTO audit (ts, event, detail_json) VALUES (?, ?, ?)").run(ts, "alarm_instant", JSON.stringify({ sensorId: `s-${i}` }));
+      db.prepare("INSERT INTO audit (ts, event, detail_json) VALUES (?, ?, ?)").run(
+        ts,
+        "alarm_instant",
+        JSON.stringify({ sensorId: `s-${i}` }),
+      );
     }
 
     const res = await GET(adminReq("/api/admin/events?limit=not-a-number"));

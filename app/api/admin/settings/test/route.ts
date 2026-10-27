@@ -20,8 +20,12 @@ export async function POST(req: Request) {
   }
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: 'expected { target: "console" | "notifications", channel?: id }' }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: 'expected { target: "console" | "notifications", channel?: id }' },
+      { status: 400 },
+    );
   }
-  const results = parsed.data.target === "console" ? await checkConsole() : await checkNotifications(parsed.data.channel);
+  const results =
+    parsed.data.target === "console" ? await checkConsole() : await checkNotifications(parsed.data.channel);
   return NextResponse.json({ results });
 }

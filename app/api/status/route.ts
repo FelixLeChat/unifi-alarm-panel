@@ -6,5 +6,9 @@ import { getEngine } from "@/lib/engine";
 import { getAppVersion } from "@/lib/version";
 
 export async function GET() {
-  return NextResponse.json({ ...getEngine().getStatus(), version: getAppVersion(), uptimeSec: Math.floor(process.uptime()) });
+  return NextResponse.json({
+    ...getEngine().getStatus(),
+    version: getAppVersion(),
+    uptimeSec: Math.floor(process.uptime()),
+  });
 }

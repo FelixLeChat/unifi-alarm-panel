@@ -114,7 +114,9 @@ describe("admin update route", () => {
   // update-check.test.ts, this just proves the route wires it through and
   // still responds (no github token on the test box, so it's a quiet no-op).
   it("GET with ?refresh=true triggers an update check without erroring", async () => {
-    const res = await GET(new Request("http://localhost/api/admin/update?refresh=true", { headers: { "x-admin-token": ADMIN_TOKEN } }));
+    const res = await GET(
+      new Request("http://localhost/api/admin/update?refresh=true", { headers: { "x-admin-token": ADMIN_TOKEN } }),
+    );
     expect(res.status).toBe(200);
   });
 });

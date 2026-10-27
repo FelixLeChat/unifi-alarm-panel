@@ -25,7 +25,12 @@ export async function GET(req: Request) {
     ...incident,
     sensors: incident.sensors.map((s) => {
       const sensor = sensorsById.get(s.sensorId);
-      return { ...s, sensorName: sensor?.name ?? s.sensorId, cameraId: sensor?.cameraId ?? null, rtspUrl: sensor?.rtspUrl ?? null };
+      return {
+        ...s,
+        sensorName: sensor?.name ?? s.sensorId,
+        cameraId: sensor?.cameraId ?? null,
+        rtspUrl: sensor?.rtspUrl ?? null,
+      };
     }),
   }));
 

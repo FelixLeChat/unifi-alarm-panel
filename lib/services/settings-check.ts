@@ -26,7 +26,11 @@ export async function checkConsole(): Promise<CheckResult[]> {
     const probe = await new UnifiProtectClient(baseUrl, apiKey, "").probeCameras();
     results.push(
       probe.ok
-        ? { name: "Protect Integration API", status: "ok", detail: `Connected. ${probe.count} camera${probe.count === 1 ? "" : "s"} found.` }
+        ? {
+            name: "Protect Integration API",
+            status: "ok",
+            detail: `Connected. ${probe.count} camera${probe.count === 1 ? "" : "s"} found.`,
+          }
         : { name: "Protect Integration API", status: "failed", detail: probe.error },
     );
   }
@@ -51,7 +55,10 @@ export async function checkConsole(): Promise<CheckResult[]> {
         name: "SuperAdmin (arm-state sync, event stream)",
         status: "failed",
         // The alarm endpoints need a SuperAdmin; a Protect-scoped admin signs in fine and then gets 403.
-        detail: err instanceof ProtectAlarmPermissionError ? "Signed in, but the account is not a SuperAdmin (403)." : describeFetchError(err),
+        detail:
+          err instanceof ProtectAlarmPermissionError
+            ? "Signed in, but the account is not a SuperAdmin (403)."
+            : describeFetchError(err),
       });
     }
   }
@@ -65,7 +72,11 @@ export async function checkConsole(): Promise<CheckResult[]> {
         : { name: "go2rtc (live camera view)", status: "failed", detail: `${go2rtc} answered ${res.status}.` },
     );
   } catch (err) {
-    results.push({ name: "go2rtc (live camera view)", status: "failed", detail: `${go2rtc}: ${describeFetchError(err)}. Live view stays off; alerts still work.` });
+    results.push({
+      name: "go2rtc (live camera view)",
+      status: "failed",
+      detail: `${go2rtc}: ${describeFetchError(err)}. Live view stays off; alerts still work.`,
+    });
   }
 
   return results;
@@ -77,15 +88,27 @@ export async function checkNotifications(channelId?: ChannelId): Promise<CheckRe
   if (channels.length === 0) {
     return [
       channelId
-        ? { name: CHANNELS.find((d) => d.id === channelId)?.name ?? channelId, status: "skipped", detail: "Not configured. Fill in its fields and save." }
-        : { name: "Notifications", status: "skipped", detail: "No channel configured. Alerts only show on the kiosk and in the audit log." },
+        ? {
+            name: CHANNELS.find((d) => d.id === channelId)?.name ?? channelId,
+            status: "skipped",
+            detail: "Not configured. Fill in its fields and save.",
+          }
+        : {
+            name: "Notifications",
+            status: "skipped",
+            detail: "No channel configured. Alerts only show on the kiosk and in the audit log.",
+          },
     ];
   }
   return Promise.all(
     channels.map(async ({ channel, enabled, kinds }): Promise<CheckResult> => {
       try {
         await channel.test();
-        const note = !enabled ? " The channel is switched off, so real alerts skip it." : kinds.size === 0 ? " No alert types are routed to it." : "";
+        const note = !enabled
+          ? " The channel is switched off, so real alerts skip it."
+          : kinds.size === 0
+            ? " No alert types are routed to it."
+            : "";
         return { name: channel.name, status: "ok", detail: `Test alert sent.${note}` };
       } catch (err) {
         return { name: channel.name, status: "failed", detail: describeFetchError(err) };

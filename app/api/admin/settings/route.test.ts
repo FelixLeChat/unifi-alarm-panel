@@ -33,13 +33,20 @@ function adminReq(method: string, body?: unknown, url = "/api/admin/settings"): 
 describe("admin settings route", () => {
   it("rejects requests without the admin token", async () => {
     expect((await GET(new Request("http://localhost/api/admin/settings"))).status).toBe(401);
-    expect((await PUT(new Request("http://localhost/api/admin/settings", { method: "PUT", body: "{}" }))).status).toBe(401);
-    expect((await TEST(new Request("http://localhost/api/admin/settings/test", { method: "POST", body: "{}" }))).status).toBe(401);
+    expect((await PUT(new Request("http://localhost/api/admin/settings", { method: "PUT", body: "{}" }))).status).toBe(
+      401,
+    );
+    expect(
+      (await TEST(new Request("http://localhost/api/admin/settings/test", { method: "POST", body: "{}" }))).status,
+    ).toBe(401);
   });
 
   it("saves a group and never returns a secret's value, in the response or the audit log", async () => {
     const res = await PUT(
-      adminReq("PUT", { group: "console", values: { protectApiBaseUrl: "https://192.168.1.1", protectApiKey: "very-secret-key" } }),
+      adminReq("PUT", {
+        group: "console",
+        values: { protectApiBaseUrl: "https://192.168.1.1", protectApiKey: "very-secret-key" },
+      }),
     );
     expect(res.status).toBe(200);
     const raw = await res.text();
@@ -64,17 +71,24 @@ describe("admin settings route", () => {
   });
 
   it("reports a skipped check when nothing is configured", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(Object.assign(new Error("fetch failed"), { cause: { code: "ECONNREFUSED" } })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(Object.assign(new Error("fetch failed"), { cause: { code: "ECONNREFUSED" } })),
+    );
     const res = await TEST(adminReq("POST", { target: "notifications" }, "/api/admin/settings/test"));
     const { results } = await res.json();
     expect(results).toEqual([expect.objectContaining({ status: "skipped" })]);
   });
 
   it("reports why a console check failed", async () => {
-    await PUT(adminReq("PUT", { group: "console", values: { protectApiBaseUrl: "https://192.168.1.1", protectApiKey: "k" } }));
+    await PUT(
+      adminReq("PUT", { group: "console", values: { protectApiBaseUrl: "https://192.168.1.1", protectApiKey: "k" } }),
+    );
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (url: string) => (String(url).includes("/cameras") ? { ok: false, status: 401 } : { ok: true, status: 200 })),
+      vi.fn(async (url: string) =>
+        String(url).includes("/cameras") ? { ok: false, status: 401 } : { ok: true, status: 200 },
+      ),
     );
     const res = await TEST(adminReq("POST", { target: "console" }, "/api/admin/settings/test"));
     const { results } = (await res.json()) as { results: { name: string; status: string; detail: string }[] };

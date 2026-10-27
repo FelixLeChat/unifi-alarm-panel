@@ -61,10 +61,7 @@ export function PinDetailDialog({ pin, token, onClose, onSaved }: PinDetailDialo
 
   return (
     <Dialog open={pin != null} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent
-        showCloseButton={false}
-        className="w-[420px] max-w-[calc(100%-2rem)]"
-      >
+      <DialogContent showCloseButton={false} className="w-[420px] max-w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle className="font-display text-title-xs text-foreground">Edit PIN</DialogTitle>
         </DialogHeader>
@@ -98,7 +95,9 @@ export function PinDetailDialog({ pin, token, onClose, onSaved }: PinDetailDialo
           </Field>
           <div className="flex h-9 items-center gap-2.5">
             <Switch checked={isDuress} onCheckedChange={setIsDuress} aria-labelledby="pin-detail-duress-label" />
-            <span id="pin-detail-duress-label" className="text-body-s text-foreground">Duress PIN</span>
+            <span id="pin-detail-duress-label" className="text-body-s text-foreground">
+              Duress PIN
+            </span>
           </div>
           {pin && (
             <div className="flex flex-col gap-1 border-t border-border pt-3.5 font-mono text-body-xs text-muted-foreground">
@@ -110,18 +109,10 @@ export function PinDetailDialog({ pin, token, onClose, onSaved }: PinDetailDialo
         </div>
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-          >
+          <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-          >
+          <Button type="button" onClick={handleSave} disabled={saving}>
             Save
           </Button>
         </DialogFooter>

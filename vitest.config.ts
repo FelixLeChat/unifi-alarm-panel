@@ -6,7 +6,7 @@ export default defineConfig({
     environment: "node",
     // Code that reaches getDb() without a test setting DATABASE_PATH must never write ./data/alarm.db.
     env: { DATABASE_PATH: ":memory:" },
-    include: ["lib/**/*.test.ts", "app/**/*.test.ts", "test/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "app/**/*.test.ts"],
   },
   resolve: {
     alias: {

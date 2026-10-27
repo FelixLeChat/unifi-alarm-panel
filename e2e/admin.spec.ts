@@ -81,12 +81,17 @@ test.describe("admin portal", () => {
     await expect(connectivityCard.getByRole("button", { name: "Check now" })).toBeVisible();
   });
 
-  test("a live requested: -> applying: -> done: transition auto-reloads the page, but an already-in-progress state on load does not", async ({ page }) => {
+  test("a live requested: -> applying: -> done: transition auto-reloads the page, but an already-in-progress state on load does not", async ({
+    page,
+  }) => {
     // Seeds a real "requested:" state via the same API the "Update to
     // latest" button calls, then loads straight into it — the reload effect
     // (app/admin/[[...screen]]/page.tsx) must not fire just because the page
     // happened to mount mid-update, only on a transition it observes live.
-    await page.request.post("/api/admin/update", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { tag: "v9.9.9" } });
+    await page.request.post("/api/admin/update", {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      data: { tag: "v9.9.9" },
+    });
     await signIn(page);
     await page.getByText("Tasks", { exact: true }).click();
     await expect(page.getByText("Update requested")).toBeVisible();
@@ -184,7 +189,10 @@ test.describe("admin portal", () => {
 
   test("PINs screen defaults to showing only Active PINs, not Revoked ones", async ({ page, request }) => {
     const label = `E2E Default Filter ${Date.now()}`;
-    await request.post("/api/admin/pins", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { label, pin: "9012", isDuress: false } });
+    await request.post("/api/admin/pins", {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      data: { label, pin: "9012", isDuress: false },
+    });
     const created = await (await request.get("/api/admin/pins", { headers: { "x-admin-token": ADMIN_TOKEN } })).json();
     const createdPin = (created.pins as { id: number; label: string }[]).find((p) => p.label === label)!;
     await request.delete(`/api/admin/pins?id=${createdPin.id}`, { headers: { "x-admin-token": ADMIN_TOKEN } });
@@ -312,7 +320,11 @@ test.describe("admin portal", () => {
       await page.locator("#rate-limit-window-sec").fill("120");
       await page.locator("#rate-limit-lockout-sec").fill("90");
       // Every settings section has its own Save: use the one under Security.
-      await page.getByRole("heading", { name: "Security" }).locator("..").getByRole("button", { name: "Save", exact: true }).click();
+      await page
+        .getByRole("heading", { name: "Security" })
+        .locator("..")
+        .getByRole("button", { name: "Save", exact: true })
+        .click();
       await expect(page.getByText("Security settings saved")).toBeVisible();
 
       await page.reload();
@@ -327,7 +339,10 @@ test.describe("admin portal", () => {
     }
   });
 
-  test("Settings screen's Test mode switch persists across a reload and is not listed under Advanced", async ({ page, request }) => {
+  test("Settings screen's Test mode switch persists across a reload and is not listed under Advanced", async ({
+    page,
+    request,
+  }) => {
     try {
       await signIn(page);
       await page.getByText("Settings", { exact: true }).click();
@@ -379,7 +394,9 @@ test.describe("admin portal", () => {
     await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
     const unifiId = `e2e-overview-noise-${Date.now()}`;
     for (let i = 0; i < 55; i++) {
-      await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
+      await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+        data: { sensorId: unifiId, eventType: "open" },
+      });
     }
 
     await signIn(page);
@@ -394,7 +411,10 @@ test.describe("admin portal", () => {
   // Advanced config table — the earlier rate-limit test's `getByRole("button",
   // { name: "Save", exact: true })` relies on "Save" being unique on that
   // screen, and running this test before it broke that.
-  test("Overview's 'Open right now' card reflects real door-sensor state once tracking is configured", async ({ page, request }) => {
+  test("Overview's 'Open right now' card reflects real door-sensor state once tracking is configured", async ({
+    page,
+    request,
+  }) => {
     const doorId = `e2e-overview-door-${Date.now()}`;
     try {
       await request.put("/api/admin/config", {
@@ -405,14 +425,18 @@ test.describe("admin portal", () => {
         headers: { "x-admin-token": ADMIN_TOKEN },
         data: { sensors: [{ unifiId: doorId, mode: "instant", sensorType: "door" }] },
       });
-      await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: doorId, eventType: "e2e-overview-open" } });
+      await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+        data: { sensorId: doorId, eventType: "e2e-overview-open" },
+      });
 
       await signIn(page);
       const openCard = page.locator("div.border-border").filter({ hasText: "Open right now" });
       await expect(openCard.getByText(doorId, { exact: false })).toBeVisible();
       await expect(openCard.getByText("Live sensor state isn't tracked yet", { exact: false })).toHaveCount(0);
 
-      await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: doorId, eventType: "e2e-overview-close" } });
+      await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+        data: { sensorId: doorId, eventType: "e2e-overview-close" },
+      });
       await page.reload();
       const openCardAfterClose = page.locator("div.border-border").filter({ hasText: "Open right now" });
       await expect(openCardAfterClose.getByText(doorId, { exact: false })).toHaveCount(0);
@@ -464,14 +488,23 @@ test.describe("admin portal", () => {
     await expect(page.locator("#sensor-rtsp")).toHaveValue("rtsps://192.168.1.1:7441/e2e-test?enableSrtp");
   });
 
-  test("the detail pane's trip history lists this sensor's own recent events, most recent first", async ({ page, request }) => {
+  test("the detail pane's trip history lists this sensor's own recent events, most recent first", async ({
+    page,
+    request,
+  }) => {
     const unifiId = `e2e-trip-history-${Date.now()}`;
     // Three distinct trips, sequential and awaited so they land in a known
     // order — a fourth sensor's trip in between proves the list is actually
     // filtered to this sensor, not just "recent audit rows in general".
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: `${unifiId}-other`, eventType: "open" } });
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: unifiId, eventType: "open" },
+    });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: `${unifiId}-other`, eventType: "open" },
+    });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: unifiId, eventType: "open" },
+    });
 
     await signIn(page);
     await page.getByText("Sensors", { exact: true }).click();
@@ -511,7 +544,9 @@ test.describe("admin portal", () => {
 
   test("the sidebar health dot is green for a sensor tripping at its own normal rate", async ({ page, request }) => {
     const unifiId = `e2e-health-sensor-${Date.now()}`;
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: unifiId, eventType: "open" },
+    });
 
     await signIn(page);
     await page.getByText("Sensors", { exact: true }).click();
@@ -519,9 +554,14 @@ test.describe("admin portal", () => {
     await expect(row.locator("span[title*='Last tripped']")).toHaveClass(/bg-success/);
   });
 
-  test("a trip arriving while the Sensors screen is open updates its date without a manual refresh", async ({ page, request }) => {
+  test("a trip arriving while the Sensors screen is open updates its date without a manual refresh", async ({
+    page,
+    request,
+  }) => {
     const unifiId = `e2e-live-refresh-${Date.now()}`;
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: unifiId, eventType: "open" },
+    });
 
     await signIn(page);
     await page.getByText("Sensors", { exact: true }).click();
@@ -532,7 +572,9 @@ test.describe("admin portal", () => {
     // the whole reason the list polls (see the Sensors poll in
     // app/admin/[[...screen]]/page.tsx).
     await new Promise((resolve) => setTimeout(resolve, 1100));
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: unifiId, eventType: "open" },
+    });
     await expect(row).not.toContainText(firstTrip, { timeout: 25_000 });
   });
 
@@ -558,7 +600,9 @@ test.describe("admin portal", () => {
     request,
   }) => {
     const unifiId = `e2e-nofeed-sensor-${Date.now()}`;
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: unifiId, eventType: "open" },
+    });
 
     await signIn(page);
     await page.getByText("Sensors", { exact: true }).click();
@@ -607,11 +651,16 @@ test.describe("admin portal", () => {
 
     await cameraRow.click();
     await expect(page.locator("#sensor-camera")).toHaveValue(cameraUnifiId);
-    await expect(page.getByText("its snapshot or live feed above is wired to itself automatically", { exact: false })).toBeVisible();
+    await expect(
+      page.getByText("its snapshot or live feed above is wired to itself automatically", { exact: false }),
+    ).toBeVisible();
     await expect(page.getByText("Last tripped", { exact: false })).toBeVisible();
   });
 
-  test("shows a loading spinner in the camera feed while switching between two camera sensors", async ({ page, request }) => {
+  test("shows a loading spinner in the camera feed while switching between two camera sensors", async ({
+    page,
+    request,
+  }) => {
     await request.put("/api/admin/config", {
       headers: { "x-admin-token": ADMIN_TOKEN },
       data: { config: { cameraTriggerEventTypes: "motion" } },
@@ -639,9 +688,14 @@ test.describe("admin portal", () => {
     await expect(page.locator("svg.animate-spin")).toBeHidden({ timeout: 5_000 });
   });
 
-  test("selecting a sensor puts its id at the end of the URL, and a reload lands on that same sensor", async ({ page, request }) => {
+  test("selecting a sensor puts its id at the end of the URL, and a reload lands on that same sensor", async ({
+    page,
+    request,
+  }) => {
     const unifiId = `e2e-url-sensor-${Date.now()}`;
-    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, { data: { sensorId: unifiId, eventType: "open" } });
+    await request.post(`/api/hooks/sensor?token=e2e-webhook-secret`, {
+      data: { sensorId: unifiId, eventType: "open" },
+    });
 
     await signIn(page);
     await page.getByText("Sensors", { exact: true }).click();
@@ -654,12 +708,17 @@ test.describe("admin portal", () => {
     await expect(page).toHaveURL(new RegExp(`/admin/sensors/${unifiId}$`));
   });
 
-  test("Refresh picks up a sensor that self-registered while the screen was already open", async ({ page, request }) => {
+  test("Refresh picks up a sensor that self-registered while the screen was already open", async ({
+    page,
+    request,
+  }) => {
     await signIn(page);
     // Opening Sensors reloads the whole admin snapshot a few milliseconds after the click. Wait for it:
     // a webhook posted inside that window is already in the reloaded list, and the "not there yet"
     // check below would fail.
-    const snapshotReloaded = page.waitForResponse((r) => r.url().endsWith("/api/admin/config") && r.request().method() === "GET");
+    const snapshotReloaded = page.waitForResponse(
+      (r) => r.url().endsWith("/api/admin/config") && r.request().method() === "GET",
+    );
     await page.getByText("Sensors", { exact: true }).click();
     await snapshotReloaded;
 
@@ -716,7 +775,9 @@ test.describe("admin portal", () => {
     expect(pinsCount).toBeGreaterThan(0);
   });
 
-  test("downloads the audit log as CSV (most recent 200), with raw detail beyond the humanized summary", async ({ page }) => {
+  test("downloads the audit log as CSV (most recent 200), with raw detail beyond the humanized summary", async ({
+    page,
+  }) => {
     // Trip a sensor first so there's a row with real detail (sensorId) to
     // verify in the export, not just plain events.
     await page.request.post("/api/hooks/sensor?token=e2e-webhook-secret", {
@@ -735,8 +796,9 @@ test.describe("admin portal", () => {
     expect(download.suggestedFilename()).toMatch(/^audit-log-\d{4}-\d{2}-\d{2}\.csv$/);
 
     const csvPath = await download.path();
-    const csv = readFileSync(csvPath!, "utf8");
-    expect(csv.split("\r\n")[0]).toBe("id,timestamp,actor,event,category,description,detail_json");
+    const csv = readFileSync(csvPath, "utf8");
+    // Starts with a UTF-8 BOM so Excel on Windows reads accented names correctly.
+    expect(csv.split("\r\n")[0]).toBe("\uFEFFid,timestamp,actor,event,category,description,detail_json");
     // The raw detail (e.g. sensorId) must survive into the export — that's
     // the whole point, beyond what the UI's humanized one-liner shows.
     expect(csv).toContain("e2e-csv-check");
@@ -748,7 +810,9 @@ test.describe("admin portal", () => {
     // flow, and it doesn't affect anything else in the suite.
     const unifiId = `e2e-pagination-sensor-${Date.now()}`;
     for (let i = 0; i < 105; i++) {
-      await request.post("/api/hooks/sensor?token=e2e-webhook-secret", { data: { sensorId: unifiId, eventType: "open" } });
+      await request.post("/api/hooks/sensor?token=e2e-webhook-secret", {
+        data: { sensorId: unifiId, eventType: "open" },
+      });
     }
 
     await signIn(page);
@@ -930,7 +994,8 @@ test.describe("admin portal", () => {
     await page.getByText("PINs", { exact: true }).click();
     const trigger = page.getByRole("button", { name: "What is a duress PIN?" });
     await page.locator("#new-pin-code").focus();
-    for (let i = 0; i < 6 && !(await trigger.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
+    for (let i = 0; i < 6 && !(await trigger.evaluate((el) => el === document.activeElement)); i++)
+      await page.keyboard.press("Tab");
     await expect(trigger).toBeFocused();
     const tip = page.getByText(/^Disarms normally/);
     await expect(tip).toBeVisible();
@@ -939,7 +1004,10 @@ test.describe("admin portal", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("the duress toggle: role, name, keyboard, saved value and audit entry (add form and edit dialog)", async ({ page, request }) => {
+  test("the duress toggle: role, name, keyboard, saved value and audit entry (add form and edit dialog)", async ({
+    page,
+    request,
+  }) => {
     await signIn(page);
     await page.getByText("PINs", { exact: true }).click();
 
@@ -963,11 +1031,17 @@ test.describe("admin portal", () => {
     await expect(page.getByText("PIN added. Active immediately.")).toBeVisible();
 
     const headers = { "x-admin-token": ADMIN_TOKEN };
-    const pins = (await (await request.get("/api/admin/pins", { headers })).json()) as { pins: Array<{ label: string; isDuress: boolean }> };
+    const pins = (await (await request.get("/api/admin/pins", { headers })).json()) as {
+      pins: Array<{ label: string; isDuress: boolean }>;
+    };
     expect(pins.pins.find((p) => p.label === label)?.isDuress).toBe(true);
-    const audit = (await (await request.get("/api/admin/audit", { headers })).json()) as { audit: Array<{ event: string; detail: unknown }> };
+    const audit = (await (await request.get("/api/admin/audit", { headers })).json()) as {
+      audit: Array<{ event: string; detail: unknown }>;
+    };
     // A duress PIN's audit entry carries the same fields as a standard PIN's: nothing marks it.
-    expect(audit.audit.find((e) => e.event === "pin_created" && JSON.stringify(e.detail).includes(label))?.detail).toEqual({ label });
+    expect(
+      audit.audit.find((e) => e.event === "pin_created" && JSON.stringify(e.detail).includes(label))?.detail,
+    ).toEqual({ label });
 
     // Edit dialog: the toggle starts from the saved value and saves a change.
     await page.getByRole("row").filter({ hasText: label }).click();
@@ -979,13 +1053,18 @@ test.describe("admin portal", () => {
     await expect(editToggle).not.toBeChecked();
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("heading", { name: "Edit PIN" })).not.toBeVisible();
-    const after = (await (await request.get("/api/admin/pins", { headers })).json()) as { pins: Array<{ label: string; isDuress: boolean }> };
+    const after = (await (await request.get("/api/admin/pins", { headers })).json()) as {
+      pins: Array<{ label: string; isDuress: boolean }>;
+    };
     expect(after.pins.find((p) => p.label === label)?.isDuress).toBe(false);
   });
 
   test("dialogs: focus moves in on open, Escape closes, focus returns to the trigger", async ({ page, request }) => {
     const label = `E2E Dialog focus ${Date.now()}`;
-    await request.post("/api/admin/pins", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { label, pin: "4448", isDuress: false } });
+    await request.post("/api/admin/pins", {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      data: { label, pin: "4448", isDuress: false },
+    });
     await signIn(page);
     await page.getByText("PINs", { exact: true }).click();
 
@@ -1017,9 +1096,15 @@ test.describe("admin portal", () => {
     await request.post("/api/disarm", { data: { pin: STANDARD_PIN } });
   });
 
-  test("PINs table: a row is a tab stop and Enter on it opens Edit PIN; headers sort from the keyboard", async ({ page, request }) => {
+  test("PINs table: a row is a tab stop and Enter on it opens Edit PIN; headers sort from the keyboard", async ({
+    page,
+    request,
+  }) => {
     const label = `E2E Row keyboard ${Date.now()}`;
-    await request.post("/api/admin/pins", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { label, pin: "4449", isDuress: false } });
+    await request.post("/api/admin/pins", {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      data: { label, pin: "4449", isDuress: false },
+    });
     await signIn(page);
     await page.getByText("PINs", { exact: true }).click();
 
@@ -1038,9 +1123,15 @@ test.describe("admin portal", () => {
     await expect(page.getByRole("columnheader", { name: /Type/ })).toContainText("↑");
   });
 
-  test("confirm dialogs are alert dialogs: described, closed by Escape and Cancel, not by a click outside", async ({ page, request }) => {
+  test("confirm dialogs are alert dialogs: described, closed by Escape and Cancel, not by a click outside", async ({
+    page,
+    request,
+  }) => {
     const label = `E2E Alert dialog ${Date.now()}`;
-    await request.post("/api/admin/pins", { headers: { "x-admin-token": ADMIN_TOKEN }, data: { label, pin: "4450", isDuress: false } });
+    await request.post("/api/admin/pins", {
+      headers: { "x-admin-token": ADMIN_TOKEN },
+      data: { label, pin: "4450", isDuress: false },
+    });
     await signIn(page);
     await page.getByText("PINs", { exact: true }).click();
     const revoke = page.getByRole("row").filter({ hasText: label }).getByRole("button", { name: "Revoke" });
@@ -1063,7 +1154,9 @@ test.describe("admin portal", () => {
     await expect(page.getByRole("row").filter({ hasText: label }).getByText("Active")).toBeVisible();
   });
 
-  test("forms: every control is reachable by its label, in order, and validation errors are announced", async ({ page }) => {
+  test("forms: every control is reachable by its label, in order, and validation errors are announced", async ({
+    page,
+  }) => {
     await signIn(page);
 
     await page.getByText("Delays", { exact: true }).click();
@@ -1089,13 +1182,18 @@ test.describe("admin portal", () => {
     await expect(page.getByRole("alert").filter({ hasText: "Give the PIN a label." })).toBeVisible();
   });
 
-  test("Events lists an incident from a sensor trip while armed, expands it, and shows it resolved after the disarm", async ({ page, request }) => {
+  test("Events lists an incident from a sensor trip while armed, expands it, and shows it resolved after the disarm", async ({
+    page,
+    request,
+  }) => {
     const unifiId = `e2e-events-${Date.now()}`;
     const hook = "/api/hooks/sensor?token=e2e-webhook-secret";
     // Register the sensor while disarmed, then arm and trip it.
     expect((await request.post(hook, { data: { sensorId: unifiId, eventType: "open" } })).ok()).toBeTruthy();
     await request.post("/api/panel/arm");
-    await expect.poll(async () => (await (await request.get("/api/status")).json()).state, { timeout: 10_000 }).toBe("ARMED");
+    await expect
+      .poll(async () => (await (await request.get("/api/status")).json()).state, { timeout: 10_000 })
+      .toBe("ARMED");
     expect((await request.post(hook, { data: { sensorId: unifiId, eventType: "open" } })).ok()).toBeTruthy();
     await expect
       .poll(async () => (await (await request.get("/api/status")).json()).state, { timeout: 10_000 })
@@ -1122,7 +1220,9 @@ test.describe("admin portal", () => {
     await expect(page.locator("#admin-token")).toBeVisible();
   });
 
-  test("the sidebar navigates from the keyboard (Enter and Space), marks the current page, and collapses", async ({ page }) => {
+  test("the sidebar navigates from the keyboard (Enter and Space), marks the current page, and collapses", async ({
+    page,
+  }) => {
     await signIn(page);
     const nav = page.getByRole("navigation", { name: "Admin screens" });
     await expect(nav.getByRole("button", { name: "Overview" })).toHaveAttribute("aria-current", "page");

@@ -22,12 +22,7 @@ export interface VerifyResult {
   isDuress?: boolean;
 }
 
-export async function createPin(
-  db: Database.Database,
-  label: string,
-  pin: string,
-  isDuress = false,
-): Promise<void> {
+export async function createPin(db: Database.Database, label: string, pin: string, isDuress = false): Promise<void> {
   const hash = await argon2.hash(pin, { type: argon2.argon2id });
   db.prepare(
     "INSERT INTO pins (label, hash, is_duress, updated_at) VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))",
@@ -37,7 +32,14 @@ export async function createPin(
 export function listPins(db: Database.Database): PinSummary[] {
   const rows = db
     .prepare("SELECT id, label, is_duress, active, created_at, updated_at FROM pins ORDER BY id")
-    .all() as { id: number; label: string; is_duress: number; active: number; created_at: string; updated_at: string }[];
+    .all() as {
+    id: number;
+    label: string;
+    is_duress: number;
+    active: number;
+    created_at: string;
+    updated_at: string;
+  }[];
   return rows.map((row) => ({
     id: row.id,
     label: row.label,
@@ -79,7 +81,7 @@ export async function updatePin(db: Database.Database, id: number, update: PinUp
  * FIRST matching row, so a duplicate code is silently shadowed by whichever
  * was created first — and a shadowed duress PIN is catastrophic: it disarms
  * as the other person, attributes the audit entry to them, and never fires
- * the DURESS alert. Reproduced before this check existed.
+ * the DURESS alert.
  *
  * Hashes are salted, so there's no index to check against — this has to try
  * the candidate against each active hash, same as verifyPin. Fine at this

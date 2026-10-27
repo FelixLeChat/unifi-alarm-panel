@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import type Database from "better-sqlite3";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb } from "@/lib/db";
 import { createPin } from "@/lib/services/pins";
@@ -49,9 +49,7 @@ describe("AlarmEngine", () => {
   });
 
   it("restores prior state from the database on construction", () => {
-    db.prepare("INSERT INTO alarm_state (id, name, since) VALUES (1, 'ARMED', ?)").run(
-      new Date().toISOString(),
-    );
+    db.prepare("INSERT INTO alarm_state (id, name, since) VALUES (1, 'ARMED', ?)").run(new Date().toISOString());
     const engine = new AlarmEngine(db);
     expect(engine.getStatus().state).toBe("ARMED");
   });
@@ -216,6 +214,32 @@ describe("AlarmEngine", () => {
     expect(engine.getStatus().triggeredBy).toEqual({ sensorId: "back-door" });
   });
 
+  it("an instant trip during the entry delay drops the countdown, so ALARM shows no remainingSec", async () => {
+    await createPin(db, "Alex", "1234");
+    upsertSensor(db, "front-door", "Front Door", "delayed", null, null, "door");
+    const engine = new AlarmEngine(db);
+    await engine.arm("1234");
+    await vi.advanceTimersByTimeAsync(5_000);
+    engine.handleSensorTrip("front-door", "delayed");
+    expect(engine.getStatus().state).toBe("ENTRY_DELAY");
+    expect(engine.getStatus().remainingSec).not.toBeNull();
+
+    engine.handleSensorTrip("motion-1", "instant");
+    expect(engine.getStatus().state).toBe("ALARM");
+    expect(engine.getStatus().remainingSec).toBeNull();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(listAudit(db, 50).map((a) => a.event)).not.toContain("stale_timer_ignored");
+  });
+
+  it("refuses to boot when alarm_state cannot be read, instead of disarming over it", () => {
+    db.prepare("INSERT INTO alarm_state (id, name, since) VALUES (1, 'ARMED', ?)").run(new Date().toISOString());
+    db.exec("ALTER TABLE alarm_state RENAME TO alarm_state_gone");
+    expect(() => new AlarmEngine(db)).toThrow();
+    db.exec("ALTER TABLE alarm_state_gone RENAME TO alarm_state");
+    const row = db.prepare("SELECT name FROM alarm_state WHERE id = 1").get() as { name: string };
+    expect(row.name).toBe("ARMED");
+  });
+
   it("disarming during the entry delay cancels the timer and stays quiet", async () => {
     await createPin(db, "Alex", "1234");
     const engine = new AlarmEngine(db);
@@ -360,7 +384,19 @@ describe("AlarmEngine", () => {
     const locked = await engine.arm("1234", "yet-another-source");
     expect(locked.ok).toBe(false);
     expect(locked.lockedOut).toBe(true);
-    expect(engine.getStatus().state).toBe("DISARMED");
+    // The 5th wrong PIN raises ALARM on the arm path exactly as on the disarm path: one bucket, one meaning.
+    expect(engine.getStatus().state).toBe("ALARM");
+    expect(listAudit(db, 50).map((a) => a.event)).toContain("alarm_pin_lockout");
+  });
+
+  it("arming while in ALARM reports ok: false instead of claiming the system armed", async () => {
+    const engine = new AlarmEngine(db);
+    expect(engine.armWithoutPin("Panel").ok).toBe(true);
+    await vi.advanceTimersByTimeAsync(5_000);
+    engine.handleSensorTrip("motion-1", "instant");
+    expect(engine.getStatus().state).toBe("ALARM");
+    expect(engine.armWithoutPin("Panel").ok).toBe(false);
+    expect(engine.getStatus().state).toBe("ALARM");
   });
 
   it("a legitimate PIN in between doesn't reset an attacker's failures", async () => {

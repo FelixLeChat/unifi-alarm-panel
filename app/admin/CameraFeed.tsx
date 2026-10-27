@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { fetchCameraSnapshotUrl, fetchLiveStreamUrl } from "./api";
 import { FullscreenIcon } from "@/components/ui/icons/fullscreen";
 import { ProgressActivityIcon } from "@/components/ui/icons/progress-activity";
@@ -66,17 +66,24 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
     setLoading(true);
     onLoadingChange?.(true);
 
-    fetchFeedUrl(token, cameraId, rtspUrl).then((result) => {
-      if (cancelled) {
-        if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
-        return;
-      }
-      setLiveUrl(result?.kind === "live" ? result.url : null);
-      if (result?.kind === "snapshot") objectUrl = result.url;
-      setSnapshotUrl(result?.kind === "snapshot" ? result.url : null);
-      setLoading(false);
-      onLoadingChange?.(false);
-    });
+    fetchFeedUrl(token, cameraId, rtspUrl)
+      .then((result) => {
+        if (cancelled) {
+          if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
+          return;
+        }
+        setLiveUrl(result?.kind === "live" ? result.url : null);
+        if (result?.kind === "snapshot") objectUrl = result.url;
+        setSnapshotUrl(result?.kind === "snapshot" ? result.url : null);
+      })
+      .catch(() => {
+        // Network failure: fall through to the camera-off state below instead of a spinner that never ends.
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+        onLoadingChange?.(false);
+      });
 
     return () => {
       cancelled = true;
@@ -100,14 +107,18 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
     let cancelled = false;
     let objectUrl: string | null = null;
 
-    fetchFeedUrl(token, cameraId, rtspUrl).then((result) => {
-      if (cancelled) {
-        if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
-        return;
-      }
-      if (result?.kind === "snapshot") objectUrl = result.url;
-      setExpandedUrl(result);
-    });
+    fetchFeedUrl(token, cameraId, rtspUrl)
+      .then((result) => {
+        if (cancelled) {
+          if (result?.kind === "snapshot") URL.revokeObjectURL(result.url);
+          return;
+        }
+        if (result?.kind === "snapshot") objectUrl = result.url;
+        setExpandedUrl(result);
+      })
+      .catch(() => {
+        if (!cancelled) setExpandedUrl(null);
+      });
 
     return () => {
       cancelled = true;
@@ -127,7 +138,10 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
 
   return (
     <>
-      <div className="relative flex max-h-[320px] items-center justify-center overflow-hidden bg-primary" style={{ aspectRatio: "16/9" }}>
+      <div
+        className="relative flex max-h-[320px] items-center justify-center overflow-hidden bg-primary"
+        style={{ aspectRatio: "16/9" }}
+      >
         {liveUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- a live MJPEG feed, not a static asset Next's image pipeline should optimize
           <img
@@ -149,7 +163,9 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
           <VideocamOffIcon size={36} className="text-muted-foreground" />
         )}
         <span className="absolute bottom-3 left-3.5 font-mono text-eyebrow-s tracking-eyebrow text-primary-foreground/70 uppercase">
-          {cameraId ? `${cameraId}${liveUrl ? " · live" : snapshotUrl ? "" : loading ? " · loading" : " · unreachable"}` : "No Protect camera mapped"}
+          {cameraId
+            ? `${cameraId}${liveUrl ? " · live" : snapshotUrl ? "" : loading ? " · loading" : " · unreachable"}`
+            : "No Protect camera mapped"}
         </span>
         {(liveUrl || snapshotUrl) && (
           <Button
@@ -175,6 +191,7 @@ export function CameraFeed({ token, name, cameraId, rtspUrl, refreshKey, onLoadi
           style={{ width: "92vw", height: "92vh", maxWidth: "92vw" }}
           className="flex items-center justify-center bg-primary p-0 ring-0"
         >
+          <DialogTitle className="sr-only">{name} camera</DialogTitle>
           {expandedUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a live/snapshot camera feed, not a static asset Next's image pipeline should optimize
             <img
