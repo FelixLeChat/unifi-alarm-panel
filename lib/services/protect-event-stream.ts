@@ -28,8 +28,10 @@ import { resolveSensorModeForDevice, setSensorState } from "./sensors";
  * - A physical sensor (UP-Sense) reports through `devicePatched` on the
  *   `sensor` model key — `isMotionDetected` / `isOpened` booleans on the
  *   device record, not an occurrence.
- * - A camera's motion arrives as a `motionDetected` occurrence, keyed by
- *   the camera's Protect id rather than its MAC.
+ * - A camera reports a `motionDetected` occurrence (any pixel change) and a
+ *   `smartDetect` occurrence (a classified object), keyed by the camera's
+ *   Protect id rather than its MAC. Only a smart detection of a person trips:
+ *   raw motion fired the alarm on a speck of dust in IR night mode.
  *
  * Both are translated to the same (MAC, mode) pair a webhook produces, and
  * handed to the same ingest (sensor-ingest.ts), which de-duplicates across
@@ -123,7 +125,14 @@ export function classifyStreamEvent(event: TypedEvent, devices: Map<string, Devi
     // right — inventing a sensor row from an id this app can't name would
     // put an unidentifiable entry in the alarm's own sensor list.
     if (!device) return null;
-    return { unifiId: device.mac, name: device.name, isCamera: true, trips: true };
+    // Registers the camera, never trips: see the header on why raw motion is not evidence of a person.
+    return { unifiId: device.mac, name: device.name, isCamera: true, trips: false };
+  }
+
+  if (event.kind === "smartDetect") {
+    const device = devices.get(event.cameraId);
+    if (!device) return null;
+    return { unifiId: device.mac, name: device.name, isCamera: true, trips: event.objectTypes.includes("person") };
   }
 
   if (event.kind === "devicePatched" && event.modelKey === "sensor") {

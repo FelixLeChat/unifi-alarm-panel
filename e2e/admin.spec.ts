@@ -654,7 +654,8 @@ test.describe("admin portal", () => {
     await expect(
       page.getByText("its snapshot or live feed above is wired to itself automatically", { exact: false }),
     ).toBeVisible();
-    await expect(page.getByText("Last tripped", { exact: false })).toBeVisible();
+    // Raw camera motion registers the camera but never counts as a trip.
+    await expect(page.getByText("Never tripped", { exact: true })).toBeVisible();
   });
 
   test("shows a loading spinner in the camera feed while switching between two camera sensors", async ({

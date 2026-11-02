@@ -9,7 +9,7 @@ How this app talks to UniFi, what was tried, and what is confirmed. See [INSTALL
 
 The webhook alone was the original design. It failed the way pushes fail: the automation stopped delivering for four days while every sensor was healthy, and this app couldn't tell "the office is quiet" from "the feed is dead".
 
-The stream pulls the same occurrences itself. A physical UP-Sense reports through `devicePatched` on the `sensor` model key (`isOpened` / `isMotionDetected`). A camera's motion comes as a `motionDetected` occurrence keyed by Protect id. Both map to the same (MAC, mode) pair a webhook produces.
+The stream pulls the same occurrences itself. A physical UP-Sense reports through `devicePatched` on the `sensor` model key (`isOpened` / `isMotionDetected`). A camera reports `motionDetected` (raw pixel change) and `smartDetect` (a classified object) occurrences keyed by Protect id. Only a `smartDetect` containing `person` trips the alarm: a speck of dust in IR night mode once tripped a real alarm. Raw camera motion registers the camera and nothing more. Both map to the same (MAC, mode) pair a webhook produces.
 
 Both sources converge on `lib/services/sensor-ingest.ts`, which drops a trip the other source already delivered for that sensor within 5s. Cross-source only, so repeated trips from one source stay separate events. Either source alone runs the alarm correctly. The stream needs the SuperAdmin credential below and is a no-op without it. A door closing updates the open/closed state that gates arming and never trips.
 

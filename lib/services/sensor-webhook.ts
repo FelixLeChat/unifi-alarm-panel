@@ -3,8 +3,8 @@ import type { AlarmEngine } from "@/lib/engine";
 import { logger } from "@/lib/logger";
 import { recordAudit } from "./audit";
 import { ingestSensorTrip } from "./sensor-ingest";
-import { resolveSensorMode, updateSensorState } from "./sensors";
-import { parseSensorWebhook, recordRawPayload } from "./webhook-intake";
+import { isCameraTriggerEvent, resolveSensorMode, updateSensorState } from "./sensors";
+import { parseSensorWebhook, recordRawPayload, recordSensorEvent } from "./webhook-intake";
 
 export interface WebhookResult {
   status: number;
@@ -41,6 +41,13 @@ export function handleSensorWebhook(db: Database.Database, engine: AlarmEngine, 
   const openState = updateSensorState(db, parsed.sensorId, parsed.eventType);
   // A door closing updates the state that gates arming and stops there, the same rule the realtime stream applies (see classifyStreamEvent). Only a deployment that configured sensorClosedEventTypes can tell a close apart.
   if (openState === "closed") return { status: 200, body: { ok: true } };
+  // A camera's own motion trigger is raw pixel change, not a person (a speck
+  // of dust in IR night mode set off a real alarm). Person detections trip via
+  // the realtime stream. Still stamped, so the feed heartbeat stays truthful.
+  if (isCameraTriggerEvent(db, parsed.eventType)) {
+    recordSensorEvent("webhook");
+    return { status: 200, body: { ok: true } };
+  }
   // Via the shared ingest so a trip the realtime stream just delivered for
   // this same sensor isn't counted twice (see sensor-ingest.ts).
   ingestSensorTrip(engine, parsed.sensorId, mode, "webhook");

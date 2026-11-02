@@ -164,7 +164,7 @@ export function deleteSensor(db: Database.Database, unifiId: string): void {
  * config-mapped and opt-in (empty by default = no behavior change) rather
  * than inferred, same reasoning as the two path configs.
  */
-function isCameraTriggerEvent(db: Database.Database, eventType: string | undefined): boolean {
+export function isCameraTriggerEvent(db: Database.Database, eventType: string | undefined): boolean {
   if (eventType === undefined) return false;
   const configured = getConfigValue(db, "cameraTriggerEventTypes");
   if (!configured) return false;
