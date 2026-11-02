@@ -21,14 +21,29 @@ function patched(id: string, patch: Record<string, unknown>): TypedEvent {
 }
 
 describe("classifyStreamEvent", () => {
-  it("turns a camera's motion occurrence into a trip on that camera's MAC", () => {
+  it("does not trip on a camera's raw motion occurrence", () => {
     const event = { kind: "motionDetected", cameraId: CAMERA_ID, eventId: "e1", at: 1 } as TypedEvent;
+    expect(classifyStreamEvent(event, devices)).toEqual({
+      unifiId: CAMERA_MAC,
+      name: "Entrance",
+      isCamera: true,
+      trips: false,
+    });
+  });
+
+  it("turns a camera's person detection into a trip on that camera's MAC", () => {
+    const event = { kind: "smartDetect", cameraId: CAMERA_ID, eventId: "e1", at: 1, objectTypes: ["person"] } as TypedEvent;
     expect(classifyStreamEvent(event, devices)).toEqual({
       unifiId: CAMERA_MAC,
       name: "Entrance",
       isCamera: true,
       trips: true,
     });
+  });
+
+  it("does not trip on a smart detection of something other than a person", () => {
+    const event = { kind: "smartDetect", cameraId: CAMERA_ID, eventId: "e1", at: 1, objectTypes: ["vehicle"] } as TypedEvent;
+    expect(classifyStreamEvent(event, devices)?.trips).toBe(false);
   });
 
   // A UP-Sense doesn't emit an occurrence — its door state arrives as a

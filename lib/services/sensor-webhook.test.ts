@@ -30,6 +30,19 @@ afterEach(() => {
 });
 
 describe("handleSensorWebhook", () => {
+  it("while ARMED, a camera's motion trigger never starts the entry delay", async () => {
+    await createPin(db, "Alex", "1234");
+    setConfigValue(db, "cameraTriggerEventTypes", "motion");
+    const engine = new AlarmEngine(db, notifier);
+    await engine.arm("1234");
+    await vi.advanceTimersByTimeAsync(30_000);
+
+    const result = handleSensorWebhook(db, engine, JSON.stringify({ sensorId: "cam-1", eventType: "motion" }));
+
+    expect(result.status).toBe(200);
+    expect(engine.getStatus().state).toBe("ARMED");
+  });
+
   it("while ARMED, a trip from a default-mode sensor waits out the entry delay before alerting", async () => {
     await createPin(db, "Alex", "1234");
     const engine = new AlarmEngine(db, notifier);
