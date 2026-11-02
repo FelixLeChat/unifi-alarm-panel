@@ -32,7 +32,13 @@ describe("classifyStreamEvent", () => {
   });
 
   it("turns a camera's person detection into a trip on that camera's MAC", () => {
-    const event = { kind: "smartDetect", cameraId: CAMERA_ID, eventId: "e1", at: 1, objectTypes: ["person"] } as TypedEvent;
+    const event = {
+      kind: "smartDetect",
+      cameraId: CAMERA_ID,
+      eventId: "e1",
+      at: 1,
+      objectTypes: ["person"],
+    } as TypedEvent;
     expect(classifyStreamEvent(event, devices)).toEqual({
       unifiId: CAMERA_MAC,
       name: "Entrance",
@@ -42,7 +48,13 @@ describe("classifyStreamEvent", () => {
   });
 
   it("does not trip on a smart detection of something other than a person", () => {
-    const event = { kind: "smartDetect", cameraId: CAMERA_ID, eventId: "e1", at: 1, objectTypes: ["vehicle"] } as TypedEvent;
+    const event = {
+      kind: "smartDetect",
+      cameraId: CAMERA_ID,
+      eventId: "e1",
+      at: 1,
+      objectTypes: ["vehicle"],
+    } as TypedEvent;
     expect(classifyStreamEvent(event, devices)?.trips).toBe(false);
   });
 
